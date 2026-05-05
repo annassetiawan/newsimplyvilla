@@ -628,13 +628,13 @@ video {
   margin-left: 0.75rem;
   margin-right: 0.75rem;
 }
-.my-1 {
-  margin-top: 0.25rem;
-  margin-bottom: 0.25rem;
-}
 .mx-auto {
   margin-left: auto;
   margin-right: auto;
+}
+.my-1 {
+  margin-top: 0.25rem;
+  margin-bottom: 0.25rem;
 }
 .mb-1 {
   margin-bottom: 0.25rem;
@@ -801,11 +801,11 @@ video {
 .min-w-\[8rem\] {
   min-width: 8rem;
 }
-.max-w-sm {
-  max-width: 24rem;
-}
 .max-w-\[1400px\] {
   max-width: 1400px;
+}
+.max-w-sm {
+  max-width: 24rem;
 }
 .flex-1 {
   flex: 1 1 0%;
