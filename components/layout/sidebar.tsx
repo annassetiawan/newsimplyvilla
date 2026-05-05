@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
@@ -17,9 +18,17 @@ import {
   ChevronRight,
   Building2,
   LogOut,
+  Lock,
+  Wallet,
+  UserCheck,
+  Globe,
+  GitBranch,
+  TrendingUp,
+  Crown,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useSidebar } from '@/store/sidebar-store'
+import { useSubscription } from '@/hooks/useSubscription'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import {
@@ -29,6 +38,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { UpgradeModal } from '@/components/UpgradeModal'
 
 const navGroups = [
   {
@@ -61,9 +71,27 @@ const navGroups = [
   },
 ]
 
+const proFeatures = [
+  { label: 'Business', href: '/business', icon: TrendingUp },
+  { label: 'Finance & Account', href: '/finance', icon: Wallet },
+  { label: 'User Management', href: '/users', icon: Users },
+  { label: 'Employee Management', href: '/employee', icon: UserCheck },
+  { label: 'Channel Manager', href: '/channel-manager', icon: Globe },
+  { label: 'Change Management', href: '/change-management', icon: GitBranch },
+]
+
 export function Sidebar() {
   const { collapsed, toggle } = useSidebar()
   const pathname = usePathname()
+  const { isPro } = useSubscription()
+  const [upgradeModal, setUpgradeModal] = useState<{ open: boolean; feature: string }>({
+    open: false,
+    feature: '',
+  })
+
+  function openUpgrade(feature: string) {
+    setUpgradeModal({ open: true, feature })
+  }
 
   return (
     <TooltipProvider delayDuration={0}>
@@ -145,7 +173,124 @@ export function Sidebar() {
               </div>
             </div>
           ))}
+
+          {/* PRO FEATURES section */}
+          <div className="mt-4">
+            {!collapsed && (
+              <div className="mb-1 flex items-center gap-2 px-4">
+                <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">
+                  Pro Features
+                </p>
+              </div>
+            )}
+            {collapsed && <div className="mx-3 mb-3 mt-1 h-px bg-border" />}
+            <div className="space-y-0.5 px-2">
+              {proFeatures.map((item) => {
+                const Icon = item.icon
+                const isActive =
+                  isPro && (pathname === item.href || pathname.startsWith(item.href + '/'))
+
+                if (isPro) {
+                  return (
+                    <Tooltip key={item.label}>
+                      <TooltipTrigger asChild>
+                        <Link
+                          href={item.href}
+                          className={cn(
+                            'flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-medium transition-colors',
+                            isActive
+                              ? 'bg-primary text-white'
+                              : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+                            collapsed && 'justify-center px-2'
+                          )}
+                        >
+                          <Icon className="h-4 w-4 shrink-0" />
+                          {!collapsed && <span className="truncate">{item.label}</span>}
+                        </Link>
+                      </TooltipTrigger>
+                      {collapsed && (
+                        <TooltipContent side="right" className="font-medium">
+                          {item.label}
+                        </TooltipContent>
+                      )}
+                    </Tooltip>
+                  )
+                }
+
+                return (
+                  <Tooltip key={item.label}>
+                    <TooltipTrigger asChild>
+                      <button
+                        onClick={() => openUpgrade(item.label)}
+                        className={cn(
+                          'flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-medium transition-colors',
+                          'cursor-pointer text-muted-foreground/60 hover:bg-muted hover:text-muted-foreground',
+                          collapsed && 'justify-center px-2'
+                        )}
+                      >
+                        <Lock className="h-4 w-4 shrink-0 text-muted-foreground/40" />
+                        {!collapsed && (
+                          <>
+                            <span className="flex-1 truncate text-left">{item.label}</span>
+                            <span
+                              className="shrink-0 rounded px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide"
+                              style={{
+                                background: '#E1A62F22',
+                                color: '#E1A62F',
+                              }}
+                            >
+                              PRO
+                            </span>
+                          </>
+                        )}
+                      </button>
+                    </TooltipTrigger>
+                    {collapsed && (
+                      <TooltipContent side="right" className="font-medium">
+                        {item.label}{' '}
+                        <span className="ml-1 text-[#E1A62F] text-[10px] font-bold">PRO</span>
+                      </TooltipContent>
+                    )}
+                  </Tooltip>
+                )
+              })}
+            </div>
+          </div>
         </nav>
+
+        {/* Upgrade banner — only when not Pro */}
+        {!isPro && (
+          <div className="shrink-0 px-2 pb-2">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Link
+                  href="/pricing"
+                  className={cn(
+                    'flex items-center gap-2.5 rounded-lg border-l-2 border-[#E1A62F] bg-[#E1A62F0D] px-2.5 py-2.5 transition-colors hover:bg-[#E1A62F1A]',
+                    collapsed && 'justify-center border-l-0 border border-[#E1A62F33]'
+                  )}
+                >
+                  <Crown className="h-4 w-4 shrink-0 text-[#E1A62F]" />
+                  {!collapsed && (
+                    <div className="min-w-0">
+                      <p className="text-[13px] font-medium leading-tight text-foreground">
+                        Upgrade ke Pro
+                      </p>
+                      <p className="text-[11px] text-muted-foreground">
+                        Unlock 6 fitur eksklusif
+                      </p>
+                    </div>
+                  )}
+                </Link>
+              </TooltipTrigger>
+              {collapsed && (
+                <TooltipContent side="right" className="font-medium">
+                  Upgrade ke Pro
+                </TooltipContent>
+              )}
+            </Tooltip>
+          </div>
+        )}
 
         {/* User area */}
         <div className="shrink-0 border-t border-border p-2">
@@ -187,6 +332,12 @@ export function Sidebar() {
           </DropdownMenu>
         </div>
       </aside>
+
+      <UpgradeModal
+        isOpen={upgradeModal.open}
+        onClose={() => setUpgradeModal({ open: false, feature: '' })}
+        feature={upgradeModal.feature}
+      />
     </TooltipProvider>
   )
 }

@@ -35,7 +35,7 @@ async function main() {
     const room = await prisma.room.upsert({
       where: { id: `room-${r.code.toLowerCase()}` },
       update: { status: r.status },
-      create: { id: `room-${r.code.toLowerCase()}`, ...r, villaId: villa.id },
+      create: { id: `room-${r.code.toLowerCase()}`, ...r, photos: [], villaId: villa.id },
     })
     rooms[r.code] = room
   }
@@ -355,6 +355,19 @@ async function main() {
   console.log(
     `✅ Transactions created: ${transactionsData.length} | Revenue: Rp${(totalRevenue / 1e6).toFixed(1)}M | Expenses: Rp${(totalExpenses / 1e6).toFixed(1)}M`
   )
+
+  // ── Subscription ───────────────────────────────────────────────────────────
+  await prisma.subscription.upsert({
+    where: { villaId: villa.id },
+    update: {},
+    create: {
+      villaId: villa.id,
+      plan: 'FREE',
+      status: 'ACTIVE',
+      startDate: new Date('2026-01-01'),
+    },
+  })
+  console.log('✅ Subscription created: FREE plan, ACTIVE')
 
   console.log('\n🎉 Seeding complete!')
 }

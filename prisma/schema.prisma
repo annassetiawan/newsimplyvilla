@@ -23,6 +23,7 @@ model Villa {
   sops         SOP[]
   transactions Transaction[]
   lostAndFound LostAndFound[]
+  subscription Subscription?
 }
 
 enum RoomStatus {
@@ -243,4 +244,34 @@ model LostAndFound {
   status      LostAndFoundStatus @default(FOUND)
   villaId     String
   villa       Villa              @relation(fields: [villaId], references: [id])
+}
+
+enum Plan {
+  FREE
+  PRO
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  INACTIVE
+  TRIAL
+}
+
+model Subscription {
+  id        String             @id @default(cuid())
+  villaId   String             @unique
+  villa     Villa              @relation(fields: [villaId], references: [id])
+  plan      Plan               @default(FREE)
+  status    SubscriptionStatus @default(ACTIVE)
+  startDate DateTime           @default(now())
+  endDate   DateTime?
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+}
+
+model Waitlist {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  plan      Plan     @default(PRO)
+  createdAt DateTime @default(now())
 }
