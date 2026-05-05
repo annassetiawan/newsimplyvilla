@@ -8,7 +8,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <Sidebar />
       <Header />
       <SidebarOffset>
-        <main className="p-6">{children}</main>
+        <main className="mx-auto max-w-[1400px] p-6">{children}</main>
       </SidebarOffset>
     </div>
   )

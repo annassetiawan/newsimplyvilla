@@ -1,5 +1,5 @@
 {
-  "/(auth)/login/page": "app/(auth)/login/page.js",
+  "/_not-found/page": "app/_not-found/page.js",
   "/(app)/front-desk/page": "app/(app)/front-desk/page.js",
   "/(app)/dashboard/page": "app/(app)/dashboard/page.js"
 }
