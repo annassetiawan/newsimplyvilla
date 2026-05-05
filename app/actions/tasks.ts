@@ -58,3 +58,9 @@ export async function advanceStatus(id: string, current: string) {
   revalidatePath('/maintenance')
   revalidatePath('/dashboard')
 }
+
+export async function moveTaskStatus(id: string, status: 'PENDING' | 'IN_PROGRESS' | 'DONE') {
+  await db.task.update({ where: { id }, data: { status } })
+  revalidatePath('/maintenance')
+  revalidatePath('/dashboard')
+}

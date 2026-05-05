@@ -1,10 +1,12 @@
 'use client'
 
-import { useTransition } from 'react'
+import { useState, useTransition } from 'react'
+import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd'
 import { Clock, MapPin, ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
-import { advanceStatus } from '@/app/actions/tasks'
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
+import { advanceStatus, moveTaskStatus } from '@/app/actions/tasks'
 import type { TaskData } from './maintenance-client'
 
 interface Props {
@@ -13,20 +15,41 @@ interface Props {
 }
 
 const COLUMNS = [
-  { status: 'PENDING', label: 'Pending', color: 'text-gray-600' },
-  { status: 'IN_PROGRESS', label: 'In Progress', color: 'text-blue-600' },
-  { status: 'DONE', label: 'Done', color: 'text-green-600' },
+  {
+    status: 'PENDING',
+    label: 'Pending',
+    badgeClass: 'bg-[#E1A62F] text-white',
+    headerClass: 'text-amber-700',
+  },
+  {
+    status: 'IN_PROGRESS',
+    label: 'In Progress',
+    badgeClass: 'bg-blue-500 text-white',
+    headerClass: 'text-blue-700',
+  },
+  {
+    status: 'DONE',
+    label: 'Done',
+    badgeClass: 'bg-green-500 text-white',
+    headerClass: 'text-green-700',
+  },
 ] as const
 
 const TYPE_STYLE: Record<string, string> = {
-  MAINTENANCE: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
-  CLEANING: 'bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-400',
+  MAINTENANCE: 'bg-gray-100 text-gray-600',
+  CLEANING: 'bg-teal-100 text-teal-700',
 }
 
 const PRIORITY_STYLE: Record<string, string> = {
-  HIGH: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
-  MED: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
-  LOW: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
+  HIGH: 'bg-red-100 text-red-700',
+  MED: 'bg-amber-100 text-amber-700',
+  LOW: 'bg-gray-100 text-gray-500',
+}
+
+const STATUS_LABEL: Record<string, string> = {
+  PENDING: 'Pending',
+  IN_PROGRESS: 'In Progress',
+  DONE: 'Done',
 }
 
 function fmtDate(iso: string | null) {
@@ -48,56 +71,176 @@ function initials(name: string) {
     .toUpperCase()
 }
 
-function TaskCard({ task, onEdit }: { task: TaskData; onEdit: () => void }) {
+function TaskDetailSheet({
+  task,
+  onClose,
+  onEdit,
+}: {
+  task: TaskData | null
+  onClose: () => void
+  onEdit: (task: TaskData) => void
+}) {
   const [pending, startTransition] = useTransition()
+
+  if (!task) return null
   const isDone = task.status === 'DONE'
 
   function handleAdvance() {
     startTransition(async () => {
-      await advanceStatus(task.id, task.status)
+      await advanceStatus(task!.id, task!.status)
+      onClose()
     })
   }
 
   return (
+    <Sheet open={!!task} onOpenChange={(o) => !o && onClose()}>
+      <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
+        <SheetHeader className="mb-5">
+          <div className="flex items-center gap-2 mb-2">
+            <span className={cn('rounded-full px-2 py-0.5 text-[11px] font-semibold', TYPE_STYLE[task.type])}>
+              {task.type === 'MAINTENANCE' ? 'Maintenance' : 'Cleaning'}
+            </span>
+            <span className={cn('rounded-full px-2 py-0.5 text-[11px] font-semibold', PRIORITY_STYLE[task.priority])}>
+              {task.priority === 'HIGH' ? 'High' : task.priority === 'MED' ? 'Medium' : 'Low'}
+            </span>
+          </div>
+          <SheetTitle className={cn(isDone && 'line-through text-muted-foreground')}>
+            {task.title}
+          </SheetTitle>
+        </SheetHeader>
+
+        <div className="space-y-4">
+          <div className="rounded-lg border border-border divide-y divide-border">
+            <div className="flex items-center gap-3 px-4 py-3">
+              <span className="text-xs font-medium text-muted-foreground w-24 shrink-0">Status</span>
+              <span
+                className={cn(
+                  'rounded-full px-2 py-0.5 text-[11px] font-semibold',
+                  task.status === 'PENDING'
+                    ? 'bg-gray-100 text-gray-600'
+                    : task.status === 'IN_PROGRESS'
+                    ? 'bg-blue-100 text-blue-700'
+                    : 'bg-green-100 text-green-700'
+                )}
+              >
+                {STATUS_LABEL[task.status]}
+              </span>
+            </div>
+            <div className="flex items-center gap-3 px-4 py-3">
+              <span className="text-xs font-medium text-muted-foreground w-24 shrink-0">Location</span>
+              <div className="flex items-center gap-1 text-sm">
+                <MapPin className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                <span>{task.location}</span>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 px-4 py-3">
+              <span className="text-xs font-medium text-muted-foreground w-24 shrink-0">Assigned to</span>
+              {task.assignedTo ? (
+                <div className="flex items-center gap-2">
+                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#E1A62F] text-[10px] font-bold text-white">
+                    {initials(task.assignedTo)}
+                  </div>
+                  <span className="text-sm">{task.assignedTo}</span>
+                </div>
+              ) : (
+                <span className="text-sm text-muted-foreground italic">Unassigned</span>
+              )}
+            </div>
+            <div className="flex items-center gap-3 px-4 py-3">
+              <span className="text-xs font-medium text-muted-foreground w-24 shrink-0">Due date</span>
+              <span className="text-sm">
+                {task.dueDate ? fmtDate(task.dueDate) : <span className="text-muted-foreground italic">Not set</span>}
+              </span>
+            </div>
+          </div>
+
+          <div className="flex gap-2">
+            {!isDone && (
+              <Button
+                size="sm"
+                className="gap-1.5"
+                disabled={pending}
+                onClick={handleAdvance}
+              >
+                {task.status === 'PENDING' ? 'Start task' : 'Mark as done'}
+                <ChevronRight className="h-3.5 w-3.5" />
+              </Button>
+            )}
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                onClose()
+                onEdit(task)
+              }}
+            >
+              Edit task
+            </Button>
+          </div>
+        </div>
+      </SheetContent>
+    </Sheet>
+  )
+}
+
+function TaskCard({
+  task,
+  onOpenDetail,
+  dragHandleProps,
+  draggableProps,
+  innerRef,
+}: {
+  task: TaskData
+  onOpenDetail: () => void
+  dragHandleProps: object | null
+  draggableProps: object
+  innerRef: (el: HTMLElement | null) => void
+}) {
+  const isDone = task.status === 'DONE'
+
+  return (
     <div
+      ref={innerRef}
+      {...draggableProps}
+      {...(dragHandleProps ?? {})}
+      onClick={onOpenDetail}
       className={cn(
-        'rounded-xl border border-border bg-background p-3.5 space-y-2.5 cursor-pointer hover:shadow-sm transition-shadow',
+        'bg-white rounded-lg border border-border shadow-sm p-3.5 space-y-2.5 cursor-pointer',
+        'transition-colors hover:border-[#E1A62F]',
         isDone && 'opacity-70'
       )}
-      onClick={onEdit}
     >
       <div className="flex items-start justify-between gap-2">
         <span className={cn('rounded-full px-2 py-0.5 text-[10px] font-semibold', TYPE_STYLE[task.type])}>
           {task.type === 'MAINTENANCE' ? 'Maintenance' : 'Cleaning'}
         </span>
         <span className={cn('rounded-full px-2 py-0.5 text-[10px] font-semibold', PRIORITY_STYLE[task.priority])}>
-          {task.priority}
+          {task.priority === 'HIGH' ? 'High' : task.priority === 'MED' ? 'Med' : 'Low'}
         </span>
       </div>
 
-      <p className={cn('text-sm font-semibold leading-tight', isDone && 'line-through text-muted-foreground')}>
+      <p className={cn('text-sm font-medium leading-tight', isDone && 'line-through text-muted-foreground')}>
         {task.title}
       </p>
 
       <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
         <MapPin className="h-3 w-3 shrink-0" />
-        <span>{task.location}</span>
+        <span className="truncate">{task.location}</span>
       </div>
 
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-1.5">
-          {task.assignedTo && (
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-1.5 min-w-0">
+          {task.assignedTo ? (
             <>
-              <div className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/10 text-[9px] font-bold text-primary">
+              <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#E1A62F] text-[9px] font-bold text-white">
                 {initials(task.assignedTo)}
               </div>
-              <span className="text-[11px] text-muted-foreground truncate max-w-[80px]">
+              <span className="text-[11px] text-muted-foreground truncate">
                 {task.assignedTo}
               </span>
             </>
-          )}
-          {!task.assignedTo && (
-            <span className="text-[11px] text-muted-foreground">Unassigned</span>
+          ) : (
+            <span className="text-[11px] text-muted-foreground italic">Unassigned</span>
           )}
         </div>
         {task.dueDate && (
@@ -107,52 +250,93 @@ function TaskCard({ task, onEdit }: { task: TaskData; onEdit: () => void }) {
           </div>
         )}
       </div>
-
-      {!isDone && (
-        <Button
-          size="sm"
-          variant="outline"
-          className="w-full h-7 text-xs gap-1"
-          disabled={pending}
-          onClick={(e) => {
-            e.stopPropagation()
-            handleAdvance()
-          }}
-        >
-          {task.status === 'PENDING' ? 'Start task' : 'Mark done'}
-          <ChevronRight className="h-3 w-3" />
-        </Button>
-      )}
     </div>
   )
 }
 
 export function BoardView({ tasks, onEdit }: Props) {
+  const [detailTask, setDetailTask] = useState<TaskData | null>(null)
+  const [, startTransition] = useTransition()
+
+  function onDragEnd(result: DropResult) {
+    const { source, destination, draggableId } = result
+    if (!destination) return
+    if (source.droppableId === destination.droppableId) return
+
+    startTransition(async () => {
+      await moveTaskStatus(
+        draggableId,
+        destination.droppableId as 'PENDING' | 'IN_PROGRESS' | 'DONE'
+      )
+    })
+  }
+
   return (
-    <div className="grid grid-cols-3 gap-4">
-      {COLUMNS.map((col) => {
-        const colTasks = tasks.filter((t) => t.status === col.status)
-        return (
-          <div key={col.status} className="space-y-3">
-            <div className="flex items-center gap-2 px-1">
-              <p className={cn('text-sm font-semibold', col.color)}>{col.label}</p>
-              <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-semibold text-muted-foreground">
-                {colTasks.length}
-              </span>
-            </div>
-            <div className="space-y-2 min-h-[100px]">
-              {colTasks.length === 0 && (
-                <div className="rounded-xl border-2 border-dashed border-border p-6 text-center text-xs text-muted-foreground">
-                  No tasks
+    <>
+      <DragDropContext onDragEnd={onDragEnd}>
+        <div className="grid grid-cols-3 gap-4">
+          {COLUMNS.map((col) => {
+            const colTasks = tasks.filter((t) => t.status === col.status)
+            return (
+              <div key={col.status} className="flex flex-col gap-3">
+                <div className="flex items-center gap-2 px-1">
+                  <p className={cn('text-sm font-semibold', col.headerClass)}>{col.label}</p>
+                  <span
+                    className={cn(
+                      'rounded-full px-2 py-0.5 text-[11px] font-bold',
+                      col.badgeClass
+                    )}
+                  >
+                    {colTasks.length}
+                  </span>
                 </div>
-              )}
-              {colTasks.map((task) => (
-                <TaskCard key={task.id} task={task} onEdit={() => onEdit(task)} />
-              ))}
-            </div>
-          </div>
-        )
-      })}
-    </div>
+
+                <Droppable droppableId={col.status}>
+                  {(provided, snapshot) => (
+                    <div
+                      ref={provided.innerRef}
+                      {...provided.droppableProps}
+                      className={cn(
+                        'rounded-xl p-2.5 space-y-2 min-h-[200px] transition-colors',
+                        snapshot.isDraggingOver ? 'bg-[#FDF3D8]' : 'bg-[#F9FAFB]'
+                      )}
+                    >
+                      {colTasks.length === 0 && !snapshot.isDraggingOver && (
+                        <div className="flex items-center justify-center rounded-lg border-2 border-dashed border-gray-200 p-6 text-center text-xs text-muted-foreground min-h-[120px]">
+                          No tasks
+                        </div>
+                      )}
+                      {colTasks.map((task, index) => (
+                        <Draggable key={task.id} draggableId={task.id} index={index}>
+                          {(provided) => (
+                            <TaskCard
+                              task={task}
+                              onOpenDetail={() => setDetailTask(task)}
+                              dragHandleProps={provided.dragHandleProps ?? null}
+                              draggableProps={provided.draggableProps}
+                              innerRef={provided.innerRef}
+                            />
+                          )}
+                        </Draggable>
+                      ))}
+                      {provided.placeholder}
+                    </div>
+                  )}
+                </Droppable>
+              </div>
+            )
+          })}
+        </div>
+      </DragDropContext>
+
+      <TaskDetailSheet
+        task={detailTask}
+        onClose={() => setDetailTask(null)}
+        onEdit={(task) => {
+          setDetailTask(null)
+          onEdit(task)
+        }}
+      />
+    </>
   )
 }
