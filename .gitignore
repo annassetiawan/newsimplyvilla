@@ -1,1 +1,2 @@
 .env.local\n.env\nnode_modules\n.next
+node_modules
