@@ -1,0 +1,129 @@
+'use client'
+
+import { useState } from 'react'
+import { LayoutGrid, List, CalendarDays, Plus, Filter } from 'lucide-react'
+import { cn } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
+import { BoardView } from './board-view'
+import { ListView } from './list-view'
+import { CalendarView } from './calendar-view'
+import { TaskModal } from './task-modal'
+import type { TaskFormData } from './task-modal'
+
+export interface TaskData {
+  id: string
+  title: string
+  type: string
+  location: string
+  priority: string
+  status: string
+  assignedTo: string | null
+  dueDate: string | null
+}
+
+interface StaffOption {
+  id: string
+  name: string
+}
+
+interface Props {
+  tasks: TaskData[]
+  staffOptions: StaffOption[]
+  locationOptions: string[]
+}
+
+const VIEWS = [
+  { id: 'board', label: 'Board', icon: LayoutGrid },
+  { id: 'list', label: 'List', icon: List },
+  { id: 'calendar', label: 'Calendar', icon: CalendarDays },
+] as const
+
+type ViewId = (typeof VIEWS)[number]['id']
+
+function toFormData(task: TaskData): TaskFormData {
+  return {
+    id: task.id,
+    title: task.title,
+    type: task.type as TaskFormData['type'],
+    location: task.location,
+    priority: task.priority as TaskFormData['priority'],
+    assignedTo: task.assignedTo ?? undefined,
+    dueDate: task.dueDate ?? undefined,
+  }
+}
+
+export function MaintenanceClient({ tasks, staffOptions, locationOptions }: Props) {
+  const [view, setView] = useState<ViewId>('board')
+  const [modalOpen, setModalOpen] = useState(false)
+  const [editTask, setEditTask] = useState<TaskFormData | null>(null)
+
+  const openTasks = tasks.filter((t) => t.status !== 'DONE')
+
+  function handleEdit(task: TaskData) {
+    setEditTask(toFormData(task))
+    setModalOpen(true)
+  }
+
+  function handleNew() {
+    setEditTask(null)
+    setModalOpen(true)
+  }
+
+  function handleClose() {
+    setModalOpen(false)
+    setEditTask(null)
+  }
+
+  const staffNames = staffOptions.map((s) => s.name)
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <div className="inline-flex h-9 items-center justify-center rounded-lg bg-muted p-1 text-muted-foreground">
+            {VIEWS.map(({ id, label, icon: Icon }) => (
+              <button
+                key={id}
+                onClick={() => setView(id)}
+                className={cn(
+                  'inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-md px-3 py-1 text-sm font-medium transition-all',
+                  view === id ? 'bg-background text-foreground shadow' : 'hover:text-foreground'
+                )}
+              >
+                <Icon className="h-3.5 w-3.5" />
+                {label}
+              </button>
+            ))}
+          </div>
+          <p className="text-sm text-muted-foreground">
+            {openTasks.length} open task{openTasks.length !== 1 ? 's' : ''}
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" className="gap-1.5">
+            <Filter className="h-3.5 w-3.5" />
+            Filter
+          </Button>
+          <Button size="sm" className="gap-1.5" onClick={handleNew}>
+            <Plus className="h-3.5 w-3.5" />
+            New task
+          </Button>
+        </div>
+      </div>
+
+      {view === 'board' && <BoardView tasks={tasks} onEdit={handleEdit} />}
+      {view === 'list' && (
+        <ListView tasks={tasks} staffNames={staffNames} onEdit={handleEdit} />
+      )}
+      {view === 'calendar' && <CalendarView tasks={tasks} onEdit={handleEdit} />}
+
+      <TaskModal
+        open={modalOpen}
+        onClose={handleClose}
+        initial={editTask}
+        locationOptions={locationOptions}
+        staffOptions={staffOptions}
+      />
+    </div>
+  )
+}

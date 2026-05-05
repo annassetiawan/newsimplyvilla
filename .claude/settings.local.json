@@ -18,7 +18,8 @@
       "PowerShell(Stop-Process -Force)",
       "Bash(npm run *)",
       "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3001/front-desk)",
-      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3001/rooms)"
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3001/rooms)",
+      "Bash(npx next *)"
     ]
   },
   "enableAllProjectMcpServers": true,
