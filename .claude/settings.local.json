@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install *)",
+      "PowerShell($timeout = 240; $elapsed = 0; while \\(-not \\(Test-Path \"d:\\\\Claude\\\\newsimplyvilla\\\\newsimplyvilla\\\\node_modules\\\\next\"\\) -and $elapsed -lt $timeout\\) { Start-Sleep -Seconds 5; $elapsed += 5; Write-Host \"Waiting... $elapsed`s\" }; if \\(Test-Path \"d:\\\\Claude\\\\newsimplyvilla\\\\newsimplyvilla\\\\node_modules\\\\next\"\\) { \"✅ Installed!\" } else { \"❌ Timed out\" })",
+      "PowerShell($timeout = 300; $elapsed = 0; while \\(-not \\(Test-Path \"d:\\\\Claude\\\\newsimplyvilla\\\\newsimplyvilla\\\\node_modules\\\\next\"\\) -and $elapsed -lt $timeout\\) { Start-Sleep -Seconds 10; $elapsed += 10; $content = Get-Content \"C:\\\\Users\\\\setia\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\d--Claude-newsimplyvilla-newsimplyvilla\\\\d6742662-3058-4b9c-b1de-b719f9f1e7aa\\\\tasks\\\\bdsqyq6u1.output\" -ErrorAction SilentlyContinue -Tail 3; Write-Host \"$elapsed`s: $content\" }; if \\(Test-Path \"d:\\\\Claude\\\\newsimplyvilla\\\\newsimplyvilla\\\\node_modules\\\\next\"\\) { \"✅ node_modules ready!\" } else { \"Checking status...\" })",
+      "mcp__supabase__get_project_url",
+      "mcp__supabase__get_publishable_keys",
+      "mcp__supabase__execute_sql",
+      "mcp__supabase__apply_migration"
+    ]
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "supabase"
+  ]
+}

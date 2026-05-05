@@ -1,0 +1,246 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Villa {
+  id           String         @id @default(cuid())
+  name         String
+  address      String
+  description  String?
+  contact      String?
+  updatedAt    DateTime       @updatedAt
+  rooms        Room[]
+  areas        Area[]
+  staff        Staff[]
+  tasks        Task[]
+  inventory    InventoryItem[]
+  sops         SOP[]
+  transactions Transaction[]
+  lostAndFound LostAndFound[]
+}
+
+enum RoomStatus {
+  AVAILABLE
+  OCCUPIED
+  CLEANING
+  MAINTENANCE
+}
+
+model Room {
+  id            String        @id @default(cuid())
+  code          String
+  name          String
+  type          String
+  capacity      Int
+  pricePerNight Float
+  status        RoomStatus    @default(AVAILABLE)
+  photos        String[]
+  villaId       String
+  villa         Villa         @relation(fields: [villaId], references: [id])
+  reservations  Reservation[]
+}
+
+model Area {
+  id          String  @id @default(cuid())
+  name        String
+  description String?
+  villaId     String
+  villa       Villa   @relation(fields: [villaId], references: [id])
+}
+
+model Guest {
+  id           String        @id @default(cuid())
+  name         String
+  idNumber     String?
+  phone        String?
+  email        String?
+  notes        String?
+  createdAt    DateTime      @default(now())
+  reservations Reservation[]
+}
+
+enum ReservationStatus {
+  CONFIRMED
+  PENDING
+  CHECKEDIN
+  CHECKEDOUT
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PAID
+  UNPAID
+}
+
+model Reservation {
+  id            String            @id @default(cuid())
+  guestId       String
+  roomId        String
+  checkIn       DateTime
+  checkOut      DateTime
+  status        ReservationStatus @default(PENDING)
+  paymentStatus PaymentStatus     @default(UNPAID)
+  totalAmount   Float
+  createdAt     DateTime          @default(now())
+  guest         Guest             @relation(fields: [guestId], references: [id])
+  room          Room              @relation(fields: [roomId], references: [id])
+  transactions  Transaction[]
+}
+
+enum ItemCategory {
+  LINEN
+  AMENITY
+  FNB
+  MAINTENANCE
+}
+
+model InventoryItem {
+  id        String          @id @default(cuid())
+  sku       String
+  name      String
+  category  ItemCategory
+  onHand    Int
+  minLevel  Int
+  unit      String
+  villaId   String
+  villa     Villa           @relation(fields: [villaId], references: [id])
+  movements StockMovement[]
+}
+
+enum MovementType {
+  IN
+  OUT
+}
+
+model StockMovement {
+  id       String        @id @default(cuid())
+  itemId   String
+  type     MovementType
+  quantity Int
+  date     DateTime      @default(now())
+  note     String?
+  item     InventoryItem @relation(fields: [itemId], references: [id])
+}
+
+enum TaskType {
+  MAINTENANCE
+  CLEANING
+}
+
+enum TaskPriority {
+  HIGH
+  MED
+  LOW
+}
+
+enum TaskStatus {
+  PENDING
+  IN_PROGRESS
+  DONE
+}
+
+model Task {
+  id         String       @id @default(cuid())
+  title      String
+  type       TaskType
+  location   String
+  priority   TaskPriority
+  status     TaskStatus   @default(PENDING)
+  assignedTo String?
+  dueDate    DateTime?
+  proofPhoto String?
+  villaId    String
+  villa      Villa        @relation(fields: [villaId], references: [id])
+}
+
+enum StaffRole {
+  OWNER
+  STAFF
+}
+
+model Staff {
+  id       String    @id @default(cuid())
+  name     String
+  role     StaffRole
+  position String
+  email    String?
+  isActive Boolean   @default(true)
+  villaId  String
+  villa    Villa     @relation(fields: [villaId], references: [id])
+  shifts   Shift[]
+}
+
+enum ShiftType {
+  MORNING
+  AFTERNOON
+  NIGHT
+  OFF
+}
+
+model Shift {
+  id        String    @id @default(cuid())
+  staffId   String
+  date      DateTime
+  shiftType ShiftType
+  staff     Staff     @relation(fields: [staffId], references: [id])
+}
+
+enum TransactionType {
+  INCOME
+  EXPENSE
+}
+
+model Transaction {
+  id            String          @id @default(cuid())
+  date          DateTime
+  type          TransactionType
+  description   String
+  amount        Float
+  category      String
+  paymentStatus PaymentStatus
+  reservationId String?
+  villaId       String
+  villa         Villa           @relation(fields: [villaId], references: [id])
+  reservation   Reservation?    @relation(fields: [reservationId], references: [id])
+}
+
+enum SOPCategory {
+  FRONT_DESK
+  HOUSEKEEPING
+  MAINTENANCE
+  INVENTORY
+  SAFETY
+}
+
+model SOP {
+  id               String      @id @default(cuid())
+  title            String
+  category         SOPCategory
+  steps            Json
+  estimatedMinutes Int
+  villaId          String
+  villa            Villa       @relation(fields: [villaId], references: [id])
+  updatedAt        DateTime    @updatedAt
+}
+
+enum LostAndFoundStatus {
+  FOUND
+  CLAIMED
+}
+
+model LostAndFound {
+  id          String             @id @default(cuid())
+  item        String
+  description String?
+  location    String
+  foundDate   DateTime
+  status      LostAndFoundStatus @default(FOUND)
+  villaId     String
+  villa       Villa              @relation(fields: [villaId], references: [id])
+}

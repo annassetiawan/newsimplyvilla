@@ -1,0 +1,192 @@
+'use client'
+
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
+import {
+  LayoutDashboard,
+  ConciergeBell,
+  BedDouble,
+  Package,
+  Wrench,
+  Calendar,
+  BarChart3,
+  BookOpen,
+  Users,
+  Settings,
+  ChevronLeft,
+  ChevronRight,
+  Building2,
+  LogOut,
+} from 'lucide-react'
+import { cn } from '@/lib/utils'
+import { useSidebar } from '@/store/sidebar-store'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+
+const navGroups = [
+  {
+    label: 'OVERVIEW',
+    items: [{ label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard }],
+  },
+  {
+    label: 'OPERATIONS',
+    items: [
+      { label: 'Front Desk', href: '/front-desk', icon: ConciergeBell },
+      { label: 'Rooms & Areas', href: '/rooms', icon: BedDouble },
+      { label: 'Inventory', href: '/inventory', icon: Package },
+      { label: 'Maintenance', href: '/maintenance', icon: Wrench },
+      { label: 'Schedule', href: '/schedule', icon: Calendar },
+    ],
+  },
+  {
+    label: 'INSIGHTS',
+    items: [
+      { label: 'Reports', href: '/reports', icon: BarChart3 },
+      { label: 'SOP', href: '/sop', icon: BookOpen },
+    ],
+  },
+  {
+    label: 'SYSTEM',
+    items: [
+      { label: 'Users', href: '/users', icon: Users },
+      { label: 'Settings', href: '/settings', icon: Settings },
+    ],
+  },
+]
+
+export function Sidebar() {
+  const { collapsed, toggle } = useSidebar()
+  const pathname = usePathname()
+
+  return (
+    <TooltipProvider delayDuration={0}>
+      <aside
+        className={cn(
+          'fixed left-0 top-0 z-40 flex h-full flex-col border-r border-border bg-background transition-all duration-300 ease-in-out',
+          collapsed ? 'w-[64px]' : 'w-[240px]'
+        )}
+      >
+        {/* Logo + toggle */}
+        <div className="flex h-14 shrink-0 items-center border-b border-border px-3">
+          <div className="flex min-w-0 flex-1 items-center gap-2.5">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary">
+              <Building2 className="h-4 w-4 text-white" />
+            </div>
+            {!collapsed && (
+              <div className="min-w-0">
+                <p className="truncate text-sm font-bold leading-tight">SimplyVilla</p>
+                <p className="truncate text-[11px] text-muted-foreground">Villa Senja Ubud</p>
+              </div>
+            )}
+          </div>
+          <button
+            onClick={toggle}
+            className="ml-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          >
+            {collapsed ? (
+              <ChevronRight className="h-3.5 w-3.5" />
+            ) : (
+              <ChevronLeft className="h-3.5 w-3.5" />
+            )}
+          </button>
+        </div>
+
+        {/* Navigation */}
+        <nav className="flex-1 overflow-y-auto py-3">
+          {navGroups.map((group, groupIdx) => (
+            <div key={group.label} className={cn(groupIdx > 0 && 'mt-4')}>
+              {!collapsed && (
+                <p className="mb-1 px-4 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">
+                  {group.label}
+                </p>
+              )}
+              {collapsed && groupIdx > 0 && (
+                <div className="mx-3 mb-3 mt-1 h-px bg-border" />
+              )}
+              <div className="space-y-0.5 px-2">
+                {group.items.map((item) => {
+                  const isActive =
+                    pathname === item.href || pathname.startsWith(item.href + '/')
+                  const Icon = item.icon
+
+                  return (
+                    <Tooltip key={item.href}>
+                      <TooltipTrigger asChild>
+                        <Link
+                          href={item.href}
+                          className={cn(
+                            'flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-medium transition-colors',
+                            isActive
+                              ? 'bg-primary text-white'
+                              : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+                            collapsed && 'justify-center px-2'
+                          )}
+                        >
+                          <Icon className="h-4 w-4 shrink-0" />
+                          {!collapsed && <span className="truncate">{item.label}</span>}
+                        </Link>
+                      </TooltipTrigger>
+                      {collapsed && (
+                        <TooltipContent side="right" className="font-medium">
+                          {item.label}
+                        </TooltipContent>
+                      )}
+                    </Tooltip>
+                  )
+                })}
+              </div>
+            </div>
+          ))}
+        </nav>
+
+        {/* User area */}
+        <div className="shrink-0 border-t border-border p-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                className={cn(
+                  'flex w-full items-center gap-2.5 rounded-lg px-2 py-2 text-left transition-colors hover:bg-muted',
+                  collapsed && 'justify-center px-2'
+                )}
+              >
+                <Avatar className="h-7 w-7 shrink-0">
+                  <AvatarImage src="" alt="User" />
+                  <AvatarFallback className="bg-primary/10 text-[11px] font-semibold text-primary">
+                    A
+                  </AvatarFallback>
+                </Avatar>
+                {!collapsed && (
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium leading-tight">Admin</p>
+                    <p className="truncate text-[11px] text-muted-foreground">
+                      admin@villa.com
+                    </p>
+                  </div>
+                )}
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent side="top" align="start" className="w-52">
+              <div className="px-2 py-1.5">
+                <p className="text-sm font-medium">Admin</p>
+                <p className="text-xs text-muted-foreground">admin@villa.com</p>
+              </div>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem className="text-destructive focus:text-destructive">
+                <LogOut className="h-4 w-4" />
+                Sign out
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </aside>
+    </TooltipProvider>
+  )
+}
