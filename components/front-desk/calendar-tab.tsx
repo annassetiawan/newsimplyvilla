@@ -5,7 +5,7 @@ import { ChevronLeft, ChevronRight, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
-const DAY_W = 56
+const DAYS = 14
 
 interface RoomRow {
   id: string
@@ -39,7 +39,7 @@ export function CalendarTab({ rooms, reservations, onNewReservation }: Props) {
   const todayBase = startOfDay(new Date())
   const [viewStart, setViewStart] = useState(todayBase)
 
-  const days = Array.from({ length: 14 }, (_, i) => {
+  const days = Array.from({ length: DAYS }, (_, i) => {
     const d = new Date(viewStart)
     d.setDate(viewStart.getDate() + i)
     return d
@@ -82,7 +82,11 @@ export function CalendarTab({ rooms, reservations, onNewReservation }: Props) {
       (resEnd.getTime() - resStart.getTime()) / 86400000
     )
 
-    return { left: leftDays * DAY_W + 2, width: widthDays * DAY_W - 4, nights: totalNights }
+    return {
+      left: `calc(${leftDays} / ${DAYS} * 100% + 2px)`,
+      width: `calc(${widthDays} / ${DAYS} * 100% - 4px)`,
+      nights: totalNights,
+    }
   }
 
   const isActive = (status: string) =>
@@ -118,42 +122,33 @@ export function CalendarTab({ rooms, reservations, onNewReservation }: Props) {
       </div>
 
       <div className="overflow-x-auto rounded-xl border border-border">
-        <div style={{ minWidth: 160 + 14 * DAY_W }}>
+        <div className="min-w-[640px]">
           {/* Header */}
           <div className="flex border-b border-border bg-muted/40">
             <div className="w-[160px] shrink-0 border-r border-border px-3 py-2.5 text-xs font-semibold text-muted-foreground">
               Room
             </div>
-            {days.map((day) => {
-              const isToday = day.toDateString() === todayBase.toDateString()
-              return (
-                <div
-                  key={day.toISOString()}
-                  style={{ width: DAY_W, minWidth: DAY_W }}
-                  className={cn(
-                    'shrink-0 border-r border-border px-1 py-2 text-center last:border-0',
-                    isToday ? 'bg-primary/10' : ''
-                  )}
-                >
-                  <p
+            <div className="flex flex-1">
+              {days.map((day) => {
+                const isToday = day.toDateString() === todayBase.toDateString()
+                return (
+                  <div
+                    key={day.toISOString()}
                     className={cn(
-                      'text-xs font-semibold',
-                      isToday ? 'text-primary' : 'text-foreground'
+                      'flex-1 border-r border-border px-1 py-2 text-center last:border-0',
+                      isToday ? 'bg-primary/10' : ''
                     )}
                   >
-                    {day.toLocaleDateString('en-GB', { day: 'numeric' })}
-                  </p>
-                  <p
-                    className={cn(
-                      'text-[10px]',
-                      isToday ? 'text-primary' : 'text-muted-foreground'
-                    )}
-                  >
-                    {day.toLocaleDateString('en-GB', { weekday: 'short' })}
-                  </p>
-                </div>
-              )
-            })}
+                    <p className={cn('text-xs font-semibold', isToday ? 'text-primary' : 'text-foreground')}>
+                      {day.toLocaleDateString('en-GB', { day: 'numeric' })}
+                    </p>
+                    <p className={cn('text-[10px]', isToday ? 'text-primary' : 'text-muted-foreground')}>
+                      {day.toLocaleDateString('en-GB', { weekday: 'short' })}
+                    </p>
+                  </div>
+                )
+              })}
+            </div>
           </div>
 
           {/* Room rows */}
@@ -170,15 +165,14 @@ export function CalendarTab({ rooms, reservations, onNewReservation }: Props) {
                   <p className="text-[11px] text-muted-foreground/60">{room.capacity} pax</p>
                 </div>
 
-                <div className="relative flex" style={{ height: 64 }}>
+                <div className="relative flex flex-1" style={{ height: 64 }}>
                   {days.map((day) => {
                     const isToday = day.toDateString() === todayBase.toDateString()
                     return (
                       <div
                         key={day.toISOString()}
-                        style={{ width: DAY_W, minWidth: DAY_W }}
                         className={cn(
-                          'h-full shrink-0 border-r border-border last:border-0',
+                          'h-full flex-1 border-r border-border last:border-0',
                           isToday && 'bg-primary/5'
                         )}
                       />
@@ -203,7 +197,7 @@ export function CalendarTab({ rooms, reservations, onNewReservation }: Props) {
                       >
                         <span className="truncate text-[11px] font-semibold">
                           {res.guest.name}
-                          {block.width > 90 && (
+                          {block.nights > 1 && (
                             <span className="ml-1 opacity-70">· {block.nights}n</span>
                           )}
                         </span>

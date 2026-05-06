@@ -153,7 +153,7 @@ export function Sidebar() {
                           className={cn(
                             'flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-medium transition-colors',
                             isActive
-                              ? 'bg-primary text-white'
+                              ? 'bg-primary/15 text-primary'
                               : 'text-muted-foreground hover:bg-muted hover:text-foreground',
                             collapsed && 'justify-center px-2'
                           )}
@@ -199,7 +199,7 @@ export function Sidebar() {
                           className={cn(
                             'flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-medium transition-colors',
                             isActive
-                              ? 'bg-primary text-white'
+                              ? 'bg-primary/15 text-primary'
                               : 'text-muted-foreground hover:bg-muted hover:text-foreground',
                             collapsed && 'justify-center px-2'
                           )}
