@@ -19,31 +19,31 @@ const COLUMNS = [
     status: 'PENDING',
     label: 'Pending',
     badgeClass: 'bg-[#E1A62F] text-white',
-    headerClass: 'text-amber-700',
+    headerClass: 'text-amber-700 dark:text-amber-400',
   },
   {
     status: 'IN_PROGRESS',
     label: 'In Progress',
     badgeClass: 'bg-blue-500 text-white',
-    headerClass: 'text-blue-700',
+    headerClass: 'text-blue-700 dark:text-blue-400',
   },
   {
     status: 'DONE',
     label: 'Done',
     badgeClass: 'bg-green-500 text-white',
-    headerClass: 'text-green-700',
+    headerClass: 'text-green-700 dark:text-green-400',
   },
 ] as const
 
 const TYPE_STYLE: Record<string, string> = {
-  MAINTENANCE: 'bg-gray-100 text-gray-600',
-  CLEANING: 'bg-teal-100 text-teal-700',
+  MAINTENANCE: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300',
+  CLEANING: 'bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-300',
 }
 
 const PRIORITY_STYLE: Record<string, string> = {
-  HIGH: 'bg-red-100 text-red-700',
-  MED: 'bg-amber-100 text-amber-700',
-  LOW: 'bg-gray-100 text-gray-500',
+  HIGH: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300',
+  MED: 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300',
+  LOW: 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400',
 }
 
 const STATUS_LABEL: Record<string, string> = {
@@ -117,10 +117,10 @@ function TaskDetailSheet({
                 className={cn(
                   'rounded-full px-2 py-0.5 text-[11px] font-semibold',
                   task.status === 'PENDING'
-                    ? 'bg-gray-100 text-gray-600'
+                    ? 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300'
                     : task.status === 'IN_PROGRESS'
-                    ? 'bg-blue-100 text-blue-700'
-                    : 'bg-green-100 text-green-700'
+                    ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300'
+                    : 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300'
                 )}
               >
                 {STATUS_LABEL[task.status]}
@@ -205,7 +205,7 @@ function TaskCard({
       {...(dragHandleProps ?? {})}
       onClick={onOpenDetail}
       className={cn(
-        'bg-white rounded-lg border border-border shadow-sm p-3.5 space-y-2.5 cursor-pointer',
+        'bg-card rounded-lg border border-border shadow-sm p-3.5 space-y-2.5 cursor-pointer',
         'transition-colors hover:border-[#E1A62F]',
         isDone && 'opacity-70'
       )}
@@ -298,11 +298,13 @@ export function BoardView({ tasks, onEdit }: Props) {
                       {...provided.droppableProps}
                       className={cn(
                         'rounded-xl p-2.5 space-y-2 min-h-[200px] transition-colors',
-                        snapshot.isDraggingOver ? 'bg-[#FDF3D8]' : 'bg-[#F9FAFB]'
+                        snapshot.isDraggingOver
+                          ? 'bg-amber-50 dark:bg-amber-950/20'
+                          : 'bg-muted/50 dark:bg-muted/30'
                       )}
                     >
                       {colTasks.length === 0 && !snapshot.isDraggingOver && (
-                        <div className="flex items-center justify-center rounded-lg border-2 border-dashed border-gray-200 p-6 text-center text-xs text-muted-foreground min-h-[120px]">
+                        <div className="flex items-center justify-center rounded-lg border-2 border-dashed border-border p-6 text-center text-xs text-muted-foreground min-h-[120px]">
                           No tasks
                         </div>
                       )}
