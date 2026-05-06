@@ -157,7 +157,7 @@ export function SOPModal({ open, onClose, initial }: Props) {
             <div className="space-y-2">
               {fields.map((field, index) => (
                 <div key={field.id} className="flex items-start gap-2">
-                  <div className="mt-2.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[11px] font-bold text-primary">
+                  <div className="mt-2.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-foreground text-[11px] font-bold text-background">
                     {index + 1}
                   </div>
                   <Textarea

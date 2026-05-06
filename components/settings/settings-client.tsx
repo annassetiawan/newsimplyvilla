@@ -150,7 +150,7 @@ export function SettingsClient({ profile }: Props) {
               className={cn(
                 'flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
                 tab === id
-                  ? 'bg-primary/10 text-primary'
+                  ? 'bg-muted text-foreground'
                   : 'text-muted-foreground hover:text-foreground'
               )}
             >
@@ -247,7 +247,7 @@ export function SettingsClient({ profile }: Props) {
                       className={cn(
                         'rounded-lg border px-4 py-2 text-sm font-medium transition-colors',
                         prefs.language === v
-                          ? 'border-primary bg-primary/10 text-primary'
+                          ? 'border-border bg-muted text-foreground'
                           : 'border-border text-muted-foreground hover:text-foreground'
                       )}
                     >
@@ -284,7 +284,7 @@ export function SettingsClient({ profile }: Props) {
                       className={cn(
                         'rounded-lg border px-4 py-2 text-sm font-medium transition-colors',
                         prefs.dateFormat === f
-                          ? 'border-primary bg-primary/10 text-primary'
+                          ? 'border-border bg-muted text-foreground'
                           : 'border-border text-muted-foreground hover:text-foreground'
                       )}
                     >
@@ -304,7 +304,7 @@ export function SettingsClient({ profile }: Props) {
                       className={cn(
                         'rounded-lg border px-4 py-2 text-sm font-medium transition-colors',
                         prefs.theme === t.toLowerCase()
-                          ? 'border-primary bg-primary/10 text-primary'
+                          ? 'border-border bg-muted text-foreground'
                           : 'border-border text-muted-foreground hover:text-foreground'
                       )}
                     >

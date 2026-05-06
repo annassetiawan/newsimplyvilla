@@ -25,6 +25,7 @@ import {
   GitBranch,
   TrendingUp,
   Crown,
+  MoreHorizontal,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useSidebar } from '@/store/sidebar-store'
@@ -101,9 +102,22 @@ export function Sidebar() {
           collapsed ? 'w-[64px]' : 'w-[240px]'
         )}
       >
-        {/* Logo + toggle */}
+        {/* Collapse toggle — floats on the right border */}
+        <button
+          onClick={toggle}
+          className="absolute -right-3 top-5 z-50 flex h-6 w-6 items-center justify-center rounded-full border border-border bg-background text-muted-foreground shadow-sm transition-colors hover:bg-muted hover:text-foreground"
+          aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+        >
+          {collapsed ? (
+            <ChevronRight className="h-3 w-3" />
+          ) : (
+            <ChevronLeft className="h-3 w-3" />
+          )}
+        </button>
+
+        {/* Logo */}
         <div className="flex h-14 shrink-0 items-center border-b border-border px-3">
-          <div className="flex min-w-0 flex-1 items-center gap-2.5">
+          <div className={cn('flex min-w-0 items-center gap-2.5', collapsed && 'w-full justify-center')}>
             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary">
               <Building2 className="h-4 w-4 text-white" />
             </div>
@@ -114,17 +128,6 @@ export function Sidebar() {
               </div>
             )}
           </div>
-          <button
-            onClick={toggle}
-            className="ml-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-            aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-          >
-            {collapsed ? (
-              <ChevronRight className="h-3.5 w-3.5" />
-            ) : (
-              <ChevronLeft className="h-3.5 w-3.5" />
-            )}
-          </button>
         </div>
 
         {/* Navigation */}
@@ -153,7 +156,7 @@ export function Sidebar() {
                           className={cn(
                             'flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-medium transition-colors',
                             isActive
-                              ? 'bg-primary/15 text-primary'
+                              ? 'bg-muted text-foreground'
                               : 'text-muted-foreground hover:bg-muted hover:text-foreground',
                             collapsed && 'justify-center px-2'
                           )}
@@ -199,7 +202,7 @@ export function Sidebar() {
                           className={cn(
                             'flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-medium transition-colors',
                             isActive
-                              ? 'bg-primary/15 text-primary'
+                              ? 'bg-muted text-foreground'
                               : 'text-muted-foreground hover:bg-muted hover:text-foreground',
                             collapsed && 'justify-center px-2'
                           )}
@@ -261,34 +264,37 @@ export function Sidebar() {
         {/* Upgrade banner — only when not Pro */}
         {!isPro && (
           <div className="shrink-0 px-2 pb-2">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Link
-                  href="/pricing"
-                  className={cn(
-                    'flex items-center gap-2.5 rounded-lg border-l-2 border-[#E1A62F] bg-[#E1A62F0D] px-2.5 py-2.5 transition-colors hover:bg-[#E1A62F1A]',
-                    collapsed && 'justify-center border-l-0 border border-[#E1A62F33]'
-                  )}
-                >
-                  <Crown className="h-4 w-4 shrink-0 text-[#E1A62F]" />
-                  {!collapsed && (
-                    <div className="min-w-0">
-                      <p className="text-[13px] font-medium leading-tight text-foreground">
-                        Upgrade ke Pro
-                      </p>
-                      <p className="text-[11px] text-muted-foreground">
-                        Unlock 6 fitur eksklusif
-                      </p>
-                    </div>
-                  )}
-                </Link>
-              </TooltipTrigger>
-              {collapsed && (
+            {collapsed ? (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Link
+                    href="/pricing"
+                    className="flex h-9 w-full items-center justify-center rounded-lg border border-[#E1A62F33] bg-[#E1A62F0D] text-[#E1A62F] transition-colors hover:bg-[#E1A62F1A]"
+                  >
+                    <Crown className="h-4 w-4 shrink-0" />
+                  </Link>
+                </TooltipTrigger>
                 <TooltipContent side="right" className="font-medium">
                   Upgrade ke Pro
                 </TooltipContent>
-              )}
-            </Tooltip>
+              </Tooltip>
+            ) : (
+              <div className="flex items-center gap-2.5 rounded-lg bg-[#E1A62F0D] px-3 py-2.5">
+                <Crown className="h-4 w-4 shrink-0 text-[#E1A62F]" />
+                <div className="min-w-0 flex-1">
+                  <p className="text-[13px] font-semibold leading-tight text-foreground">
+                    Upgrade ke Pro
+                  </p>
+                  <p className="text-[11px] text-muted-foreground">Unlock 6 fitur eksklusif</p>
+                </div>
+                <Link
+                  href="/pricing"
+                  className="shrink-0 rounded-md border border-[#E1A62F] px-2.5 py-1 text-[11px] font-semibold text-[#E1A62F] transition-colors hover:bg-[#E1A62F] hover:text-white"
+                >
+                  Upgrade
+                </Link>
+              </div>
+            )}
           </div>
         )}
 
@@ -304,17 +310,20 @@ export function Sidebar() {
               >
                 <Avatar className="h-7 w-7 shrink-0">
                   <AvatarImage src="" alt="User" />
-                  <AvatarFallback className="bg-primary/10 text-[11px] font-semibold text-primary">
+                  <AvatarFallback className="bg-foreground text-[11px] font-semibold text-background">
                     A
                   </AvatarFallback>
                 </Avatar>
                 {!collapsed && (
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium leading-tight">Admin</p>
-                    <p className="truncate text-[11px] text-muted-foreground">
-                      admin@villa.com
-                    </p>
-                  </div>
+                  <>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium leading-tight">Admin</p>
+                      <p className="truncate text-[11px] text-muted-foreground">
+                        admin@villa.com
+                      </p>
+                    </div>
+                    <MoreHorizontal className="h-4 w-4 shrink-0 text-muted-foreground" />
+                  </>
                 )}
               </button>
             </DropdownMenuTrigger>

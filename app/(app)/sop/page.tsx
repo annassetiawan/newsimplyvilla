@@ -20,15 +20,5 @@ export default async function SopPage() {
     updatedAt: s.updatedAt.toISOString(),
   }))
 
-  return (
-    <div className="space-y-5">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">SOP</h1>
-        <p className="mt-0.5 text-sm text-muted-foreground">
-          Standard operating procedures for all villa departments.
-        </p>
-      </div>
-      <SOPClient sops={sops} />
-    </div>
-  )
+  return <SOPClient sops={sops} />
 }

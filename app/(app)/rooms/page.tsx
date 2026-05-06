@@ -73,15 +73,5 @@ export default async function RoomsPage() {
     description: a.description,
   }))
 
-  return (
-    <div className="space-y-5">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Rooms &amp; Areas</h1>
-        <p className="mt-0.5 text-sm text-muted-foreground">
-          View and manage room status, details, and shared villa areas.
-        </p>
-      </div>
-      <RoomsClient rooms={serializedRooms} areas={serializedAreas} />
-    </div>
-  )
+  return <RoomsClient rooms={serializedRooms} areas={serializedAreas} />
 }

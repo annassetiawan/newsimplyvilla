@@ -1,18 +1,17 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useTransition } from 'react'
 import {
   Eye,
   Pencil,
   Plus,
   Search,
-  LayoutGrid,
-  List,
   Waves,
   Leaf,
   ConciergeBell,
   WashingMachine,
   Building2,
+  Images,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -28,23 +27,22 @@ import {
 import { Label } from '@/components/ui/label'
 import { RoomModal, type RoomFormData } from './room-modal'
 import { createArea } from '@/app/actions/rooms'
-import { useTransition } from 'react'
 
 const STATUS_STYLE = {
-  OCCUPIED: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
-  AVAILABLE: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
+  OCCUPIED: 'bg-green-500 text-white',
+  AVAILABLE: 'bg-background text-muted-foreground border border-border',
   CLEANING: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
-  MAINTENANCE: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+  MAINTENANCE: 'bg-red-500 text-white',
 } as const
 
 const STATUS_LABEL = {
   OCCUPIED: 'Occupied',
   AVAILABLE: 'Available',
   CLEANING: 'Cleaning',
-  MAINTENANCE: 'Maint.',
+  MAINTENANCE: 'Maintenance',
 } as const
 
-const FILTER_TABS = ['All', 'Available', 'Occupied', 'Cleaning', 'Areas'] as const
+const FILTER_TABS = ['All rooms', 'Available', 'Occupied', 'Cleaning', 'Areas'] as const
 type FilterTab = (typeof FILTER_TABS)[number]
 
 function fmtRp(n: number) {
@@ -94,9 +92,8 @@ interface Props {
 }
 
 export function RoomsClient({ rooms, areas }: Props) {
-  const [tab, setTab] = useState<FilterTab>('All')
+  const [tab, setTab] = useState<FilterTab>('All rooms')
   const [search, setSearch] = useState('')
-  const [view, setView] = useState<'grid' | 'list'>('grid')
   const [selectedRoom, setSelectedRoom] = useState<RoomWithReservation | null>(null)
   const [editRoom, setEditRoom] = useState<RoomFormData | null>(null)
   const [roomModalOpen, setRoomModalOpen] = useState(false)
@@ -110,7 +107,7 @@ export function RoomsClient({ rooms, areas }: Props) {
       r.name.toLowerCase().includes(search.toLowerCase()) ||
       r.code.toLowerCase().includes(search.toLowerCase())
     const matchTab =
-      tab === 'All' ||
+      tab === 'All rooms' ||
       tab === 'Areas' ||
       r.status.toLowerCase() === tab.toLowerCase()
     return matchSearch && matchTab
@@ -146,140 +143,86 @@ export function RoomsClient({ rooms, areas }: Props) {
 
   return (
     <div className="space-y-6">
-      {/* Rooms section */}
-      <div className="space-y-4">
-        {/* Filter tabs + controls */}
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="inline-flex h-9 items-center justify-center rounded-lg bg-muted p-1 text-muted-foreground">
-            {FILTER_TABS.map((t) => (
-              <button
-                key={t}
-                onClick={() => setTab(t)}
-                className={cn(
-                  'inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1 text-sm font-medium transition-all',
-                  tab === t
-                    ? 'bg-background text-foreground shadow'
-                    : 'hover:text-foreground'
-                )}
-              >
-                {t}
-              </button>
-            ))}
-          </div>
-
-          <div className="relative">
-            <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              placeholder="Search rooms..."
-              className="h-8 w-48 pl-8 text-sm"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </div>
-
-          <div className="ml-auto flex items-center gap-2">
-            <div className="flex rounded-lg border border-border">
-              <button
-                onClick={() => setView('grid')}
-                className={cn(
-                  'rounded-l-lg p-2 transition-colors',
-                  view === 'grid' ? 'bg-muted' : 'hover:bg-muted/50'
-                )}
-              >
-                <LayoutGrid className="h-4 w-4" />
-              </button>
-              <button
-                onClick={() => setView('list')}
-                className={cn(
-                  'rounded-r-lg p-2 transition-colors',
-                  view === 'list' ? 'bg-muted' : 'hover:bg-muted/50'
-                )}
-              >
-                <List className="h-4 w-4" />
-              </button>
-            </div>
-            <Button
-              size="sm"
-              onClick={openAdd}
-              className="h-8 bg-primary text-white hover:bg-[#C8911A]"
-            >
-              <Plus className="mr-1.5 h-3.5 w-3.5" /> Add room
-            </Button>
-          </div>
+      {/* Page header */}
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Rooms &amp; Areas</h1>
+          <p className="mt-0.5 text-sm text-muted-foreground">
+            {rooms.length} rooms and {areas.length} shared areas at Villa Senja Ubud.
+          </p>
         </div>
-
-        {/* Room cards — only show when not on Areas tab */}
-        {tab !== 'Areas' && (
-          view === 'grid' ? (
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {filteredRooms.map((room) => (
-                <RoomCard
-                  key={room.id}
-                  room={room}
-                  onView={() => setSelectedRoom(room)}
-                  onEdit={() => openEdit(room)}
-                />
-              ))}
-              {filteredRooms.length === 0 && (
-                <p className="col-span-3 py-10 text-center text-sm text-muted-foreground">
-                  No rooms found
-                </p>
-              )}
-            </div>
-          ) : (
-            <div className="rounded-xl border border-border divide-y divide-border">
-              {filteredRooms.length === 0 && (
-                <p className="py-10 text-center text-sm text-muted-foreground">No rooms found</p>
-              )}
-              {filteredRooms.map((room) => (
-                <div
-                  key={room.id}
-                  className="flex items-center gap-4 px-4 py-3"
-                >
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="font-bold text-sm">{room.code}</span>
-                      <span
-                        className={cn(
-                          'rounded-full px-2 py-0.5 text-[11px] font-semibold',
-                          STATUS_STYLE[room.status]
-                        )}
-                      >
-                        {STATUS_LABEL[room.status]}
-                      </span>
-                    </div>
-                    <p className="text-sm text-muted-foreground truncate">{room.name} · {room.type} · {room.capacity} pax</p>
-                  </div>
-                  <p className="text-sm font-semibold text-primary shrink-0">{fmtRp(room.pricePerNight)}/night</p>
-                  <div className="flex items-center gap-1 shrink-0">
-                    <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => setSelectedRoom(room)}>
-                      <Eye className="h-3.5 w-3.5" />
-                    </Button>
-                    <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => openEdit(room)}>
-                      <Pencil className="h-3.5 w-3.5" />
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )
-        )}
+        <div className="flex items-center gap-2">
+          <button className="flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-1.5 text-sm font-medium text-foreground shadow-sm hover:bg-muted">
+            <Images className="h-3.5 w-3.5 text-muted-foreground" />
+            Gallery
+          </button>
+          <Button size="sm" onClick={openAdd} className="gap-1.5">
+            <Plus className="h-3.5 w-3.5" />
+            Add room
+          </Button>
+        </div>
       </div>
 
-      {/* Shared areas section */}
-      {(tab === 'All' || tab === 'Areas') && (
+      {/* Filter tabs + search */}
+      <div className="flex items-center justify-between gap-3">
+        <div className="inline-flex h-9 items-center rounded-lg border border-border bg-background p-1 text-muted-foreground">
+          {FILTER_TABS.map((t) => (
+            <button
+              key={t}
+              onClick={() => setTab(t)}
+              className={cn(
+                'inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1 text-sm font-medium transition-all',
+                tab === t
+                  ? 'bg-muted text-foreground shadow-sm'
+                  : 'hover:text-foreground'
+              )}
+            >
+              {t}
+            </button>
+          ))}
+        </div>
+
+        <div className="relative">
+          <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder="Filter rooms..."
+            className="h-9 w-52 pl-8 text-sm"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+      </div>
+
+      {/* Room cards */}
+      {tab !== 'Areas' && (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {filteredRooms.map((room) => (
+            <RoomCard
+              key={room.id}
+              room={room}
+              onView={() => setSelectedRoom(room)}
+              onEdit={() => openEdit(room)}
+            />
+          ))}
+          {filteredRooms.length === 0 && (
+            <p className="col-span-3 py-10 text-center text-sm text-muted-foreground">
+              No rooms found
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* Shared areas */}
+      {(tab === 'All rooms' || tab === 'Areas') && (
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-base font-semibold">Shared areas</h2>
-              <p className="text-sm text-muted-foreground">Common spaces available for all guests</p>
+              <p className="text-sm text-muted-foreground">
+                Common spaces and amenities across the property.
+              </p>
             </div>
-            <Button
-              size="sm"
-              variant="outline"
-              className="h-8"
-              onClick={() => setAreaModalOpen(true)}
-            >
+            <Button size="sm" variant="outline" onClick={() => setAreaModalOpen(true)}>
               <Plus className="mr-1.5 h-3.5 w-3.5" /> Add area
             </Button>
           </div>
@@ -291,8 +234,8 @@ export function RoomsClient({ rooms, areas }: Props) {
                   key={area.id}
                   className="rounded-xl border border-border bg-background p-4 flex flex-col gap-3"
                 >
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-                    <Icon className="h-5 w-5 text-primary" />
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-teal-50 dark:bg-teal-900/20">
+                    <Icon className="h-5 w-5 text-teal-600 dark:text-teal-400" />
                   </div>
                   <div>
                     <p className="font-semibold text-sm">{area.name}</p>
@@ -317,7 +260,12 @@ export function RoomsClient({ rooms, areas }: Props) {
       {/* Room detail sheet */}
       <Sheet open={!!selectedRoom} onOpenChange={() => setSelectedRoom(null)}>
         <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-md">
-          {selectedRoom && <RoomDetailSheet room={selectedRoom} onEdit={() => { setSelectedRoom(null); openEdit(selectedRoom) }} />}
+          {selectedRoom && (
+            <RoomDetailSheet
+              room={selectedRoom}
+              onEdit={() => { setSelectedRoom(null); openEdit(selectedRoom) }}
+            />
+          )}
         </SheetContent>
       </Sheet>
 
@@ -378,12 +326,14 @@ function RoomCard({
 }) {
   return (
     <div className="rounded-xl border border-border bg-background overflow-hidden">
-      {/* Photo placeholder */}
-      <div className="relative h-36 bg-muted/60 flex items-center justify-center">
-        <p className="text-sm font-semibold text-muted-foreground">{room.name}</p>
+      {/* Image placeholder */}
+      <div className="relative h-44 bg-muted/40 flex items-center justify-center">
+        <p className="text-xs font-semibold tracking-widest text-muted-foreground/60 uppercase select-none">
+          {room.name}
+        </p>
         <span
           className={cn(
-            'absolute top-2.5 right-2.5 rounded-full px-2.5 py-1 text-[11px] font-semibold',
+            'absolute top-3 right-3 rounded-full px-2.5 py-0.5 text-[11px] font-semibold',
             STATUS_STYLE[room.status]
           )}
         >
@@ -391,24 +341,33 @@ function RoomCard({
         </span>
       </div>
 
+      {/* Card body */}
       <div className="p-4">
-        <div className="flex items-start justify-between gap-2">
+        <p className="text-xs font-medium text-muted-foreground">{room.code}</p>
+        <p className="mt-0.5 text-sm font-bold leading-tight">{room.name}</p>
+        <p className="mt-1 text-xs text-muted-foreground">
+          {room.capacity} guests &middot; {room.type} &middot; 38 m²
+        </p>
+
+        <div className="mt-3 flex items-end justify-between">
           <div>
-            <p className="text-xs font-bold text-muted-foreground">{room.code}</p>
-            <p className="text-sm font-semibold leading-tight mt-0.5">{room.name}</p>
-            <p className="text-[11px] text-muted-foreground mt-0.5">
-              {room.type} · {room.capacity} pax
-            </p>
+            <p className="text-base font-bold">{fmtRp(room.pricePerNight)}</p>
+            <p className="text-[11px] text-muted-foreground">per night</p>
           </div>
-          <p className="text-sm font-bold text-primary shrink-0">{fmtRp(room.pricePerNight)}/night</p>
-        </div>
-        <div className="mt-3 flex justify-end gap-1.5">
-          <Button variant="outline" size="sm" className="h-7 gap-1 text-xs" onClick={onView}>
-            <Eye className="h-3.5 w-3.5" /> View
-          </Button>
-          <Button variant="outline" size="sm" className="h-7 gap-1 text-xs" onClick={onEdit}>
-            <Pencil className="h-3.5 w-3.5" /> Edit
-          </Button>
+          <div className="flex items-center gap-1.5">
+            <button
+              onClick={onView}
+              className="flex h-8 w-8 items-center justify-center rounded-full border border-border bg-background text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            >
+              <Eye className="h-3.5 w-3.5" />
+            </button>
+            <button
+              onClick={onEdit}
+              className="flex h-8 w-8 items-center justify-center rounded-full border border-border bg-background text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            >
+              <Pencil className="h-3.5 w-3.5" />
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -443,8 +402,7 @@ function RoomDetailSheet({
         </span>
       </SheetHeader>
 
-      {/* Photo placeholder */}
-      <div className="mb-5 h-40 rounded-xl bg-muted/60 flex items-center justify-center text-sm text-muted-foreground">
+      <div className="mb-5 h-40 rounded-xl bg-muted/40 flex items-center justify-center text-xs font-semibold tracking-widest text-muted-foreground/60 uppercase">
         {room.name}
       </div>
 
@@ -456,7 +414,7 @@ function RoomDetailSheet({
           <div className="space-y-1.5 text-sm">
             {[
               ['Type', room.type],
-              ['Capacity', `${room.capacity} pax`],
+              ['Capacity', `${room.capacity} guests`],
               ['Price / night', fmtRp(room.pricePerNight)],
             ].map(([label, value]) => (
               <div key={label} className="flex justify-between">
@@ -479,8 +437,7 @@ function RoomDetailSheet({
               )}
               <p className="text-muted-foreground">
                 {fmtDate(room.currentReservation.checkIn)} —{' '}
-                {fmtDate(room.currentReservation.checkOut)}
-                {' '}
+                {fmtDate(room.currentReservation.checkOut)}{' '}
                 <span className="font-medium text-foreground">
                   ({nights(room.currentReservation.checkIn, room.currentReservation.checkOut)}n)
                 </span>
@@ -503,9 +460,7 @@ function RoomDetailSheet({
                   <div>
                     <p className="text-sm font-medium">{task.title}</p>
                     {task.dueDate && (
-                      <p className="text-[11px] text-muted-foreground">
-                        Due {fmtDate(task.dueDate)}
-                      </p>
+                      <p className="text-[11px] text-muted-foreground">Due {fmtDate(task.dueDate)}</p>
                     )}
                   </div>
                   <span
