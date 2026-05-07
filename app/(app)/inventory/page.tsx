@@ -1,22 +1,26 @@
 export const dynamic = 'force-dynamic'
 
+import { redirect } from 'next/navigation'
 import { db } from '@/lib/db'
 import { InventoryClient } from '@/components/inventory/inventory-client'
-
-const VILLA_ID = 'villa-senja-ubud'
+import { getSessionUser } from '@/lib/getSession'
 
 export default async function InventoryPage() {
+  const user = await getSessionUser()
+  if (!user) redirect('/login')
+  const villaId = user.villaId
+
   const sevenDaysAgo = new Date()
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
 
   const [itemsRaw, recentMovements] = await Promise.all([
     db.inventoryItem.findMany({
-      where: { villaId: VILLA_ID },
+      where: { villaId },
       orderBy: { name: 'asc' },
       include: { movements: { orderBy: { date: 'desc' } } },
     }),
     db.stockMovement.findMany({
-      where: { item: { villaId: VILLA_ID }, date: { gte: sevenDaysAgo } },
+      where: { item: { villaId }, date: { gte: sevenDaysAgo } },
     }),
   ])
 

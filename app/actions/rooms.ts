@@ -1,9 +1,15 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { redirect } from 'next/navigation'
 import { db } from '@/lib/db'
+import { getSessionUser } from '@/lib/getSession'
 
-const VILLA_ID = 'villa-senja-ubud'
+async function getVillaId() {
+  const user = await getSessionUser()
+  if (!user) redirect('/login')
+  return user.villaId
+}
 
 export async function upsertRoom(data: {
   id?: string
@@ -27,6 +33,7 @@ export async function upsertRoom(data: {
       },
     })
   } else {
+    const villaId = await getVillaId()
     await db.room.create({
       data: {
         code: data.code,
@@ -35,7 +42,8 @@ export async function upsertRoom(data: {
         capacity: data.capacity,
         pricePerNight: data.pricePerNight,
         status: data.status,
-        villaId: VILLA_ID,
+        photos: [],
+        villaId,
       },
     })
   }
@@ -44,11 +52,12 @@ export async function upsertRoom(data: {
 }
 
 export async function createArea(data: { name: string; description?: string }) {
+  const villaId = await getVillaId()
   await db.area.create({
     data: {
       name: data.name,
       description: data.description,
-      villaId: VILLA_ID,
+      villaId,
     },
   })
   revalidatePath('/rooms')

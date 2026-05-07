@@ -1,9 +1,15 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { redirect } from 'next/navigation'
 import { db } from '@/lib/db'
+import { getSessionUser } from '@/lib/getSession'
 
-const VILLA_ID = 'villa-senja-ubud'
+async function getVillaId() {
+  const user = await getSessionUser()
+  if (!user) redirect('/login')
+  return user.villaId
+}
 
 export async function createTask(data: {
   title: string
@@ -13,6 +19,7 @@ export async function createTask(data: {
   assignedTo?: string
   dueDate?: Date
 }) {
+  const villaId = await getVillaId()
   await db.task.create({
     data: {
       title: data.title,
@@ -22,7 +29,7 @@ export async function createTask(data: {
       assignedTo: data.assignedTo || null,
       dueDate: data.dueDate || null,
       status: 'PENDING',
-      villaId: VILLA_ID,
+      villaId,
     },
   })
   revalidatePath('/maintenance')

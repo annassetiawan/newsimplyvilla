@@ -1,11 +1,15 @@
 export const dynamic = 'force-dynamic'
 
+import { redirect } from 'next/navigation'
 import { db } from '@/lib/db'
 import { ScheduleClient } from '@/components/schedule/schedule-client'
-
-const VILLA_ID = 'villa-senja-ubud'
+import { getSessionUser } from '@/lib/getSession'
 
 export default async function SchedulePage() {
+  const user = await getSessionUser()
+  if (!user) redirect('/login')
+  const villaId = user.villaId
+
   const monday = new Date()
   const day = monday.getDay()
   monday.setDate(monday.getDate() - day + (day === 0 ? -6 : 1))
@@ -17,12 +21,12 @@ export default async function SchedulePage() {
 
   const [staffRaw, shiftsRaw] = await Promise.all([
     db.staff.findMany({
-      where: { villaId: VILLA_ID },
+      where: { villaId },
       orderBy: { name: 'asc' },
     }),
     db.shift.findMany({
       where: {
-        staff: { villaId: VILLA_ID },
+        staff: { villaId },
         date: { gte: monday, lte: sunday },
       },
       orderBy: { date: 'asc' },

@@ -1,9 +1,13 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useTransition } from 'react'
 import { ChevronLeft, ChevronRight, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { cancelReservation, markAsPaid } from '@/app/actions/reservations'
+import { ReservationDetailSheet } from './reservation-detail-sheet'
+import { EditReservationModal } from './edit-reservation-modal'
+import type { ListReservation } from './list-tab'
 
 const DAYS = 14
 
@@ -14,18 +18,9 @@ interface RoomRow {
   capacity: number
 }
 
-interface ResBlock {
-  id: string
-  checkIn: string
-  checkOut: string
-  status: string
-  guest: { name: string }
-  room: { id: string }
-}
-
 interface Props {
   rooms: RoomRow[]
-  reservations: ResBlock[]
+  reservations: ListReservation[]
   onNewReservation: () => void
 }
 
@@ -38,6 +33,9 @@ function startOfDay(d: Date) {
 export function CalendarTab({ rooms, reservations, onNewReservation }: Props) {
   const todayBase = startOfDay(new Date())
   const [viewStart, setViewStart] = useState(todayBase)
+  const [selected, setSelected] = useState<ListReservation | null>(null)
+  const [editTarget, setEditTarget] = useState<ListReservation | null>(null)
+  const [pending, startTransition] = useTransition()
 
   const days = Array.from({ length: DAYS }, (_, i) => {
     const d = new Date(viewStart)
@@ -60,11 +58,11 @@ export function CalendarTab({ rooms, reservations, onNewReservation }: Props) {
     })
   }
 
-  function getBlock(res: ResBlock) {
+  function getBlock(res: ListReservation) {
     const resStart = startOfDay(new Date(res.checkIn))
     const resEnd = startOfDay(new Date(res.checkOut))
     const viewEnd = new Date(viewStart)
-    viewEnd.setDate(viewStart.getDate() + 14)
+    viewEnd.setDate(viewStart.getDate() + DAYS)
 
     if (resEnd <= viewStart || resStart >= viewEnd) return null
 
@@ -91,6 +89,30 @@ export function CalendarTab({ rooms, reservations, onNewReservation }: Props) {
 
   const isActive = (status: string) =>
     status === 'CONFIRMED' || status === 'CHECKEDIN'
+
+  function handleCancel(id: string) {
+    startTransition(async () => {
+      await cancelReservation(id)
+      setSelected(null)
+    })
+  }
+
+  function handleMarkAsPaid(id: string) {
+    startTransition(async () => {
+      await markAsPaid(id)
+      if (selected?.id === id) {
+        setSelected({ ...selected, paymentStatus: 'PAID' })
+      }
+    })
+  }
+
+  function handleEdit(res: ListReservation) {
+    setEditTarget(res)
+  }
+
+  function handleEditSuccess(updates: Partial<ListReservation>) {
+    if (selected) setSelected({ ...selected, ...updates })
+  }
 
   return (
     <div className="space-y-3">
@@ -139,10 +161,20 @@ export function CalendarTab({ rooms, reservations, onNewReservation }: Props) {
                       isToday ? 'bg-primary/10' : ''
                     )}
                   >
-                    <p className={cn('text-xs font-semibold', isToday ? 'text-primary' : 'text-foreground')}>
+                    <p
+                      className={cn(
+                        'text-xs font-semibold',
+                        isToday ? 'text-primary' : 'text-foreground'
+                      )}
+                    >
                       {day.toLocaleDateString('en-GB', { day: 'numeric' })}
                     </p>
-                    <p className={cn('text-[10px]', isToday ? 'text-primary' : 'text-muted-foreground')}>
+                    <p
+                      className={cn(
+                        'text-[10px]',
+                        isToday ? 'text-primary' : 'text-muted-foreground'
+                      )}
+                    >
                       {day.toLocaleDateString('en-GB', { weekday: 'short' })}
                     </p>
                   </div>
@@ -184,16 +216,17 @@ export function CalendarTab({ rooms, reservations, onNewReservation }: Props) {
                     if (!block) return null
                     const active = isActive(res.status)
                     return (
-                      <div
+                      <button
                         key={res.id}
                         className={cn(
-                          'absolute top-2.5 bottom-2.5 flex items-center overflow-hidden rounded-md px-2',
+                          'absolute top-2.5 bottom-2.5 flex items-center overflow-hidden rounded-md px-2 transition-opacity hover:opacity-80',
                           active
                             ? 'bg-primary text-white'
                             : 'border-2 border-dashed border-primary bg-primary/10 text-primary'
                         )}
                         style={{ left: block.left, width: block.width }}
                         title={`${res.guest.name} · ${block.nights}n`}
+                        onClick={() => setSelected(res)}
                       >
                         <span className="truncate text-[11px] font-semibold">
                           {res.guest.name}
@@ -201,7 +234,7 @@ export function CalendarTab({ rooms, reservations, onNewReservation }: Props) {
                             <span className="ml-1 opacity-70">· {block.nights}n</span>
                           )}
                         </span>
-                      </div>
+                      </button>
                     )
                   })}
                 </div>
@@ -210,6 +243,21 @@ export function CalendarTab({ rooms, reservations, onNewReservation }: Props) {
           })}
         </div>
       </div>
+
+      <ReservationDetailSheet
+        selected={selected}
+        onClose={() => setSelected(null)}
+        pending={pending}
+        onMarkPaid={handleMarkAsPaid}
+        onCancel={handleCancel}
+        onEdit={handleEdit}
+      />
+
+      <EditReservationModal
+        reservation={editTarget}
+        onClose={() => setEditTarget(null)}
+        onSuccess={handleEditSuccess}
+      />
     </div>
   )
 }

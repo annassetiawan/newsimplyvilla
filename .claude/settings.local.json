@@ -24,7 +24,16 @@
       "Bash(npx shadcn@latest add accordion --yes)",
       "Bash(npx dotenv *)",
       "PowerShell(cd \"d:\\\\Claude\\\\newsimplyvilla\\\\newsimplyvilla\"; $env_content = Get-Content .env.local; foreach \\($line in $env_content\\) { if \\($line -match '^\\(DATABASE_URL|DIRECT_URL\\)=\\(.+\\)$'\\) { [System.Environment]::SetEnvironmentVariable\\($Matches[1], $Matches[2]\\) } }; npx prisma generate 2>&1)",
-      "PowerShell(cd \"d:\\\\Claude\\\\newsimplyvilla\\\\newsimplyvilla\"; $env_content = Get-Content .env.local; foreach \\($line in $env_content\\) { if \\($line -match '^\\(DATABASE_URL|DIRECT_URL\\)=\\(.+\\)$'\\) { [System.Environment]::SetEnvironmentVariable\\($Matches[1], $Matches[2]\\) } }; npx prisma db seed 2>&1)"
+      "PowerShell(cd \"d:\\\\Claude\\\\newsimplyvilla\\\\newsimplyvilla\"; $env_content = Get-Content .env.local; foreach \\($line in $env_content\\) { if \\($line -match '^\\(DATABASE_URL|DIRECT_URL\\)=\\(.+\\)$'\\) { [System.Environment]::SetEnvironmentVariable\\($Matches[1], $Matches[2]\\) } }; npx prisma db seed 2>&1)",
+      "PowerShell(cd \"d:\\\\Claude\\\\newsimplyvilla\\\\newsimplyvilla\"; $env:DATABASE_URL=\"postgresql://postgres:tK9mWfrYDSWwiQ3i@db.xptduvukhivomxjwybye.supabase.co:5432/postgres\"; $env:DIRECT_URL=\"postgresql://postgres:tK9mWfrYDSWwiQ3i@db.xptduvukhivomxjwybye.supabase.co:5432/postgres\"; npx prisma db push --accept-data-loss 2>&1)",
+      "PowerShell(cd \"d:\\\\Claude\\\\newsimplyvilla\\\\newsimplyvilla\"; $env:DATABASE_URL=\"postgresql://postgres:tK9mWfrYDSWwiQ3i@db.xptduvukhivomxjwybye.supabase.co:5432/postgres\"; $env:DIRECT_URL=\"postgresql://postgres:tK9mWfrYDSWwiQ3i@db.xptduvukhivomxjwybye.supabase.co:5432/postgres\"; npx prisma generate 2>&1)",
+      "Bash(node -e \"const z = require\\('zod'\\); console.log\\(z.ZodIssueCode ? 'ZodIssueCode found' : 'not found'\\); console.log\\(typeof z.ZodIssueCode?.custom\\)\")",
+      "Bash(node -e \"const pkg = require\\('./node_modules/zod/package.json'\\); console.log\\(pkg.version\\)\")",
+      "Bash(node -e \"const z = require\\('zod'\\); const s = z.object\\({ a: z.string\\(\\).optional\\(\\) }\\).superRefine; console.log\\(typeof s\\)\")",
+      "Bash(node -e ' *)",
+      "Bash(powershell -Command \"Get-Content 'node_modules/.prisma/client/index.d.ts' | Select-String -Pattern 'photos' -Context 2,2 | Select-Object -First 5\")",
+      "Bash(powershell -Command \"Get-Content 'node_modules/.prisma/client/index.d.ts' | Select-String -Pattern 'RoomCreateInput' -Context 0,20 | Select-Object -First 1\")",
+      "Bash(powershell -Command ' *)"
     ]
   },
   "enableAllProjectMcpServers": true,

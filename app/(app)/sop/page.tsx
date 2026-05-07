@@ -1,13 +1,17 @@
 export const dynamic = 'force-dynamic'
 
+import { redirect } from 'next/navigation'
 import { db } from '@/lib/db'
 import { SOPClient } from '@/components/sop/sop-client'
-
-const VILLA_ID = 'villa-senja-ubud'
+import { getSessionUser } from '@/lib/getSession'
 
 export default async function SopPage() {
+  const user = await getSessionUser()
+  if (!user) redirect('/login')
+  const villaId = user.villaId
+
   const sopsRaw = await db.sOP.findMany({
-    where: { villaId: VILLA_ID },
+    where: { villaId },
     orderBy: { updatedAt: 'desc' },
   })
 

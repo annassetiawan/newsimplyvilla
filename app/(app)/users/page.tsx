@@ -1,13 +1,17 @@
 export const dynamic = 'force-dynamic'
 
+import { redirect } from 'next/navigation'
 import { db } from '@/lib/db'
 import { UsersClient } from '@/components/users/users-client'
-
-const VILLA_ID = 'villa-senja-ubud'
+import { getSessionUser } from '@/lib/getSession'
 
 export default async function UsersPage() {
+  const user = await getSessionUser()
+  if (!user) redirect('/login')
+  const villaId = user.villaId
+
   const staffRaw = await db.staff.findMany({
-    where: { villaId: VILLA_ID },
+    where: { villaId },
     orderBy: [{ role: 'asc' }, { name: 'asc' }],
   })
 

@@ -1,11 +1,17 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { redirect } from 'next/navigation'
 import { db } from '@/lib/db'
-
-const VILLA_ID = 'villa-senja-ubud'
+import { getSessionUser } from '@/lib/getSession'
 
 type SOPCategory = 'FRONT_DESK' | 'HOUSEKEEPING' | 'MAINTENANCE' | 'INVENTORY' | 'SAFETY'
+
+async function getVillaId() {
+  const user = await getSessionUser()
+  if (!user) redirect('/login')
+  return user.villaId
+}
 
 export async function createSOP(data: {
   title: string
@@ -13,9 +19,10 @@ export async function createSOP(data: {
   estimatedMinutes: number
   steps: { step: number; text: string }[]
 }) {
+  const villaId = await getVillaId()
   await db.sOP.create({
     data: {
-      villaId: VILLA_ID,
+      villaId,
       title: data.title,
       category: data.category,
       estimatedMinutes: data.estimatedMinutes,

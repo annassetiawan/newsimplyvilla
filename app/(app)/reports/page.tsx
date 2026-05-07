@@ -1,9 +1,9 @@
 export const dynamic = 'force-dynamic'
 
+import { redirect } from 'next/navigation'
 import { db } from '@/lib/db'
 import { ReportsClient } from '@/components/reports/reports-client'
-
-const VILLA_ID = 'villa-senja-ubud'
+import { getSessionUser } from '@/lib/getSession'
 
 function getWeekNumber(date: Date) {
   const d = new Date(date)
@@ -13,6 +13,10 @@ function getWeekNumber(date: Date) {
 }
 
 export default async function ReportsPage() {
+  const user = await getSessionUser()
+  if (!user) redirect('/login')
+  const villaId = user.villaId
+
   const now = new Date()
   const periodStart = new Date(now.getFullYear(), now.getMonth(), 1)
   const periodEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59)
@@ -25,21 +29,21 @@ export default async function ReportsPage() {
 
   const [txCurrent, txPrev, txRecent, txWeekly, rooms] = await Promise.all([
     db.transaction.findMany({
-      where: { villaId: VILLA_ID, date: { gte: periodStart, lte: periodEnd } },
+      where: { villaId, date: { gte: periodStart, lte: periodEnd } },
       orderBy: { date: 'desc' },
     }),
     db.transaction.findMany({
-      where: { villaId: VILLA_ID, date: { gte: prevStart, lte: prevEnd } },
+      where: { villaId, date: { gte: prevStart, lte: prevEnd } },
     }),
     db.transaction.findMany({
-      where: { villaId: VILLA_ID },
+      where: { villaId },
       orderBy: { date: 'desc' },
       take: 20,
     }),
     db.transaction.findMany({
-      where: { villaId: VILLA_ID, date: { gte: twelveWeeksAgo } },
+      where: { villaId, date: { gte: twelveWeeksAgo } },
     }),
-    db.room.findMany({ where: { villaId: VILLA_ID } }),
+    db.room.findMany({ where: { villaId } }),
   ])
 
   const revenue = txCurrent.filter((t) => t.type === 'INCOME').reduce((s, t) => s + t.amount, 0)
@@ -80,10 +84,9 @@ export default async function ReportsPage() {
     expCategoryMap.set(tx.category, (expCategoryMap.get(tx.category) ?? 0) + tx.amount)
   }
   const baseCategories = ['Staff salary', 'Utilities', 'Maintenance', 'F&B supplies', 'Amenities']
-  const expenseByCategory = baseCategories.map((cat) => ({
-    category: cat,
-    amount: expCategoryMap.get(cat) ?? 0,
-  })).sort((a, b) => b.amount - a.amount)
+  const expenseByCategory = baseCategories
+    .map((cat) => ({ category: cat, amount: expCategoryMap.get(cat) ?? 0 }))
+    .sort((a, b) => b.amount - a.amount)
 
   const transactions = txRecent.map((t) => ({
     id: t.id,

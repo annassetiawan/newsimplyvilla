@@ -1,9 +1,15 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { redirect } from 'next/navigation'
 import { db } from '@/lib/db'
+import { getSessionUser } from '@/lib/getSession'
 
-const VILLA_ID = 'villa-senja-ubud'
+async function getVillaId() {
+  const user = await getSessionUser()
+  if (!user) redirect('/login')
+  return user.villaId
+}
 
 export async function createExpense(data: {
   date: Date
@@ -12,9 +18,10 @@ export async function createExpense(data: {
   amount: number
   paymentStatus: 'PAID' | 'UNPAID'
 }) {
+  const villaId = await getVillaId()
   await db.transaction.create({
     data: {
-      villaId: VILLA_ID,
+      villaId,
       date: data.date,
       type: 'EXPENSE',
       description: data.description,

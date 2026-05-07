@@ -1,29 +1,33 @@
 export const dynamic = 'force-dynamic'
 
+import { redirect } from 'next/navigation'
 import { db } from '@/lib/db'
 import { FrontDeskClient } from '@/components/front-desk/front-desk-client'
-
-const VILLA_ID = 'villa-senja-ubud'
+import { getSessionUser } from '@/lib/getSession'
 
 export default async function FrontDeskPage() {
+  const user = await getSessionUser()
+  if (!user) redirect('/login')
+  const villaId = user.villaId
+
   const [rooms, reservations, guestsRaw, lostAndFound] = await Promise.all([
-    db.room.findMany({ where: { villaId: VILLA_ID }, orderBy: { code: 'asc' } }),
+    db.room.findMany({ where: { villaId }, orderBy: { code: 'asc' } }),
     db.reservation.findMany({
-      where: { room: { villaId: VILLA_ID }, status: { notIn: ['CANCELLED'] } },
+      where: { room: { villaId }, status: { notIn: ['CANCELLED'] } },
       include: { guest: true, room: true },
       orderBy: { checkIn: 'asc' },
     }),
     db.guest.findMany({
-      where: { reservations: { some: { room: { villaId: VILLA_ID } } } },
+      where: { reservations: { some: { room: { villaId } } } },
       include: {
         reservations: {
-          where: { room: { villaId: VILLA_ID } },
+          where: { room: { villaId } },
           include: { room: true },
           orderBy: { checkIn: 'desc' },
         },
       },
     }),
-    db.lostAndFound.findMany({ where: { villaId: VILLA_ID }, orderBy: { foundDate: 'desc' } }),
+    db.lostAndFound.findMany({ where: { villaId }, orderBy: { foundDate: 'desc' } }),
   ])
 
   const serializedRooms = rooms.map((r) => ({

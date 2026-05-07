@@ -1,20 +1,18 @@
 export const dynamic = 'force-dynamic'
 
-import { db } from '@/lib/db'
+import { redirect } from 'next/navigation'
 import { SettingsClient } from '@/components/settings/settings-client'
-
-const VILLA_ID = 'villa-senja-ubud'
+import { getSessionUser } from '@/lib/getSession'
 
 export default async function SettingsPage() {
-  const staff = await db.staff.findFirst({
-    where: { villaId: VILLA_ID, role: 'OWNER' },
-  })
+  const user = await getSessionUser()
+  if (!user) redirect('/login')
 
   const profile = {
-    id: staff?.id ?? '',
-    name: staff?.name ?? 'Villa Owner',
-    email: staff?.email ?? '',
-    position: staff?.position ?? 'Owner',
+    id: user.id,
+    name: user.name,
+    email: user.email ?? '',
+    position: user.position,
   }
 
   return (

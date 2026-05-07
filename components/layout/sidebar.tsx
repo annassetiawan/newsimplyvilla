@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import {
   LayoutDashboard,
   ConciergeBell,
@@ -30,6 +30,7 @@ import {
 import { cn } from '@/lib/utils'
 import { useSidebar } from '@/store/sidebar-store'
 import { useSubscription } from '@/hooks/useSubscription'
+import { useUser } from '@/hooks/useUser'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import {
@@ -40,6 +41,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { UpgradeModal } from '@/components/UpgradeModal'
+import { createClient } from '@/lib/supabase/client'
 
 const navGroups = [
   {
@@ -81,10 +83,21 @@ const proFeatures = [
   { label: 'Change Management', href: '/change-management', icon: GitBranch },
 ]
 
+function getInitials(name: string) {
+  return name
+    .split(' ')
+    .slice(0, 2)
+    .map((w) => w[0])
+    .join('')
+    .toUpperCase()
+}
+
 export function Sidebar() {
   const { collapsed, toggle } = useSidebar()
   const pathname = usePathname()
+  const router = useRouter()
   const { isPro } = useSubscription()
+  const { user, isLoading: userLoading } = useUser()
   const [upgradeModal, setUpgradeModal] = useState<{ open: boolean; feature: string }>({
     open: false,
     feature: '',
@@ -94,6 +107,18 @@ export function Sidebar() {
     setUpgradeModal({ open: true, feature })
   }
 
+  async function handleSignOut() {
+    const supabase = createClient()
+    await supabase.auth.signOut()
+    router.push('/login')
+    router.refresh()
+  }
+
+  const displayName = userLoading ? '…' : (user?.name ?? 'User')
+  const displayEmail = userLoading ? '' : (user?.email ?? '')
+  const displayVilla = userLoading ? 'SimplyVilla' : (user?.villaName ?? 'SimplyVilla')
+  const initials = userLoading ? '?' : (user ? getInitials(user.name) : '?')
+
   return (
     <TooltipProvider delayDuration={0}>
       <aside
@@ -102,7 +127,7 @@ export function Sidebar() {
           collapsed ? 'w-[64px]' : 'w-[240px]'
         )}
       >
-        {/* Collapse toggle — floats on the right border */}
+        {/* Collapse toggle */}
         <button
           onClick={toggle}
           className="absolute -right-3 top-5 z-50 flex h-6 w-6 items-center justify-center rounded-full border border-border bg-background text-muted-foreground shadow-sm transition-colors hover:bg-muted hover:text-foreground"
@@ -124,7 +149,7 @@ export function Sidebar() {
             {!collapsed && (
               <div className="min-w-0">
                 <p className="truncate text-sm font-bold leading-tight">SimplyVilla</p>
-                <p className="truncate text-[11px] text-muted-foreground">Villa Senja Ubud</p>
+                <p className="truncate text-[11px] text-muted-foreground">{displayVilla}</p>
               </div>
             )}
           </div>
@@ -177,7 +202,7 @@ export function Sidebar() {
             </div>
           ))}
 
-          {/* PRO FEATURES section */}
+          {/* PRO FEATURES */}
           <div className="mt-4">
             {!collapsed && (
               <div className="mb-1 flex items-center gap-2 px-4">
@@ -237,10 +262,7 @@ export function Sidebar() {
                             <span className="flex-1 truncate text-left">{item.label}</span>
                             <span
                               className="shrink-0 rounded px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide"
-                              style={{
-                                background: '#E1A62F22',
-                                color: '#E1A62F',
-                              }}
+                              style={{ background: '#E1A62F22', color: '#E1A62F' }}
                             >
                               PRO
                             </span>
@@ -251,7 +273,7 @@ export function Sidebar() {
                     {collapsed && (
                       <TooltipContent side="right" className="font-medium">
                         {item.label}{' '}
-                        <span className="ml-1 text-[#E1A62F] text-[10px] font-bold">PRO</span>
+                        <span className="ml-1 text-[10px] font-bold text-[#E1A62F]">PRO</span>
                       </TooltipContent>
                     )}
                   </Tooltip>
@@ -261,7 +283,7 @@ export function Sidebar() {
           </div>
         </nav>
 
-        {/* Upgrade banner — only when not Pro */}
+        {/* Upgrade banner */}
         {!isPro && (
           <div className="shrink-0 px-2 pb-2">
             {collapsed ? (
@@ -309,18 +331,16 @@ export function Sidebar() {
                 )}
               >
                 <Avatar className="h-7 w-7 shrink-0">
-                  <AvatarImage src="" alt="User" />
+                  <AvatarImage src="" alt={displayName} />
                   <AvatarFallback className="bg-foreground text-[11px] font-semibold text-background">
-                    A
+                    {initials}
                   </AvatarFallback>
                 </Avatar>
                 {!collapsed && (
                   <>
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium leading-tight">Admin</p>
-                      <p className="truncate text-[11px] text-muted-foreground">
-                        admin@villa.com
-                      </p>
+                      <p className="truncate text-sm font-medium leading-tight">{displayName}</p>
+                      <p className="truncate text-[11px] text-muted-foreground">{displayEmail}</p>
                     </div>
                     <MoreHorizontal className="h-4 w-4 shrink-0 text-muted-foreground" />
                   </>
@@ -329,11 +349,14 @@ export function Sidebar() {
             </DropdownMenuTrigger>
             <DropdownMenuContent side="top" align="start" className="w-52">
               <div className="px-2 py-1.5">
-                <p className="text-sm font-medium">Admin</p>
-                <p className="text-xs text-muted-foreground">admin@villa.com</p>
+                <p className="text-sm font-medium">{displayName}</p>
+                <p className="text-xs text-muted-foreground">{displayEmail}</p>
               </div>
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="text-destructive focus:text-destructive">
+              <DropdownMenuItem
+                onClick={handleSignOut}
+                className="text-destructive focus:text-destructive"
+              >
                 <LogOut className="h-4 w-4" />
                 Sign out
               </DropdownMenuItem>

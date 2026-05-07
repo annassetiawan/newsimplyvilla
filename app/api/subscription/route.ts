@@ -1,16 +1,18 @@
 import { NextResponse } from 'next/server'
-import { getVillaSubscription } from '@/lib/subscription'
-
-const VILLA_ID = 'villa-senja-ubud'
+import { getSessionUser } from '@/lib/getSession'
 
 export async function GET() {
-  const sub = await getVillaSubscription(VILLA_ID)
+  const user = await getSessionUser()
+
+  if (!user) {
+    return NextResponse.json({ plan: 'FREE', status: 'INACTIVE', startDate: null, endDate: null })
+  }
+
+  const sub = user.villa.subscription
 
   if (!sub) {
     return NextResponse.json({ plan: 'FREE', status: 'INACTIVE', startDate: null, endDate: null })
   }
-
-  console.log('[subscription API] villa:', VILLA_ID, '| plan:', sub.plan, '| status:', sub.status)
 
   return NextResponse.json({
     plan: sub.plan,

@@ -1,16 +1,20 @@
 export const dynamic = 'force-dynamic'
 
+import { redirect } from 'next/navigation'
 import { db } from '@/lib/db'
 import { RoomsClient } from '@/components/rooms/rooms-client'
-
-const VILLA_ID = 'villa-senja-ubud'
+import { getSessionUser } from '@/lib/getSession'
 
 export default async function RoomsPage() {
+  const user = await getSessionUser()
+  if (!user) redirect('/login')
+  const villaId = user.villaId
+
   const today = new Date()
 
   const [rooms, areas, tasks] = await Promise.all([
     db.room.findMany({
-      where: { villaId: VILLA_ID },
+      where: { villaId },
       orderBy: { code: 'asc' },
       include: {
         reservations: {
@@ -21,9 +25,9 @@ export default async function RoomsPage() {
         },
       },
     }),
-    db.area.findMany({ where: { villaId: VILLA_ID } }),
+    db.area.findMany({ where: { villaId } }),
     db.task.findMany({
-      where: { villaId: VILLA_ID, type: 'MAINTENANCE' },
+      where: { villaId, type: 'MAINTENANCE' },
       orderBy: { dueDate: 'asc' },
     }),
   ])

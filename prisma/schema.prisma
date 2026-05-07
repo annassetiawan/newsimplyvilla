@@ -166,15 +166,17 @@ enum StaffRole {
 }
 
 model Staff {
-  id       String    @id @default(cuid())
-  name     String
-  role     StaffRole
-  position String
-  email    String?
-  isActive Boolean   @default(true)
-  villaId  String
-  villa    Villa     @relation(fields: [villaId], references: [id])
-  shifts   Shift[]
+  id             String    @id @default(cuid())
+  supabaseUserId String?   @unique
+  name           String
+  role           StaffRole
+  position       String
+  email          String?   @unique
+  isActive       Boolean   @default(true)
+  villaId        String
+  villa          Villa     @relation(fields: [villaId], references: [id])
+  shifts         Shift[]
+  createdAt      DateTime  @default(now())
 }
 
 enum ShiftType {

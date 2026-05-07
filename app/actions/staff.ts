@@ -1,9 +1,15 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { redirect } from 'next/navigation'
 import { db } from '@/lib/db'
+import { getSessionUser } from '@/lib/getSession'
 
-const VILLA_ID = 'villa-senja-ubud'
+async function getVillaId() {
+  const user = await getSessionUser()
+  if (!user) redirect('/login')
+  return user.villaId
+}
 
 export async function createStaff(data: {
   name: string
@@ -11,9 +17,10 @@ export async function createStaff(data: {
   position: string
   role: 'OWNER' | 'STAFF'
 }) {
+  const villaId = await getVillaId()
   await db.staff.create({
     data: {
-      villaId: VILLA_ID,
+      villaId,
       name: data.name,
       email: data.email,
       position: data.position,

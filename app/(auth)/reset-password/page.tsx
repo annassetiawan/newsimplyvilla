@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -12,16 +11,22 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { createClient } from '@/lib/supabase/client'
 
-const schema = z.object({
-  email: z.string().email('Invalid email address'),
-  password: z.string().min(1, 'Password is required'),
-})
+const schema = z
+  .object({
+    password: z.string().min(8, 'Password must be at least 8 characters'),
+    confirmPassword: z.string(),
+  })
+  .refine((d) => d.password === d.confirmPassword, {
+    message: 'Passwords do not match',
+    path: ['confirmPassword'],
+  })
 
 type FormValues = z.infer<typeof schema>
 
-export default function LoginPage() {
+export default function ResetPasswordPage() {
   const router = useRouter()
   const [showPassword, setShowPassword] = useState(false)
+  const [showConfirm, setShowConfirm] = useState(false)
 
   const {
     register,
@@ -32,16 +37,12 @@ export default function LoginPage() {
 
   const onSubmit = async (values: FormValues) => {
     const supabase = createClient()
-    const { error } = await supabase.auth.signInWithPassword({
-      email: values.email,
-      password: values.password,
-    })
+    const { error } = await supabase.auth.updateUser({ password: values.password })
     if (error) {
-      setError('root', { message: 'Email or password is incorrect.' })
+      setError('root', { message: error.message })
       return
     }
-    router.push('/dashboard')
-    router.refresh()
+    router.push('/login?reset=success')
   }
 
   return (
@@ -57,41 +58,20 @@ export default function LoginPage() {
 
         <div className="rounded-xl border border-border bg-background p-6 shadow-sm">
           <div className="mb-5">
-            <h2 className="text-lg font-semibold">Welcome back</h2>
-            <p className="mt-0.5 text-sm text-muted-foreground">Sign in to your account</p>
+            <h2 className="text-lg font-semibold">Buat password baru</h2>
+            <p className="mt-0.5 text-sm text-muted-foreground">
+              Masukkan password baru untuk akunmu.
+            </p>
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div className="space-y-1.5">
-              <Label htmlFor="email">Email address</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="admin@villa.com"
-                autoComplete="email"
-                {...register('email')}
-              />
-              {errors.email && (
-                <p className="text-xs text-destructive">{errors.email.message}</p>
-              )}
-            </div>
-
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="password">Password</Label>
-                <Link
-                  href="/forgot-password"
-                  className="text-xs text-primary hover:text-[#C8911A] hover:underline"
-                >
-                  Forgot password?
-                </Link>
-              </div>
+              <Label htmlFor="password">Password baru</Label>
               <div className="relative">
                 <Input
                   id="password"
                   type={showPassword ? 'text' : 'password'}
-                  placeholder="••••••••"
-                  autoComplete="current-password"
+                  placeholder="Min. 8 karakter"
                   className="pr-10"
                   {...register('password')}
                 />
@@ -109,6 +89,30 @@ export default function LoginPage() {
               )}
             </div>
 
+            <div className="space-y-1.5">
+              <Label htmlFor="confirmPassword">Konfirmasi password</Label>
+              <div className="relative">
+                <Input
+                  id="confirmPassword"
+                  type={showConfirm ? 'text' : 'password'}
+                  placeholder="Ulangi password"
+                  className="pr-10"
+                  {...register('confirmPassword')}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirm(!showConfirm)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  tabIndex={-1}
+                >
+                  {showConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+              {errors.confirmPassword && (
+                <p className="text-xs text-destructive">{errors.confirmPassword.message}</p>
+              )}
+            </div>
+
             {errors.root && (
               <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
                 {errors.root.message}
@@ -116,21 +120,10 @@ export default function LoginPage() {
             )}
 
             <Button type="submit" className="w-full" disabled={isSubmitting}>
-              {isSubmitting ? 'Signing in…' : 'Sign in'}
+              {isSubmitting ? 'Menyimpan…' : 'Simpan password baru'}
             </Button>
           </form>
-
-          <p className="mt-4 text-center text-sm text-muted-foreground">
-            Belum punya akun?{' '}
-            <Link href="/register" className="font-medium text-primary hover:underline">
-              Daftar
-            </Link>
-          </p>
         </div>
-
-        <p className="mt-5 text-center text-xs text-muted-foreground">
-          © {new Date().getFullYear()} SimplyVilla. All rights reserved.
-        </p>
       </div>
     </div>
   )

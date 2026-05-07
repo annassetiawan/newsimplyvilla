@@ -20,8 +20,10 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
-import { cancelReservation } from '@/app/actions/reservations'
+import { cancelReservation, markAsPaid } from '@/app/actions/reservations'
+import { ReservationDetailSheet } from './reservation-detail-sheet'
+import { EditReservationModal } from './edit-reservation-modal'
+import { fmtDate, fmtRp, nightCount, STATUS_STYLE, STATUS_LABEL } from './reservation-detail-sheet'
 
 export interface ListReservation {
   id: string
@@ -40,39 +42,11 @@ interface Props {
   onNewReservation: () => void
 }
 
-const STATUS_STYLE: Record<string, string> = {
-  CONFIRMED: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
-  PENDING: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
-  CHECKEDIN: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
-  CHECKEDOUT: 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-500',
-  CANCELLED: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
-}
-const STATUS_LABEL: Record<string, string> = {
-  CONFIRMED: 'Confirmed',
-  PENDING: 'Pending',
-  CHECKEDIN: 'Checked In',
-  CHECKEDOUT: 'Checked Out',
-  CANCELLED: 'Cancelled',
-}
-
-function fmtDate(iso: string) {
-  return new Date(iso).toLocaleDateString('en-GB', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  })
-}
-function fmtRp(n: number) {
-  return n >= 1_000_000 ? `Rp ${(n / 1_000_000).toFixed(1)}M` : `Rp ${(n / 1_000).toFixed(0)}K`
-}
-function nights(ci: string, co: string) {
-  return Math.ceil((new Date(co).getTime() - new Date(ci).getTime()) / 86400000)
-}
-
 export function ListTab({ reservations, onNewReservation }: Props) {
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('ALL')
   const [selected, setSelected] = useState<ListReservation | null>(null)
+  const [editTarget, setEditTarget] = useState<ListReservation | null>(null)
   const [pending, startTransition] = useTransition()
 
   const filtered = reservations.filter((r) => {
@@ -90,8 +64,26 @@ export function ListTab({ reservations, onNewReservation }: Props) {
     })
   }
 
+  function handleMarkAsPaid(id: string) {
+    startTransition(async () => {
+      await markAsPaid(id)
+      if (selected?.id === id) {
+        setSelected({ ...selected, paymentStatus: 'PAID' })
+      }
+    })
+  }
+
+  function handleEdit(res: ListReservation) {
+    setEditTarget(res)
+  }
+
+  function handleEditSuccess(updates: Partial<ListReservation>) {
+    if (selected) setSelected({ ...selected, ...updates })
+  }
+
   return (
     <div className="space-y-3">
+      {/* Toolbar */}
       <div className="flex items-center gap-3">
         <div className="relative max-w-sm flex-1">
           <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
@@ -124,6 +116,7 @@ export function ListTab({ reservations, onNewReservation }: Props) {
         </Button>
       </div>
 
+      {/* Table */}
       <div className="rounded-xl border border-border">
         <Table>
           <TableHeader>
@@ -158,7 +151,7 @@ export function ListTab({ reservations, onNewReservation }: Props) {
                 <TableCell>{fmtDate(res.checkIn)}</TableCell>
                 <TableCell>{fmtDate(res.checkOut)}</TableCell>
                 <TableCell className="text-center">
-                  {nights(res.checkIn, res.checkOut)}
+                  {nightCount(res.checkIn, res.checkOut)}
                 </TableCell>
                 <TableCell className="font-medium">{fmtRp(res.totalAmount)}</TableCell>
                 <TableCell>
@@ -195,6 +188,18 @@ export function ListTab({ reservations, onNewReservation }: Props) {
                         View detail
                       </DropdownMenuItem>
                       {res.status !== 'CANCELLED' && res.status !== 'CHECKEDOUT' && (
+                        <DropdownMenuItem onClick={() => handleEdit(res)}>
+                          Edit
+                        </DropdownMenuItem>
+                      )}
+                      {res.paymentStatus === 'UNPAID' &&
+                        res.status !== 'CANCELLED' &&
+                        res.status !== 'CHECKEDOUT' && (
+                          <DropdownMenuItem onClick={() => handleMarkAsPaid(res.id)}>
+                            Mark as paid
+                          </DropdownMenuItem>
+                        )}
+                      {res.status !== 'CANCELLED' && res.status !== 'CHECKEDOUT' && (
                         <DropdownMenuItem
                           className="text-destructive focus:text-destructive"
                           disabled={pending}
@@ -212,93 +217,20 @@ export function ListTab({ reservations, onNewReservation }: Props) {
         </Table>
       </div>
 
-      {/* Detail sheet */}
-      <Sheet open={!!selected} onOpenChange={() => setSelected(null)}>
-        <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-md">
-          {selected && (
-            <>
-              <SheetHeader className="mb-6">
-                <SheetTitle>Reservation detail</SheetTitle>
-              </SheetHeader>
-              <div className="space-y-5">
-                <div>
-                  <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                    Guest
-                  </p>
-                  <p className="font-semibold">{selected.guest.name}</p>
-                  {selected.guest.idNumber && (
-                    <p className="text-sm text-muted-foreground">ID: {selected.guest.idNumber}</p>
-                  )}
-                  {selected.guest.phone && (
-                    <p className="text-sm text-muted-foreground">{selected.guest.phone}</p>
-                  )}
-                </div>
+      <ReservationDetailSheet
+        selected={selected}
+        onClose={() => setSelected(null)}
+        pending={pending}
+        onMarkPaid={handleMarkAsPaid}
+        onCancel={handleCancel}
+        onEdit={handleEdit}
+      />
 
-                <div>
-                  <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                    Reservation
-                  </p>
-                  <div className="space-y-2 text-sm">
-                    {[
-                      ['Room', `${selected.room.code} — ${selected.room.name}`],
-                      ['Check-in', fmtDate(selected.checkIn)],
-                      ['Check-out', fmtDate(selected.checkOut)],
-                      ['Nights', String(nights(selected.checkIn, selected.checkOut))],
-                    ].map(([label, value]) => (
-                      <div key={label} className="flex justify-between">
-                        <span className="text-muted-foreground">{label}</span>
-                        <span className="font-medium">{value}</span>
-                      </div>
-                    ))}
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Total</span>
-                      <span className="font-semibold text-primary">{fmtRp(selected.totalAmount)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Payment</span>
-                      <span
-                        className={cn(
-                          'rounded-full px-2 py-0.5 text-[11px] font-semibold',
-                          selected.paymentStatus === 'PAID'
-                            ? 'bg-green-100 text-green-700'
-                            : 'bg-red-100 text-red-700'
-                        )}
-                      >
-                        {selected.paymentStatus === 'PAID' ? 'Paid' : 'Unpaid'}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Status</span>
-                      <span
-                        className={cn(
-                          'rounded-full px-2 py-0.5 text-[11px] font-semibold',
-                          STATUS_STYLE[selected.status]
-                        )}
-                      >
-                        {STATUS_LABEL[selected.status]}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {selected.status !== 'CANCELLED' && selected.status !== 'CHECKEDOUT' && (
-                  <div className="border-t border-border pt-4">
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      className="w-full"
-                      disabled={pending}
-                      onClick={() => handleCancel(selected.id)}
-                    >
-                      {pending ? 'Cancelling...' : 'Cancel reservation'}
-                    </Button>
-                  </div>
-                )}
-              </div>
-            </>
-          )}
-        </SheetContent>
-      </Sheet>
+      <EditReservationModal
+        reservation={editTarget}
+        onClose={() => setEditTarget(null)}
+        onSuccess={handleEditSuccess}
+      />
     </div>
   )
 }

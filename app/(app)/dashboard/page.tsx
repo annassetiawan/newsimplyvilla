@@ -1,12 +1,12 @@
 export const dynamic = 'force-dynamic'
 
+import { redirect } from 'next/navigation'
 import { ArrowUp, CalendarDays, Download, Plus } from 'lucide-react'
 import { db } from '@/lib/db'
 import { cn } from '@/lib/utils'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { RevenueChart } from '@/components/dashboard/revenue-chart'
-
-const VILLA_ID = 'villa-senja-ubud'
+import { getSessionUser } from '@/lib/getSession'
 
 function formatRp(amount: number) {
   if (amount >= 1_000_000) return `Rp ${(amount / 1_000_000).toFixed(1)}M`
@@ -87,36 +87,40 @@ function Sparkline({ trend = 'up' }: { trend?: 'up' | 'down' | 'neutral' }) {
 }
 
 export default async function DashboardPage() {
+  const user = await getSessionUser()
+  if (!user) redirect('/login')
+  const villaId = user.villaId
+
   const [rooms, openTasks, recentReservations, allInventory, aprilTransactions, reservationCount] =
     await Promise.all([
-      db.room.findMany({ where: { villaId: VILLA_ID }, orderBy: { code: 'asc' } }),
+      db.room.findMany({ where: { villaId }, orderBy: { code: 'asc' } }),
       db.task.findMany({
-        where: { villaId: VILLA_ID, status: { in: ['PENDING', 'IN_PROGRESS'] } },
+        where: { villaId, status: { in: ['PENDING', 'IN_PROGRESS'] } },
         orderBy: { dueDate: 'asc' },
         take: 5,
       }),
       db.reservation.findMany({
-        where: { room: { villaId: VILLA_ID } },
+        where: { room: { villaId } },
         orderBy: { createdAt: 'desc' },
         take: 5,
         include: { guest: true, room: true },
       }),
-      db.inventoryItem.findMany({ where: { villaId: VILLA_ID } }),
+      db.inventoryItem.findMany({ where: { villaId } }),
       db.transaction.findMany({
         where: {
-          villaId: VILLA_ID,
+          villaId,
           type: 'INCOME',
           date: { gte: new Date('2026-04-01'), lte: new Date('2026-04-30') },
         },
       }),
-      db.reservation.count({ where: { room: { villaId: VILLA_ID } } }),
+      db.reservation.count({ where: { room: { villaId } } }),
     ])
 
   const lowStock = allInventory.filter((i) => i.onHand < i.minLevel)
   const occupiedCount = rooms.filter(
     (r) => r.status === 'OCCUPIED' || r.status === 'CLEANING'
   ).length
-  const occupancyPct = Math.round((occupiedCount / rooms.length) * 100)
+  const occupancyPct = rooms.length ? Math.round((occupiedCount / rooms.length) * 100) : 0
   const highPriorityCount = openTasks.filter((t) => t.priority === 'HIGH').length
   const totalRevenue = aprilTransactions.reduce((s, t) => s + t.amount, 0)
 
@@ -148,12 +152,11 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-5">
-      {/* Page header */}
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
           <p className="mt-0.5 text-sm text-muted-foreground">
-            An overview of Villa Senja Ubud — occupancy, revenue, and tasks at a glance.
+            An overview of {user.villa.name} — occupancy, revenue, and tasks at a glance.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -305,7 +308,6 @@ export default async function DashboardPage() {
 
       {/* Bottom row */}
       <div className="grid grid-cols-3 gap-4">
-        {/* Today's tasks */}
         <Card>
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
@@ -347,7 +349,6 @@ export default async function DashboardPage() {
           </CardContent>
         </Card>
 
-        {/* Room status */}
         <Card>
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
@@ -375,7 +376,6 @@ export default async function DashboardPage() {
           </CardContent>
         </Card>
 
-        {/* Low stock alerts */}
         <Card>
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">

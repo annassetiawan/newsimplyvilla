@@ -1,9 +1,15 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { redirect } from 'next/navigation'
 import { db } from '@/lib/db'
+import { getSessionUser } from '@/lib/getSession'
 
-const VILLA_ID = 'villa-senja-ubud'
+async function getVillaId() {
+  const user = await getSessionUser()
+  if (!user) redirect('/login')
+  return user.villaId
+}
 
 export async function stockIn(data: {
   itemId: string
@@ -64,8 +70,9 @@ export async function createInventoryItem(data: {
   onHand: number
   minLevel: number
 }) {
+  const villaId = await getVillaId()
   await db.inventoryItem.create({
-    data: { ...data, villaId: VILLA_ID },
+    data: { ...data, villaId },
   })
   revalidatePath('/inventory')
 }
