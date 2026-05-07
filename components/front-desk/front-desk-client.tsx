@@ -29,8 +29,6 @@ interface Props {
 export function FrontDeskClient({ rooms, reservations, guests, lostAndFound }: Props) {
   const [modalOpen, setModalOpen] = useState(false)
 
-  const availableRooms = rooms.filter((r) => r.status === 'AVAILABLE')
-
   return (
     <>
       <Tabs defaultValue="calendar">
@@ -68,8 +66,9 @@ export function FrontDeskClient({ rooms, reservations, guests, lostAndFound }: P
       <ReservationModal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
-        availableRooms={availableRooms}
+        allRooms={rooms}
         existingGuests={guests}
+        existingReservations={reservations}
       />
     </>
   )
