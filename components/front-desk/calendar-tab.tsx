@@ -87,8 +87,18 @@ export function CalendarTab({ rooms, reservations, onNewReservation }: Props) {
     }
   }
 
-  const isActive = (status: string) =>
-    status === 'CONFIRMED' || status === 'CHECKEDIN'
+  const isConfirmed = (res: ListReservation) =>
+    res.paymentStatus === 'PAID' &&
+    res.status !== 'CANCELLED' &&
+    res.status !== 'CHECKEDOUT'
+
+  const isPending = (res: ListReservation) =>
+    res.paymentStatus === 'UNPAID' &&
+    res.status !== 'CANCELLED' &&
+    res.status !== 'CHECKEDOUT'
+
+  const isVisible = (res: ListReservation) =>
+    res.status !== 'CANCELLED' && res.status !== 'CHECKEDOUT'
 
   function handleCancel(id: string) {
     startTransition(async () => {
@@ -192,9 +202,10 @@ export function CalendarTab({ rooms, reservations, onNewReservation }: Props) {
                 className={cn('flex', idx < rooms.length - 1 && 'border-b border-border')}
               >
                 <div className="w-[160px] shrink-0 border-r border-border px-3 py-3">
-                  <p className="text-xs font-bold">{room.code}</p>
-                  <p className="truncate text-[11px] text-muted-foreground">{room.name}</p>
-                  <p className="text-[11px] text-muted-foreground/60">{room.capacity} pax</p>
+                  <p className="truncate text-xs font-bold">{room.name}</p>
+                  <p className="font-id text-muted-foreground">
+                    {room.code} · {room.capacity}p
+                  </p>
                 </div>
 
                 <div className="relative flex flex-1" style={{ height: 64 }}>
@@ -211,28 +222,29 @@ export function CalendarTab({ rooms, reservations, onNewReservation }: Props) {
                     )
                   })}
 
-                  {roomRes.map((res) => {
+                  {roomRes.filter(isVisible).map((res) => {
                     const block = getBlock(res)
                     if (!block) return null
-                    const active = isActive(res.status)
+                    const confirmed = isConfirmed(res)
+                    const pending = isPending(res)
                     return (
                       <button
                         key={res.id}
                         className={cn(
-                          'absolute top-2.5 bottom-2.5 flex items-center overflow-hidden rounded-md px-2 transition-opacity hover:opacity-80',
-                          active
-                            ? 'bg-primary text-white'
-                            : 'border-2 border-dashed border-primary bg-primary/10 text-primary'
+                          'absolute top-2 bottom-2 flex items-center justify-between overflow-hidden rounded-md px-2.5 transition-opacity hover:opacity-80',
+                          confirmed && 'bg-primary text-white',
+                          pending && 'border-2 border-dashed border-primary bg-primary/10 text-primary',
+                          !confirmed && !pending && 'bg-muted text-muted-foreground'
                         )}
                         style={{ left: block.left, width: block.width }}
                         title={`${res.guest.name} · ${block.nights}n`}
                         onClick={() => setSelected(res)}
                       >
-                        <span className="truncate text-[11px] font-semibold">
+                        <span className="truncate text-[11px] font-semibold leading-none">
                           {res.guest.name}
-                          {block.nights > 1 && (
-                            <span className="ml-1 opacity-70">· {block.nights}n</span>
-                          )}
+                        </span>
+                        <span className="ml-1.5 shrink-0 text-[10px] font-medium opacity-70">
+                          {block.nights}n
                         </span>
                       </button>
                     )
@@ -241,6 +253,22 @@ export function CalendarTab({ rooms, reservations, onNewReservation }: Props) {
               </div>
             )
           })}
+        </div>
+      </div>
+
+      {/* Legend */}
+      <div className="flex items-center gap-4 text-[11px] text-muted-foreground">
+        <div className="flex items-center gap-1.5">
+          <div className="h-3.5 w-8 rounded bg-primary" />
+          <span>Confirmed</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <div className="h-3.5 w-8 rounded border-2 border-dashed border-primary bg-primary/10" />
+          <span>Pending payment</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <div className="h-3.5 w-3.5 rounded bg-primary/10" />
+          <span>Today</span>
         </div>
       </div>
 

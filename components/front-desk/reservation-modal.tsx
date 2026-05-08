@@ -40,7 +40,7 @@ interface Props {
 }
 
 function formatRp(n: number) {
-  return n >= 1_000_000 ? `Rp ${(n / 1_000_000).toFixed(1)}M` : `Rp ${(n / 1_000).toFixed(0)}K`
+  return `Rp ${n.toLocaleString('id-ID')}`
 }
 
 function isConflicting(

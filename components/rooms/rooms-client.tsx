@@ -46,7 +46,7 @@ const FILTER_TABS = ['All rooms', 'Available', 'Occupied', 'Cleaning', 'Areas'] 
 type FilterTab = (typeof FILTER_TABS)[number]
 
 function fmtRp(n: number) {
-  return n >= 1_000_000 ? `Rp ${(n / 1_000_000).toFixed(1)}M` : `Rp ${(n / 1_000).toFixed(0)}K`
+  return `Rp ${n.toLocaleString('id-ID')}`
 }
 function fmtDate(iso: string) {
   return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
@@ -343,7 +343,7 @@ function RoomCard({
 
       {/* Card body */}
       <div className="p-4">
-        <p className="text-xs font-medium text-muted-foreground">{room.code}</p>
+        <p className="font-id text-muted-foreground">{room.code}</p>
         <p className="mt-0.5 text-sm font-bold leading-tight">{room.name}</p>
         <p className="mt-1 text-xs text-muted-foreground">
           {room.capacity} guests &middot; {room.type} &middot; 38 m²
@@ -386,7 +386,8 @@ function RoomDetailSheet({
       <SheetHeader className="mb-6">
         <div className="flex items-center justify-between">
           <SheetTitle>
-            {room.code} — {room.name}
+            <span className="font-id">{room.code}</span>
+            {' — '}{room.name}
           </SheetTitle>
           <Button variant="outline" size="sm" className="h-7 text-xs" onClick={onEdit}>
             <Pencil className="mr-1 h-3 w-3" /> Edit

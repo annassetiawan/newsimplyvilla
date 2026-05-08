@@ -14,18 +14,11 @@ export async function registerUser(data: {
   name: string
   email: string
   password: string
-  villaName: string
-  villaAddress: string
-  villaCity: string
-  villaPhone: string
-  firstRoom?: {
-    code: string
-    name: string
-    capacity: number
-    pricePerNight: number
-  }
 }): Promise<{ success: boolean; message?: string }> {
   const supabase = getSupabase()
+
+  const existing = await db.staff.findUnique({ where: { email: data.email } })
+  if (existing) return { success: false, message: 'Email sudah digunakan. Silakan masuk.' }
 
   const { data: authData, error } = await supabase.auth.signUp({
     email: data.email,
@@ -38,9 +31,9 @@ export async function registerUser(data: {
   try {
     const villa = await db.villa.create({
       data: {
-        name: data.villaName,
-        address: `${data.villaAddress}, ${data.villaCity}`,
-        contact: data.villaPhone,
+        name: `${data.name}'s Villa`,
+        address: '-',
+        isOnboarded: false,
       },
     })
 
@@ -63,21 +56,6 @@ export async function registerUser(data: {
         status: 'ACTIVE',
       },
     })
-
-    if (data.firstRoom) {
-      await db.room.create({
-        data: {
-          code: data.firstRoom.code,
-          name: data.firstRoom.name,
-          capacity: data.firstRoom.capacity,
-          pricePerNight: data.firstRoom.pricePerNight,
-          status: 'AVAILABLE',
-          type: 'Standard',
-          photos: [],
-          villaId: villa.id,
-        },
-      })
-    }
   } catch (err) {
     return {
       success: false,

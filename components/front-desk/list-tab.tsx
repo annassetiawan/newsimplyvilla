@@ -147,7 +147,7 @@ export function ListTab({ reservations, onNewReservation }: Props) {
                 onClick={() => setSelected(res)}
               >
                 <TableCell className="font-medium">{res.guest.name}</TableCell>
-                <TableCell className="text-muted-foreground">{res.room.code}</TableCell>
+                <TableCell className="font-id text-muted-foreground">{res.room.code}</TableCell>
                 <TableCell>{fmtDate(res.checkIn)}</TableCell>
                 <TableCell>{fmtDate(res.checkOut)}</TableCell>
                 <TableCell className="text-center">

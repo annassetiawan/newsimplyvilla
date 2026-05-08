@@ -29,7 +29,7 @@ export function EditReservationModal({ reservation, onClose, onSuccess }: Props)
   const [pending, startTransition] = useTransition()
   const [checkIn, setCheckIn] = useState('')
   const [checkOut, setCheckOut] = useState('')
-  const [status, setStatus] = useState<ListReservation['status']>('CONFIRMED')
+  const [status, setStatus] = useState<'CONFIRMED' | 'PENDING' | 'CHECKEDIN' | 'CHECKEDOUT'>('CONFIRMED')
   const [paymentStatus, setPaymentStatus] = useState<'PAID' | 'UNPAID'>('UNPAID')
   const [error, setError] = useState('')
 
@@ -37,7 +37,9 @@ export function EditReservationModal({ reservation, onClose, onSuccess }: Props)
     if (reservation) {
       setCheckIn(toDateInput(reservation.checkIn))
       setCheckOut(toDateInput(reservation.checkOut))
-      setStatus(reservation.status)
+      setStatus(
+        reservation.status === 'CANCELLED' ? 'CONFIRMED' : reservation.status
+      )
       setPaymentStatus(reservation.paymentStatus)
       setError('')
     }
@@ -90,7 +92,8 @@ export function EditReservationModal({ reservation, onClose, onSuccess }: Props)
               <span className="font-medium">{reservation.guest.name}</span>
               <span className="mx-2 text-border">·</span>
               <span className="font-medium">
-                {reservation.room.code} — {reservation.room.name}
+                <span className="font-id">{reservation.room.code}</span>
+                {' — '}{reservation.room.name}
               </span>
             </div>
 
@@ -118,7 +121,7 @@ export function EditReservationModal({ reservation, onClose, onSuccess }: Props)
               <Label>Status</Label>
               <Select
                 value={status}
-                onValueChange={(v) => setStatus(v as ListReservation['status'])}
+                onValueChange={(v) => setStatus(v as 'CONFIRMED' | 'PENDING' | 'CHECKEDIN' | 'CHECKEDOUT')}
               >
                 <SelectTrigger>
                   <SelectValue />

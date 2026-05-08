@@ -5,13 +5,6 @@ import { db } from '@/lib/db'
 import { ReportsClient } from '@/components/reports/reports-client'
 import { getSessionUser } from '@/lib/getSession'
 
-function getWeekNumber(date: Date) {
-  const d = new Date(date)
-  d.setHours(0, 0, 0, 0)
-  const jan1 = new Date(d.getFullYear(), 0, 1)
-  return Math.ceil(((d.getTime() - jan1.getTime()) / 86400000 + jan1.getDay() + 1) / 7)
-}
-
 export default async function ReportsPage() {
   const user = await getSessionUser()
   if (!user) redirect('/login')
@@ -24,10 +17,9 @@ export default async function ReportsPage() {
   const prevStart = new Date(now.getFullYear(), now.getMonth() - 1, 1)
   const prevEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59)
 
-  const twelveWeeksAgo = new Date()
-  twelveWeeksAgo.setDate(twelveWeeksAgo.getDate() - 83)
+  const twelveMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 11, 1)
 
-  const [txCurrent, txPrev, txRecent, txWeekly, rooms] = await Promise.all([
+  const [txCurrent, txPrev, txRecent, txMonthly, rooms] = await Promise.all([
     db.transaction.findMany({
       where: { villaId, date: { gte: periodStart, lte: periodEnd } },
       orderBy: { date: 'desc' },
@@ -41,7 +33,7 @@ export default async function ReportsPage() {
       take: 20,
     }),
     db.transaction.findMany({
-      where: { villaId, date: { gte: twelveWeeksAgo } },
+      where: { villaId, date: { gte: twelveMonthsAgo } },
     }),
     db.room.findMany({ where: { villaId } }),
   ])
@@ -59,23 +51,24 @@ export default async function ReportsPage() {
   ).length
   const avgOccupancy = rooms.length ? Math.round((occupiedRooms / rooms.length) * 100) : 0
 
-  const weekMap = new Map<number, { revenue: number; expenses: number }>()
-  for (const tx of txWeekly) {
-    const wk = getWeekNumber(tx.date)
-    const entry = weekMap.get(wk) ?? { revenue: 0, expenses: 0 }
+  const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+  const monthMap = new Map<string, { revenue: number; expenses: number }>()
+  for (const tx of txMonthly) {
+    const key = `${tx.date.getFullYear()}-${tx.date.getMonth()}`
+    const entry = monthMap.get(key) ?? { revenue: 0, expenses: 0 }
     if (tx.type === 'INCOME') entry.revenue += tx.amount
     else entry.expenses += tx.amount
-    weekMap.set(wk, entry)
+    monthMap.set(key, entry)
   }
 
-  const currentWeek = getWeekNumber(now)
-  const weeklyData = Array.from({ length: 12 }, (_, i) => {
-    const wk = currentWeek - 11 + i
-    const entry = weekMap.get(wk) ?? { revenue: 0, expenses: 0 }
+  const monthlyData = Array.from({ length: 12 }, (_, i) => {
+    const d = new Date(now.getFullYear(), now.getMonth() - 11 + i, 1)
+    const key = `${d.getFullYear()}-${d.getMonth()}`
+    const entry = monthMap.get(key) ?? { revenue: 0, expenses: 0 }
     return {
-      week: `W${i + 1}`,
-      revenue: entry.revenue || Math.round(Math.random() * 8_000_000 + 2_000_000),
-      expenses: entry.expenses || Math.round(Math.random() * 3_000_000 + 500_000),
+      month: MONTH_LABELS[d.getMonth()],
+      revenue: entry.revenue,
+      expenses: entry.expenses,
     }
   })
 
@@ -108,7 +101,7 @@ export default async function ReportsPage() {
       </div>
       <ReportsClient
         transactions={transactions}
-        weeklyData={weeklyData}
+        monthlyData={monthlyData}
         stats={{ revenue, expenses, netProfit, avgOccupancy, prevRevenue, prevExpenses, prevNetProfit }}
         expenseByCategory={expenseByCategory}
       />

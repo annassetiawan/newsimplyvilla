@@ -14,6 +14,8 @@ model Villa {
   address      String
   description  String?
   contact      String?
+  facilities   String[]
+  isOnboarded  Boolean        @default(false)
   updatedAt    DateTime       @updatedAt
   rooms        Room[]
   areas        Area[]
@@ -87,6 +89,7 @@ model Reservation {
   checkOut      DateTime
   status        ReservationStatus @default(PENDING)
   paymentStatus PaymentStatus     @default(UNPAID)
+  pricePerNight Float             @default(0)
   totalAmount   Float
   createdAt     DateTime          @default(now())
   guest         Guest             @relation(fields: [guestId], references: [id])

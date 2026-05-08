@@ -25,15 +25,15 @@ export interface TransactionData {
   paymentStatus: string
 }
 
-interface WeeklyData {
-  week: string
+interface MonthlyData {
+  month: string
   revenue: number
   expenses: number
 }
 
 interface Props {
   transactions: TransactionData[]
-  weeklyData: WeeklyData[]
+  monthlyData: MonthlyData[]
   stats: {
     revenue: number
     expenses: number
@@ -47,8 +47,6 @@ interface Props {
 }
 
 function formatRp(n: number) {
-  if (n >= 1_000_000) return `Rp ${(n / 1_000_000).toFixed(1)}M`
-  if (n >= 1_000) return `Rp ${(n / 1_000).toFixed(0)}K`
   return `Rp ${n.toLocaleString('id-ID')}`
 }
 
@@ -109,18 +107,16 @@ const CustomTooltip = ({ active, payload, label }: { active?: boolean; payload?:
   )
 }
 
-export function ReportsClient({ transactions, weeklyData, stats, expenseByCategory }: Props) {
+export function ReportsClient({ transactions, monthlyData, stats, expenseByCategory }: Props) {
   const [expenseOpen, setExpenseOpen] = useState(false)
 
   const maxExpense = Math.max(...expenseByCategory.map((e) => e.amount), 1)
   const recent = transactions.slice(0, 5)
 
-  const weekRevenues = weeklyData.map((w) => w.revenue)
-  const bestIdx = weekRevenues.indexOf(Math.max(...weekRevenues))
-  const bestWeek = weeklyData[bestIdx]
-  const avgRevenue = weekRevenues.length
-    ? weekRevenues.reduce((a, b) => a + b, 0) / weekRevenues.length
-    : 0
+  const revenues = monthlyData.map((m) => m.revenue)
+  const bestIdx = revenues.indexOf(Math.max(...revenues))
+  const bestMonth = monthlyData[bestIdx]
+  const avgRevenue = revenues.length ? revenues.reduce((a, b) => a + b, 0) / revenues.length : 0
 
   function exportExcel() {
     import('xlsx').then((XLSX) => {
@@ -211,11 +207,11 @@ export function ReportsClient({ transactions, weeklyData, stats, expenseByCatego
         <div className="col-span-2 rounded-xl border border-border bg-background p-5 space-y-4">
           <div>
             <p className="font-semibold">Revenue overview</p>
-            <p className="text-xs text-muted-foreground">Weekly revenue vs expenses, last 12 weeks</p>
+            <p className="text-xs text-muted-foreground">Monthly revenue vs expenses, last 12 months</p>
           </div>
           <ResponsiveContainer width="100%" height={220}>
-            <BarChart data={weeklyData} barGap={4}>
-              <XAxis dataKey="week" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
+            <BarChart data={monthlyData} barGap={4}>
+              <XAxis dataKey="month" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
               <YAxis hide />
               <Tooltip content={<CustomTooltip />} />
               <Legend
@@ -223,15 +219,15 @@ export function ReportsClient({ transactions, weeklyData, stats, expenseByCatego
                 iconSize={10}
                 wrapperStyle={{ fontSize: 11, paddingTop: 8 }}
               />
-              <Bar dataKey="revenue" name="Revenue" fill="#1a1a1a" radius={[3, 3, 0, 0]} />
-              <Bar dataKey="expenses" name="Expenses" fill="#e5e7eb" radius={[3, 3, 0, 0]} />
+              <Bar dataKey="revenue" name="Revenue" fill="#16a34a" radius={[3, 3, 0, 0]} />
+              <Bar dataKey="expenses" name="Expenses" fill="#dc2626" radius={[3, 3, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
           <div className="grid grid-cols-3 gap-3 border-t border-border pt-4">
             <div>
-              <p className="text-[11px] text-muted-foreground uppercase tracking-wider">Best week</p>
-              <p className="font-bold">{bestWeek ? formatRp(bestWeek.revenue) : '—'}</p>
-              <p className="text-xs text-muted-foreground">{bestWeek?.week}</p>
+              <p className="text-[11px] text-muted-foreground uppercase tracking-wider">Best month</p>
+              <p className="font-bold">{bestMonth ? formatRp(bestMonth.revenue) : '—'}</p>
+              <p className="text-xs text-muted-foreground">{bestMonth?.month}</p>
             </div>
             <div>
               <p className="text-[11px] text-muted-foreground uppercase tracking-wider">Average</p>

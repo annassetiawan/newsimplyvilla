@@ -33,9 +33,17 @@ interface StaffOption {
   name: string
 }
 
+interface SavedShift {
+  id: string
+  staffId: string
+  date: string
+  shiftType: string
+}
+
 interface Props {
   open: boolean
   onClose: () => void
+  onSave?: (shift: SavedShift) => void
   initial?: ShiftFormData | null
   staffOptions: StaffOption[]
 }
@@ -54,7 +62,7 @@ const SHIFT_LABELS: Record<string, string> = {
   OFF: 'Day Off',
 }
 
-export function ShiftModal({ open, onClose, initial, staffOptions }: Props) {
+export function ShiftModal({ open, onClose, onSave, initial, staffOptions }: Props) {
   const [pending, startTransition] = useTransition()
   const form = useForm<ShiftValues>({
     resolver: zodResolver(shiftSchema),
@@ -78,11 +86,12 @@ export function ShiftModal({ open, onClose, initial, staffOptions }: Props) {
 
   function onSubmit(data: ShiftValues) {
     startTransition(async () => {
-      await upsertShift({
+      const saved = await upsertShift({
         staffId: data.staffId,
         date: new Date(data.date),
         shiftType: data.shiftType,
       })
+      onSave?.(saved)
       onClose()
     })
   }

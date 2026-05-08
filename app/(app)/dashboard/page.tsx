@@ -9,8 +9,6 @@ import { RevenueChart } from '@/components/dashboard/revenue-chart'
 import { getSessionUser } from '@/lib/getSession'
 
 function formatRp(amount: number) {
-  if (amount >= 1_000_000) return `Rp ${(amount / 1_000_000).toFixed(1)}M`
-  if (amount >= 1_000) return `Rp ${(amount / 1_000).toFixed(0)}K`
   return `Rp ${amount.toLocaleString('id-ID')}`
 }
 
@@ -91,7 +89,12 @@ export default async function DashboardPage() {
   if (!user) redirect('/login')
   const villaId = user.villaId
 
-  const [rooms, openTasks, recentReservations, allInventory, aprilTransactions, reservationCount] =
+  const now = new Date()
+  const twelveMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 11, 1)
+  const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1)
+  const thisMonthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59)
+
+  const [rooms, openTasks, recentReservations, allInventory, monthlyIncome, currentMonthTx, reservationCount, chartReservations] =
     await Promise.all([
       db.room.findMany({ where: { villaId }, orderBy: { code: 'asc' } }),
       db.task.findMany({
@@ -107,13 +110,20 @@ export default async function DashboardPage() {
       }),
       db.inventoryItem.findMany({ where: { villaId } }),
       db.transaction.findMany({
-        where: {
-          villaId,
-          type: 'INCOME',
-          date: { gte: new Date('2026-04-01'), lte: new Date('2026-04-30') },
-        },
+        where: { villaId, type: 'INCOME', date: { gte: twelveMonthsAgo } },
+      }),
+      db.transaction.findMany({
+        where: { villaId, type: 'INCOME', date: { gte: thisMonthStart, lte: thisMonthEnd } },
       }),
       db.reservation.count({ where: { room: { villaId } } }),
+      db.reservation.findMany({
+        where: {
+          room: { villaId },
+          status: { notIn: ['CANCELLED'] },
+          checkOut: { gte: twelveMonthsAgo },
+        },
+        select: { checkIn: true, checkOut: true, createdAt: true },
+      }),
     ])
 
   const lowStock = allInventory.filter((i) => i.onHand < i.minLevel)
@@ -122,33 +132,51 @@ export default async function DashboardPage() {
   ).length
   const occupancyPct = rooms.length ? Math.round((occupiedCount / rooms.length) * 100) : 0
   const highPriorityCount = openTasks.filter((t) => t.priority === 'HIGH').length
-  const totalRevenue = aprilTransactions.reduce((s, t) => s + t.amount, 0)
+  const totalRevenue = currentMonthTx.reduce((s, t) => s + t.amount, 0)
 
   const sortedTasks = [...openTasks].sort(
     (a, b) => (PRIORITY_ORDER[a.priority] ?? 2) - (PRIORITY_ORDER[b.priority] ?? 2)
   )
 
-  const weeklyApril = [0, 0, 0, 0]
-  for (const txn of aprilTransactions) {
-    const day = new Date(txn.date).getDate()
-    const wIdx = Math.min(Math.floor((day - 1) / 7), 3)
-    weeklyApril[wIdx] += txn.amount
+  const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+  const monthMap = new Map<string, number>()
+  for (const tx of monthlyIncome) {
+    const key = `${tx.date.getFullYear()}-${tx.date.getMonth()}`
+    monthMap.set(key, (monthMap.get(key) ?? 0) + tx.amount)
   }
 
-  const chartData = [
-    { week: 'W1', revenue: 18_500_000 },
-    { week: 'W2', revenue: 21_000_000 },
-    { week: 'W3', revenue: 24_500_000 },
-    { week: 'W4', revenue: 28_000_000 },
-    { week: 'W5', revenue: 31_000_000 },
-    { week: 'W6', revenue: 35_500_000 },
-    { week: 'W7', revenue: 38_000_000 },
-    { week: 'W8', revenue: 43_000_000 },
-    { week: 'W9', revenue: weeklyApril[0] || 46_000_000 },
-    { week: 'W10', revenue: weeklyApril[1] || 53_000_000 },
-    { week: 'W11', revenue: weeklyApril[2] || 59_000_000 },
-    { week: 'W12', revenue: weeklyApril[3] || 65_000_000 },
-  ]
+  const chartData = Array.from({ length: 12 }, (_, i) => {
+    const d = new Date(now.getFullYear(), now.getMonth() - 11 + i, 1)
+    const monthStart = new Date(d.getFullYear(), d.getMonth(), 1)
+    const monthEnd = new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59, 999)
+    const key = `${d.getFullYear()}-${d.getMonth()}`
+
+    const revenue = monthMap.get(key) ?? 0
+
+    const bookings = chartReservations.filter((r) => {
+      const created = new Date(r.createdAt)
+      return created >= monthStart && created <= monthEnd
+    }).length
+
+    let occupiedNights = 0
+    for (const r of chartReservations) {
+      const ci = new Date(r.checkIn)
+      const co = new Date(r.checkOut)
+      if (ci < monthEnd && co > monthStart) {
+        const overlapStart = Math.max(ci.getTime(), monthStart.getTime())
+        const overlapEnd = Math.min(co.getTime(), monthEnd.getTime())
+        occupiedNights += Math.ceil((overlapEnd - overlapStart) / 86400000)
+      }
+    }
+    const daysInMonth = monthEnd.getDate()
+    const totalRoomNights = rooms.length * daysInMonth
+    const occupancy = totalRoomNights > 0 ? Math.round((occupiedNights / totalRoomNights) * 100) : 0
+
+    return { month: MONTH_LABELS[d.getMonth()], revenue, bookings, occupancy }
+  })
+
+  const totalBookings = chartData.reduce((s, d) => s + d.bookings, 0)
+  const avgOccupancy = Math.round(chartData.reduce((s, d) => s + d.occupancy, 0) / 12)
 
   return (
     <div className="space-y-5">
@@ -264,7 +292,13 @@ export default async function DashboardPage() {
       <div className="grid grid-cols-5 gap-4">
         <Card className="col-span-3">
           <CardContent className="p-5">
-            <RevenueChart data={chartData} currentMonthStart={8} totalRevenue={totalRevenue} />
+            <RevenueChart
+              data={chartData}
+              currentMonthStart={11}
+              totalRevenue={totalRevenue}
+              totalBookings={totalBookings}
+              avgOccupancy={avgOccupancy}
+            />
           </CardContent>
         </Card>
 
@@ -290,7 +324,7 @@ export default async function DashboardPage() {
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium">{res.guest.name}</p>
                   <p className="text-[11px] text-muted-foreground">
-                    {res.room.code} &middot;{' '}
+                    <span className="font-id">{res.room.code}</span> &middot;{' '}
                     {new Date(res.checkIn).toLocaleDateString('en-GB', {
                       day: 'numeric',
                       month: 'short',
@@ -367,7 +401,7 @@ export default async function DashboardPage() {
                   STATUS_STYLES.AVAILABLE
                 return (
                   <div key={room.id} className={cn('rounded-lg border p-2.5', s.card)}>
-                    <p className={cn('text-xs font-bold', s.code)}>{room.code}</p>
+                    <p className={cn('font-id font-bold', s.code)}>{room.code}</p>
                     <p className={cn('mt-0.5 text-[11px] font-medium', s.label)}>{s.text}</p>
                   </div>
                 )

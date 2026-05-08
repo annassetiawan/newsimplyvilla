@@ -20,11 +20,20 @@ export async function upsertShift(data: {
     },
   })
 
+  let shift: { id: string; staffId: string; date: Date; shiftType: string }
+
   if (existing) {
-    await db.shift.update({ where: { id: existing.id }, data: { shiftType: data.shiftType } })
+    shift = await db.shift.update({ where: { id: existing.id }, data: { shiftType: data.shiftType } })
   } else {
-    await db.shift.create({ data: { staffId: data.staffId, date: data.date, shiftType: data.shiftType } })
+    shift = await db.shift.create({ data: { staffId: data.staffId, date: data.date, shiftType: data.shiftType } })
   }
 
   revalidatePath('/schedule')
+
+  return {
+    id: shift.id,
+    staffId: shift.staffId,
+    date: shift.date.toISOString(),
+    shiftType: shift.shiftType,
+  }
 }

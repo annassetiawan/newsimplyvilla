@@ -45,6 +45,7 @@ export async function createReservation(data: {
       checkOut: data.checkOut,
       status: 'CONFIRMED',
       paymentStatus: data.paymentStatus,
+      pricePerNight: room.pricePerNight,
       totalAmount,
     },
   })
@@ -90,7 +91,7 @@ export async function updateReservation(
     1,
     Math.ceil((data.checkOut.getTime() - data.checkIn.getTime()) / 86400000)
   )
-  const totalAmount = reservation.room.pricePerNight * nights
+  const totalAmount = reservation.pricePerNight * nights
 
   await db.reservation.update({
     where: { id },

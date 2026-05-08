@@ -40,7 +40,7 @@ export function fmtDate(iso: string) {
   })
 }
 export function fmtRp(n: number) {
-  return n >= 1_000_000 ? `Rp ${(n / 1_000_000).toFixed(1)}M` : `Rp ${(n / 1_000).toFixed(0)}K`
+  return `Rp ${n.toLocaleString('id-ID')}`
 }
 export function nightCount(ci: string, co: string) {
   return Math.ceil((new Date(co).getTime() - new Date(ci).getTime()) / 86400000)
@@ -116,7 +116,7 @@ export function ReservationDetailSheet({
                     {selected.guest.idNumber && (
                       <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
                         <User className="h-3.5 w-3.5 shrink-0" />
-                        <span>ID: {selected.guest.idNumber}</span>
+                        <span className="font-id">{selected.guest.idNumber}</span>
                       </div>
                     )}
                     {selected.guest.phone && (
@@ -143,7 +143,8 @@ export function ReservationDetailSheet({
                       <span>Room</span>
                     </div>
                     <span className="text-sm font-medium">
-                      {selected.room.code} — {selected.room.name}
+                      <span className="font-id">{selected.room.code}</span>
+                      {' — '}{selected.room.name}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">

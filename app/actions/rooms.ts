@@ -20,7 +20,12 @@ export async function upsertRoom(data: {
   pricePerNight: number
   status: 'AVAILABLE' | 'OCCUPIED' | 'CLEANING' | 'MAINTENANCE'
 }) {
+  const user = await getSessionUser()
+  if (!user) redirect('/login')
+  if (user.role !== 'OWNER') throw new Error('Only owners can manage room settings')
+
   if (data.id) {
+    const existing = await db.room.findUnique({ where: { id: data.id } })
     await db.room.update({
       where: { id: data.id },
       data: {
@@ -32,8 +37,20 @@ export async function upsertRoom(data: {
         status: data.status,
       },
     })
+    if (existing && existing.pricePerNight !== data.pricePerNight) {
+      await db.transaction.create({
+        data: {
+          date: new Date(),
+          type: 'EXPENSE',
+          description: `Room price updated: ${existing.code} — Rp ${existing.pricePerNight.toLocaleString('id-ID')} → Rp ${data.pricePerNight.toLocaleString('id-ID')}`,
+          amount: 0,
+          category: 'Admin',
+          paymentStatus: 'PAID',
+          villaId: user.villaId,
+        },
+      })
+    }
   } else {
-    const villaId = await getVillaId()
     await db.room.create({
       data: {
         code: data.code,
@@ -43,7 +60,7 @@ export async function upsertRoom(data: {
         pricePerNight: data.pricePerNight,
         status: data.status,
         photos: [],
-        villaId,
+        villaId: user.villaId,
       },
     })
   }
