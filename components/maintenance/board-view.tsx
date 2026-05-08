@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd'
-import { Clock, MapPin, ChevronRight } from 'lucide-react'
+import { Clock, MapPin, ChevronRight, Loader, CheckCircle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
@@ -20,18 +20,24 @@ const COLUMNS = [
     label: 'Pending',
     badgeClass: 'bg-[#E1A62F] text-white',
     headerClass: 'text-amber-700 dark:text-amber-400',
+    emptyIcon: Clock,
+    emptyText: 'Tidak ada tugas pending',
   },
   {
     status: 'IN_PROGRESS',
     label: 'In Progress',
     badgeClass: 'bg-blue-500 text-white',
     headerClass: 'text-blue-700 dark:text-blue-400',
+    emptyIcon: Loader,
+    emptyText: 'Tidak ada tugas berjalan',
   },
   {
     status: 'DONE',
     label: 'Done',
     badgeClass: 'bg-green-500 text-white',
     headerClass: 'text-green-700 dark:text-green-400',
+    emptyIcon: CheckCircle,
+    emptyText: 'Belum ada tugas selesai hari ini',
   },
 ] as const
 
@@ -304,8 +310,9 @@ export function BoardView({ tasks, onEdit }: Props) {
                       )}
                     >
                       {colTasks.length === 0 && !snapshot.isDraggingOver && (
-                        <div className="flex items-center justify-center rounded-lg border-2 border-dashed border-border p-6 text-center text-xs text-muted-foreground min-h-[120px]">
-                          No tasks
+                        <div className="flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border p-6 text-center min-h-[120px]">
+                          <col.emptyIcon className="h-6 w-6 text-neutral-300 dark:text-neutral-600" strokeWidth={1.5} />
+                          <p className="text-xs text-neutral-400 dark:text-neutral-500">{col.emptyText}</p>
                         </div>
                       )}
                       {colTasks.map((task, index) => (

@@ -1,12 +1,13 @@
 export const dynamic = 'force-dynamic'
 
 import { redirect } from 'next/navigation'
-import { ArrowUp, CalendarDays, Download, Plus } from 'lucide-react'
+import { ArrowUp, CalendarDays, Download, Plus, CalendarOff, CheckSquare, BedDouble, PackageCheck } from 'lucide-react'
 import { db } from '@/lib/db'
 import { cn } from '@/lib/utils'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { RevenueChart } from '@/components/dashboard/revenue-chart'
 import { getSessionUser } from '@/lib/getSession'
+import { EmptyState } from '@/components/ui/EmptyState'
 
 function formatRp(amount: number) {
   return `Rp ${amount.toLocaleString('id-ID')}`
@@ -94,7 +95,7 @@ export default async function DashboardPage() {
   const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1)
   const thisMonthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59)
 
-  const [rooms, openTasks, recentReservations, allInventory, monthlyIncome, currentMonthTx, reservationCount, chartReservations] =
+  const [rooms, openTasks, recentReservations, allInventory, monthlyIncome, currentMonthTx, reservationCount, chartReservations, thisMonthCount] =
     await Promise.all([
       db.room.findMany({ where: { villaId }, orderBy: { code: 'asc' } }),
       db.task.findMany({
@@ -103,7 +104,7 @@ export default async function DashboardPage() {
         take: 5,
       }),
       db.reservation.findMany({
-        where: { room: { villaId } },
+        where: { room: { villaId }, status: { notIn: ['CANCELLED'] } },
         orderBy: { createdAt: 'desc' },
         take: 5,
         include: { guest: true, room: true },
@@ -115,7 +116,7 @@ export default async function DashboardPage() {
       db.transaction.findMany({
         where: { villaId, type: 'INCOME', date: { gte: thisMonthStart, lte: thisMonthEnd } },
       }),
-      db.reservation.count({ where: { room: { villaId } } }),
+      db.reservation.count({ where: { room: { villaId }, status: { not: 'CANCELLED' } } }),
       db.reservation.findMany({
         where: {
           room: { villaId },
@@ -123,6 +124,13 @@ export default async function DashboardPage() {
           checkOut: { gte: twelveMonthsAgo },
         },
         select: { checkIn: true, checkOut: true, createdAt: true },
+      }),
+      db.reservation.count({
+        where: {
+          room: { villaId },
+          status: { notIn: ['CANCELLED'] },
+          createdAt: { gte: thisMonthStart, lte: thisMonthEnd },
+        },
       }),
     ])
 
@@ -256,7 +264,7 @@ export default async function DashboardPage() {
             <p className="mt-3 text-3xl font-bold tracking-tight">+{reservationCount}</p>
             <div className="mt-3 flex items-end justify-between">
               <div>
-                <p className="text-xs text-muted-foreground">All time bookings</p>
+                <p className="text-xs text-muted-foreground">Total reservasi aktif</p>
                 <p className="mt-0.5 flex items-center gap-0.5 text-xs font-medium text-green-600 dark:text-green-400">
                   <ArrowUp className="h-3 w-3" /> +19% from last week
                 </p>
@@ -308,34 +316,55 @@ export default async function DashboardPage() {
               <CardTitle className="text-base">Recent reservations</CardTitle>
               <button className="text-xs font-medium text-primary hover:underline">View all</button>
             </div>
-            <CardDescription>{reservationCount} bookings this month</CardDescription>
+            <CardDescription>{thisMonthCount} reservasi aktif bulan ini</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            {recentReservations.map((res, i) => (
-              <div key={res.id} className="flex items-center gap-3">
-                <div
-                  className={cn(
-                    'flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[11px] font-bold',
-                    AVATAR_COLORS[i % AVATAR_COLORS.length]
-                  )}
-                >
-                  {getInitials(res.guest.name)}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium">{res.guest.name}</p>
-                  <p className="text-[11px] text-muted-foreground">
-                    <span className="font-id">{res.room.code}</span> &middot;{' '}
-                    {new Date(res.checkIn).toLocaleDateString('en-GB', {
-                      day: 'numeric',
-                      month: 'short',
-                    })}
-                  </p>
-                </div>
-                <p className="shrink-0 text-sm font-semibold text-primary">
-                  +{formatRp(res.totalAmount)}
-                </p>
+          <CardContent>
+            {recentReservations.length === 0 ? (
+              <EmptyState
+                icon={CalendarOff}
+                title="Belum ada reservasi"
+                description="Reservasi terbaru akan tampil di sini."
+                actionLabel="Tambah reservasi"
+                actionHref="/front-desk"
+                minHeight="min-h-[200px]"
+              />
+            ) : (
+              <div className="space-y-4">
+                {recentReservations.map((res, i) => (
+                  <div key={res.id} className="flex items-center gap-3">
+                    <div
+                      className={cn(
+                        'flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[11px] font-bold',
+                        AVATAR_COLORS[i % AVATAR_COLORS.length]
+                      )}
+                    >
+                      {getInitials(res.guest.name)}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium">{res.guest.name}</p>
+                      <p className="text-[11px] text-muted-foreground">
+                        <span className="font-id">{res.room.code}</span> &middot;{' '}
+                        {new Date(res.checkIn).toLocaleDateString('en-GB', {
+                          day: 'numeric',
+                          month: 'short',
+                        })}
+                      </p>
+                    </div>
+                    <div className="shrink-0 text-right">
+                      <p className={cn(
+                        'text-sm font-semibold',
+                        res.paymentStatus === 'PAID' ? 'text-primary' : 'text-muted-foreground'
+                      )}>
+                        {formatRp(res.totalAmount)}
+                      </p>
+                      {res.paymentStatus === 'UNPAID' && (
+                        <span className="text-[10px] font-semibold text-red-500">Belum bayar</span>
+                      )}
+                    </div>
+                  </div>
+                ))}
               </div>
-            ))}
+            )}
           </CardContent>
         </Card>
       </div>
@@ -354,32 +383,43 @@ export default async function DashboardPage() {
               {openTasks.length} open &middot; {highPriorityCount} high priority
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-3">
-            {sortedTasks.map((task) => (
-              <div key={task.id} className="flex items-start gap-3">
-                <div className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2 border-border" />
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium leading-tight">{task.title}</p>
-                  <p className="mt-0.5 text-[11px] text-muted-foreground">
-                    {task.assignedTo ?? 'Unassigned'} &middot;{' '}
-                    {task.dueDate
-                      ? new Date(task.dueDate).toLocaleDateString('en-GB', {
-                          day: 'numeric',
-                          month: 'short',
-                        })
-                      : 'No due date'}
-                  </p>
-                </div>
-                <span
-                  className={cn(
-                    'shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold',
-                    PRIORITY_BADGE[task.priority] ?? PRIORITY_BADGE.LOW
-                  )}
-                >
-                  {task.priority}
-                </span>
+          <CardContent>
+            {sortedTasks.length === 0 ? (
+              <EmptyState
+                icon={CheckSquare}
+                title="Tidak ada tugas hari ini"
+                description="Semua beres! Tidak ada tugas yang perlu dikerjakan hari ini."
+                minHeight="min-h-[180px]"
+              />
+            ) : (
+              <div className="space-y-3">
+                {sortedTasks.map((task) => (
+                  <div key={task.id} className="flex items-start gap-3">
+                    <div className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2 border-border" />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium leading-tight">{task.title}</p>
+                      <p className="mt-0.5 text-[11px] text-muted-foreground">
+                        {task.assignedTo ?? 'Unassigned'} &middot;{' '}
+                        {task.dueDate
+                          ? new Date(task.dueDate).toLocaleDateString('en-GB', {
+                              day: 'numeric',
+                              month: 'short',
+                            })
+                          : 'No due date'}
+                      </p>
+                    </div>
+                    <span
+                      className={cn(
+                        'shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold',
+                        PRIORITY_BADGE[task.priority] ?? PRIORITY_BADGE.LOW
+                      )}
+                    >
+                      {task.priority}
+                    </span>
+                  </div>
+                ))}
               </div>
-            ))}
+            )}
           </CardContent>
         </Card>
 
@@ -394,19 +434,30 @@ export default async function DashboardPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 gap-2">
-              {rooms.map((room) => {
-                const s =
-                  STATUS_STYLES[room.status as keyof typeof STATUS_STYLES] ??
-                  STATUS_STYLES.AVAILABLE
-                return (
-                  <div key={room.id} className={cn('rounded-lg border p-2.5', s.card)}>
-                    <p className={cn('font-id font-bold', s.code)}>{room.code}</p>
-                    <p className={cn('mt-0.5 text-[11px] font-medium', s.label)}>{s.text}</p>
-                  </div>
-                )
-              })}
-            </div>
+            {rooms.length === 0 ? (
+              <EmptyState
+                icon={BedDouble}
+                title="Belum ada kamar"
+                description="Tambahkan kamar villa kamu untuk mulai mengelola status."
+                actionLabel="Tambah kamar"
+                actionHref="/rooms"
+                minHeight="min-h-[160px]"
+              />
+            ) : (
+              <div className="grid grid-cols-2 gap-2">
+                {rooms.map((room) => {
+                  const s =
+                    STATUS_STYLES[room.status as keyof typeof STATUS_STYLES] ??
+                    STATUS_STYLES.AVAILABLE
+                  return (
+                    <div key={room.id} className={cn('rounded-lg border p-2.5', s.card)}>
+                      <p className={cn('font-id font-bold', s.code)}>{room.code}</p>
+                      <p className={cn('mt-0.5 text-[11px] font-medium', s.label)}>{s.text}</p>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -428,7 +479,13 @@ export default async function DashboardPage() {
           </CardHeader>
           <CardContent>
             {lowStock.length === 0 ? (
-              <p className="text-sm text-muted-foreground">All stock levels are healthy.</p>
+              <EmptyState
+                icon={PackageCheck}
+                title="Stok semua aman"
+                description="Tidak ada item yang perlu di-restock saat ini."
+                iconColor="text-green-500 dark:text-green-400"
+                minHeight="min-h-[160px]"
+              />
             ) : (
               <div className="space-y-4">
                 {lowStock.map((item) => {

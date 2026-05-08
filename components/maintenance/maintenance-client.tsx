@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { LayoutGrid, List, CalendarDays, Plus, Filter } from 'lucide-react'
+import { LayoutGrid, List, CalendarDays, Plus, Filter, ClipboardList } from 'lucide-react'
+import { EmptyState } from '@/components/ui/EmptyState'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { BoardView } from './board-view'
@@ -111,9 +112,31 @@ export function MaintenanceClient({ tasks, staffOptions, locationOptions }: Prop
         </div>
       </div>
 
-      {view === 'board' && <BoardView tasks={tasks} onEdit={handleEdit} />}
+      {view === 'board' && (
+        tasks.length === 0 ? (
+          <EmptyState
+            icon={ClipboardList}
+            title="Belum ada tugas"
+            description="Buat tugas maintenance atau kebersihan untuk staf kamu."
+            actionLabel="+ Tugas baru"
+            onAction={handleNew}
+          />
+        ) : (
+          <BoardView tasks={tasks} onEdit={handleEdit} />
+        )
+      )}
       {view === 'list' && (
-        <ListView tasks={tasks} staffNames={staffNames} onEdit={handleEdit} />
+        tasks.length === 0 ? (
+          <EmptyState
+            icon={ClipboardList}
+            title="Tidak ada tugas"
+            description="Buat tugas baru untuk mulai melacak maintenance dan kebersihan."
+            actionLabel="+ Tugas baru"
+            onAction={handleNew}
+          />
+        ) : (
+          <ListView tasks={tasks} staffNames={staffNames} onEdit={handleEdit} />
+        )
       )}
       {view === 'calendar' && <CalendarView tasks={tasks} onEdit={handleEdit} />}
 

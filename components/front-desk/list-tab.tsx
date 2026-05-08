@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { MoreHorizontal, Plus, Search } from 'lucide-react'
+import { CalendarOff, MoreHorizontal, Plus, Search } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
   Table,
@@ -21,6 +21,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { cancelReservation, markAsPaid } from '@/app/actions/reservations'
+import { EmptyState } from '@/components/ui/EmptyState'
 import { ReservationDetailSheet } from './reservation-detail-sheet'
 import { EditReservationModal } from './edit-reservation-modal'
 import { fmtDate, fmtRp, nightCount, STATUS_STYLE, STATUS_LABEL } from './reservation-detail-sheet'
@@ -79,6 +80,18 @@ export function ListTab({ reservations, onNewReservation }: Props) {
 
   function handleEditSuccess(updates: Partial<ListReservation>) {
     if (selected) setSelected({ ...selected, ...updates })
+  }
+
+  if (reservations.length === 0) {
+    return (
+      <EmptyState
+        icon={CalendarOff}
+        title="Belum ada reservasi"
+        description="Reservasi yang dibuat akan muncul dalam daftar ini."
+        actionLabel="+ Reservasi baru"
+        onAction={onNewReservation}
+      />
+    )
   }
 
   return (

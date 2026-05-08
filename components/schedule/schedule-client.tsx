@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { ChevronLeft, ChevronRight, Plus, Users, Clock, AlertTriangle } from 'lucide-react'
+import { EmptyState } from '@/components/ui/EmptyState'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { ShiftModal } from './shift-modal'
@@ -136,6 +137,18 @@ export function ScheduleClient({ staff, shifts: initialShifts }: Props) {
   const hoursScheduled = totalShifts * 8
   const totalSlots = staff.length * 7
   const coverageGaps = totalSlots - weekShifts.length
+
+  if (staff.length === 0) {
+    return (
+      <EmptyState
+        icon={Users}
+        title="Belum ada staf"
+        description="Tambahkan staf terlebih dahulu sebelum membuat jadwal."
+        actionLabel="Tambah staf"
+        actionHref="/users"
+      />
+    )
+  }
 
   return (
     <div className="space-y-4">
@@ -302,6 +315,13 @@ export function ScheduleClient({ staff, shifts: initialShifts }: Props) {
           </table>
         </div>
       </div>
+
+      {totalShifts === 0 && (
+        <p className="flex items-center justify-center gap-1.5 text-xs text-neutral-400 dark:text-neutral-500">
+          <Plus className="h-3.5 w-3.5" />
+          Klik + untuk mulai membuat jadwal minggu ini
+        </p>
+      )}
 
       <ShiftModal
         open={modalOpen}

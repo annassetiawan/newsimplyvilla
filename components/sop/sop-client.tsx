@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { Search, Plus, MoreHorizontal, Clock, ListOrdered, X } from 'lucide-react'
+import { Search, Plus, MoreHorizontal, Clock, ListOrdered, X, BookOpen } from 'lucide-react'
+import { EmptyState } from '@/components/ui/EmptyState'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -189,10 +190,24 @@ export function SOPClient({ sops }: Props) {
 
         {/* Main content */}
         <div className="flex-1 min-w-0 space-y-3">
-          {filtered.length === 0 && (
-            <div className="rounded-xl border-2 border-dashed border-border p-12 text-center text-sm text-muted-foreground">
-              No SOPs found
-            </div>
+          {filtered.length === 0 && activeCategory === 'ALL' && (
+            <EmptyState
+              icon={BookOpen}
+              title="Belum ada SOP"
+              description="Buat SOP untuk membantu staf bekerja sesuai standar villa kamu."
+              actionLabel="+ Buat SOP"
+              onAction={openNew}
+            />
+          )}
+          {filtered.length === 0 && activeCategory !== 'ALL' && (
+            <EmptyState
+              icon={BookOpen}
+              title="Belum ada SOP di kategori ini"
+              description="Tambahkan SOP baru atau pilih kategori lain."
+              actionLabel="+ Buat SOP"
+              onAction={openNew}
+              minHeight="min-h-[240px]"
+            />
           )}
 
           {/* Featured card — two-column layout */}

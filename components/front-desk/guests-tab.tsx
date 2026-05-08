@@ -2,8 +2,9 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Search } from 'lucide-react'
+import { Search, Users } from 'lucide-react'
 import { Input } from '@/components/ui/input'
+import { EmptyState } from '@/components/ui/EmptyState'
 import {
   Table,
   TableBody,
@@ -52,6 +53,16 @@ export function GuestsTab({ guests }: Props) {
       (g.phone ?? '').includes(search) ||
       (g.idNumber ?? '').includes(search)
   )
+
+  if (guests.length === 0) {
+    return (
+      <EmptyState
+        icon={Users}
+        title="Belum ada data tamu"
+        description="Profil tamu akan otomatis dibuat saat reservasi pertama masuk."
+      />
+    )
+  }
 
   return (
     <div className="space-y-3">

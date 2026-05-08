@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { Search, Plus, MoreHorizontal } from 'lucide-react'
+import { Search, Plus, MoreHorizontal, UserPlus, SearchX } from 'lucide-react'
+import { EmptyState } from '@/components/ui/EmptyState'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -140,10 +141,31 @@ export function UsersClient({ staff }: Props) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filtered.length === 0 && (
+            {filtered.length === 0 && search === '' && roleFilter === 'ALL' && statusFilter === 'ALL' && (
               <TableRow>
-                <TableCell colSpan={5} className="py-10 text-center text-muted-foreground">
-                  No staff found
+                <TableCell colSpan={5} className="py-12 text-center">
+                  <div className="flex flex-col items-center gap-2">
+                    <UserPlus className="h-10 w-10 text-neutral-300 dark:text-neutral-600" strokeWidth={1.5} />
+                    <p className="mt-1 text-[15px] font-medium text-neutral-700 dark:text-neutral-300">Belum ada anggota tim</p>
+                    <p className="text-[13px] text-neutral-400 dark:text-neutral-500">Undang staf untuk membantu mengelola villa kamu.</p>
+                    <button
+                      onClick={openNew}
+                      className="mt-3 rounded-lg bg-neutral-800 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-neutral-700"
+                    >
+                      + Undang staf
+                    </button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            )}
+            {filtered.length === 0 && (search !== '' || roleFilter !== 'ALL' || statusFilter !== 'ALL') && (
+              <TableRow>
+                <TableCell colSpan={5} className="py-10 text-center">
+                  <div className="flex flex-col items-center gap-2">
+                    <SearchX className="h-8 w-8 text-neutral-300 dark:text-neutral-600" strokeWidth={1.5} />
+                    <p className="text-sm font-medium text-neutral-700 dark:text-neutral-300">Staf tidak ditemukan</p>
+                    <p className="text-xs text-neutral-400 dark:text-neutral-500">Coba kata kunci lain.</p>
+                  </div>
                 </TableCell>
               </TableRow>
             )}

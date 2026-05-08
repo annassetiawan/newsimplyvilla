@@ -12,7 +12,11 @@ import {
   WashingMachine,
   Building2,
   Images,
+  BedDouble,
+  Filter,
+  MapPin,
 } from 'lucide-react'
+import { EmptyState } from '@/components/ui/EmptyState'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -195,21 +199,37 @@ export function RoomsClient({ rooms, areas }: Props) {
 
       {/* Room cards */}
       {tab !== 'Areas' && (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {filteredRooms.map((room) => (
-            <RoomCard
-              key={room.id}
-              room={room}
-              onView={() => setSelectedRoom(room)}
-              onEdit={() => openEdit(room)}
-            />
-          ))}
-          {filteredRooms.length === 0 && (
-            <p className="col-span-3 py-10 text-center text-sm text-muted-foreground">
-              No rooms found
-            </p>
-          )}
-        </div>
+        rooms.length === 0 ? (
+          <EmptyState
+            icon={BedDouble}
+            title="Belum ada kamar"
+            description="Tambahkan kamar villa kamu untuk mulai mengelola reservasi dan status."
+            actionLabel="+ Tambah kamar"
+            onAction={openAdd}
+          />
+        ) : (
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {filteredRooms.map((room) => (
+              <RoomCard
+                key={room.id}
+                room={room}
+                onView={() => setSelectedRoom(room)}
+                onEdit={() => openEdit(room)}
+              />
+            ))}
+            {filteredRooms.length === 0 && (
+              <div className="col-span-3 flex flex-col items-center gap-2 py-12 text-center">
+                <Filter className="h-8 w-8 text-neutral-300 dark:text-neutral-600" />
+                <p className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                  Tidak ada kamar dengan status ini
+                </p>
+                <p className="text-xs text-neutral-400 dark:text-neutral-500">
+                  Coba filter lain atau tambah kamar baru.
+                </p>
+              </div>
+            )}
+          </div>
+        )
       )}
 
       {/* Shared areas */}
@@ -226,34 +246,40 @@ export function RoomsClient({ rooms, areas }: Props) {
               <Plus className="mr-1.5 h-3.5 w-3.5" /> Add area
             </Button>
           </div>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-            {areas.map((area) => {
-              const Icon = areaIcon(area.name)
-              return (
-                <div
-                  key={area.id}
-                  className="rounded-xl border border-border bg-background p-4 flex flex-col gap-3"
-                >
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-teal-50 dark:bg-teal-900/20">
-                    <Icon className="h-5 w-5 text-teal-600 dark:text-teal-400" />
+          {areas.length === 0 ? (
+            <EmptyState
+              icon={MapPin}
+              title="Belum ada area bersama"
+              description="Tambahkan area seperti kolam renang, taman, atau lobby."
+              actionLabel="+ Tambah area"
+              onAction={() => setAreaModalOpen(true)}
+              minHeight="min-h-[200px]"
+            />
+          ) : (
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+              {areas.map((area) => {
+                const Icon = areaIcon(area.name)
+                return (
+                  <div
+                    key={area.id}
+                    className="rounded-xl border border-border bg-background p-4 flex flex-col gap-3"
+                  >
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-teal-50 dark:bg-teal-900/20">
+                      <Icon className="h-5 w-5 text-teal-600 dark:text-teal-400" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-sm">{area.name}</p>
+                      {area.description && (
+                        <p className="text-[11px] text-muted-foreground mt-0.5 line-clamp-2">
+                          {area.description}
+                        </p>
+                      )}
+                    </div>
                   </div>
-                  <div>
-                    <p className="font-semibold text-sm">{area.name}</p>
-                    {area.description && (
-                      <p className="text-[11px] text-muted-foreground mt-0.5 line-clamp-2">
-                        {area.description}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              )
-            })}
-            {areas.length === 0 && (
-              <p className="col-span-4 py-6 text-center text-sm text-muted-foreground">
-                No shared areas added yet
-              </p>
-            )}
-          </div>
+                )
+              })}
+            </div>
+          )}
         </div>
       )}
 

@@ -1,9 +1,10 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { ChevronLeft, ChevronRight, Plus } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Plus, BedDouble } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { EmptyState } from '@/components/ui/EmptyState'
 import { cancelReservation, markAsPaid } from '@/app/actions/reservations'
 import { ReservationDetailSheet } from './reservation-detail-sheet'
 import { EditReservationModal } from './edit-reservation-modal'
@@ -122,6 +123,18 @@ export function CalendarTab({ rooms, reservations, onNewReservation }: Props) {
 
   function handleEditSuccess(updates: Partial<ListReservation>) {
     if (selected) setSelected({ ...selected, ...updates })
+  }
+
+  if (rooms.length === 0) {
+    return (
+      <EmptyState
+        icon={BedDouble}
+        title="Belum ada kamar"
+        description="Tambahkan kamar terlebih dahulu sebelum membuat reservasi."
+        actionLabel="Tambah kamar"
+        actionHref="/rooms"
+      />
+    )
   }
 
   return (
@@ -271,6 +284,13 @@ export function CalendarTab({ rooms, reservations, onNewReservation }: Props) {
           <span>Today</span>
         </div>
       </div>
+
+      {reservations.length === 0 && (
+        <p className="flex items-center justify-center gap-1.5 text-xs text-neutral-400 dark:text-neutral-500">
+          <Plus className="h-3.5 w-3.5" />
+          Klik &apos;New reservation&apos; untuk tambah reservasi baru
+        </p>
+      )}
 
       <ReservationDetailSheet
         selected={selected}

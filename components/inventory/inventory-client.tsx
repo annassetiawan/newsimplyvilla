@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { MoreHorizontal, Search, Plus, ArrowDownToLine, ArrowUpFromLine, AlertTriangle } from 'lucide-react'
+import { MoreHorizontal, Search, Plus, ArrowDownToLine, ArrowUpFromLine, AlertTriangle, Package, SearchX } from 'lucide-react'
+import { EmptyState } from '@/components/ui/EmptyState'
 import { cn } from '@/lib/utils'
 import {
   Table,
@@ -209,6 +210,15 @@ export function InventoryClient({ items, recentStats }: Props) {
       </div>
 
       {/* Table */}
+      {items.length === 0 ? (
+        <EmptyState
+          icon={Package}
+          title="Belum ada item inventory"
+          description="Mulai tambahkan item untuk melacak stok villa kamu."
+          actionLabel="+ Tambah item"
+          onAction={() => setNewItemOpen(true)}
+        />
+      ) : (
       <div className="rounded-xl border border-border">
         <Table>
           <TableHeader>
@@ -222,10 +232,29 @@ export function InventoryClient({ items, recentStats }: Props) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filtered.length === 0 && (
+            {filtered.length === 0 && search !== '' && (
               <TableRow>
-                <TableCell colSpan={6} className="py-10 text-center text-muted-foreground">
-                  No items found
+                <TableCell colSpan={6} className="py-10 text-center">
+                  <div className="flex flex-col items-center gap-2">
+                    <SearchX className="h-8 w-8 text-neutral-300 dark:text-neutral-600" />
+                    <p className="text-sm font-medium text-neutral-700 dark:text-neutral-300">Item tidak ditemukan</p>
+                    <p className="text-xs text-neutral-400 dark:text-neutral-500">Coba kata kunci lain.</p>
+                  </div>
+                </TableCell>
+              </TableRow>
+            )}
+            {filtered.length === 0 && search === '' && tab !== 'All' && (
+              <TableRow>
+                <TableCell colSpan={6} className="py-10 text-center">
+                  <div className="flex flex-col items-center gap-2">
+                    <p className="text-sm font-medium text-neutral-700 dark:text-neutral-300">Tidak ada item di kategori ini</p>
+                    <button
+                      onClick={() => setNewItemOpen(true)}
+                      className="mt-1 rounded-lg bg-neutral-800 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-neutral-700"
+                    >
+                      + Tambah item
+                    </button>
+                  </div>
                 </TableCell>
               </TableRow>
             )}
@@ -279,6 +308,7 @@ export function InventoryClient({ items, recentStats }: Props) {
           </TableBody>
         </Table>
       </div>
+      )}
 
       {/* Modals */}
       <StockInModal

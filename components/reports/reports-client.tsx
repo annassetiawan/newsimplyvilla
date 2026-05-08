@@ -10,7 +10,8 @@ import {
   ResponsiveContainer,
   Legend,
 } from 'recharts'
-import { TrendingUp, TrendingDown, Plus, Download } from 'lucide-react'
+import { TrendingUp, TrendingDown, Plus, Download, BarChart2, Receipt } from 'lucide-react'
+import { EmptyState } from '@/components/ui/EmptyState'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { ExpenseModal } from './expense-modal'
@@ -209,37 +210,50 @@ export function ReportsClient({ transactions, monthlyData, stats, expenseByCateg
             <p className="font-semibold">Revenue overview</p>
             <p className="text-xs text-muted-foreground">Monthly revenue vs expenses, last 12 months</p>
           </div>
-          <ResponsiveContainer width="100%" height={220}>
-            <BarChart data={monthlyData} barGap={4}>
-              <XAxis dataKey="month" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
-              <YAxis hide />
-              <Tooltip content={<CustomTooltip />} />
-              <Legend
-                iconType="square"
-                iconSize={10}
-                wrapperStyle={{ fontSize: 11, paddingTop: 8 }}
-              />
-              <Bar dataKey="revenue" name="Revenue" fill="#16a34a" radius={[3, 3, 0, 0]} />
-              <Bar dataKey="expenses" name="Expenses" fill="#dc2626" radius={[3, 3, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-          <div className="grid grid-cols-3 gap-3 border-t border-border pt-4">
-            <div>
-              <p className="text-[11px] text-muted-foreground uppercase tracking-wider">Best month</p>
-              <p className="font-bold">{bestMonth ? formatRp(bestMonth.revenue) : '—'}</p>
-              <p className="text-xs text-muted-foreground">{bestMonth?.month}</p>
-            </div>
-            <div>
-              <p className="text-[11px] text-muted-foreground uppercase tracking-wider">Average</p>
-              <p className="font-bold">{formatRp(Math.round(avgRevenue))}</p>
-              <p className="text-xs text-muted-foreground">per week</p>
-            </div>
-            <div>
-              <p className="text-[11px] text-muted-foreground uppercase tracking-wider">YoY growth</p>
-              <p className="font-bold text-green-600">+12%</p>
-              <p className="text-xs text-muted-foreground">vs same period last year</p>
-            </div>
-          </div>
+          {transactions.length === 0 ? (
+            <EmptyState
+              icon={BarChart2}
+              title="Belum ada data keuangan"
+              description="Data laporan akan muncul setelah ada transaksi reservasi atau pengeluaran."
+              actionLabel="Catat pengeluaran"
+              onAction={() => setExpenseOpen(true)}
+              minHeight="min-h-[240px]"
+            />
+          ) : (
+            <>
+              <ResponsiveContainer width="100%" height={220}>
+                <BarChart data={monthlyData} barGap={4}>
+                  <XAxis dataKey="month" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
+                  <YAxis hide />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Legend
+                    iconType="square"
+                    iconSize={10}
+                    wrapperStyle={{ fontSize: 11, paddingTop: 8 }}
+                  />
+                  <Bar dataKey="revenue" name="Revenue" fill="#16a34a" radius={[3, 3, 0, 0]} />
+                  <Bar dataKey="expenses" name="Expenses" fill="#dc2626" radius={[3, 3, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+              <div className="grid grid-cols-3 gap-3 border-t border-border pt-4">
+                <div>
+                  <p className="text-[11px] text-muted-foreground uppercase tracking-wider">Best month</p>
+                  <p className="font-bold">{bestMonth ? formatRp(bestMonth.revenue) : '—'}</p>
+                  <p className="text-xs text-muted-foreground">{bestMonth?.month}</p>
+                </div>
+                <div>
+                  <p className="text-[11px] text-muted-foreground uppercase tracking-wider">Average</p>
+                  <p className="font-bold">{formatRp(Math.round(avgRevenue))}</p>
+                  <p className="text-xs text-muted-foreground">per week</p>
+                </div>
+                <div>
+                  <p className="text-[11px] text-muted-foreground uppercase tracking-wider">YoY growth</p>
+                  <p className="font-bold text-green-600">+12%</p>
+                  <p className="text-xs text-muted-foreground">vs same period last year</p>
+                </div>
+              </div>
+            </>
+          )}
         </div>
 
         <div className="rounded-xl border border-border bg-background p-5 space-y-4">
@@ -289,8 +303,14 @@ export function ReportsClient({ transactions, monthlyData, stats, expenseByCateg
           <tbody>
             {recent.length === 0 && (
               <tr>
-                <td colSpan={5} className="px-5 py-8 text-center text-sm text-muted-foreground">
-                  No transactions found
+                <td colSpan={5} className="px-5 py-12 text-center">
+                  <div className="flex flex-col items-center gap-2">
+                    <Receipt className="h-8 w-8 text-neutral-300 dark:text-neutral-600" strokeWidth={1.5} />
+                    <p className="text-sm font-medium text-neutral-700 dark:text-neutral-300">Belum ada transaksi</p>
+                    <p className="text-xs text-neutral-400 dark:text-neutral-500">
+                      Transaksi dari reservasi dan pengeluaran akan muncul di sini.
+                    </p>
+                  </div>
                 </td>
               </tr>
             )}

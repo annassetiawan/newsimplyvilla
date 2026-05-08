@@ -171,8 +171,11 @@ export function ListView({ tasks, staffNames, onEdit }: Props) {
           <TableBody>
             {filtered.length === 0 && (
               <TableRow>
-                <TableCell colSpan={8} className="py-10 text-center text-muted-foreground">
-                  No tasks found
+                <TableCell colSpan={8} className="py-12 text-center">
+                  <div className="flex flex-col items-center gap-2">
+                    <p className="text-sm font-medium text-neutral-700 dark:text-neutral-300">Tidak ada tugas ditemukan</p>
+                    <p className="text-xs text-neutral-400 dark:text-neutral-500">Coba ubah filter atau buat tugas baru.</p>
+                  </div>
                 </TableCell>
               </TableRow>
             )}
