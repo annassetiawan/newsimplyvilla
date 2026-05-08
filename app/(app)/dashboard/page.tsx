@@ -95,8 +95,9 @@ export default async function DashboardPage() {
   const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1)
   const thisMonthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59)
 
-  const [rooms, openTasks, recentReservations, allInventory, monthlyIncome, currentMonthTx, reservationCount, chartReservations, thisMonthCount] =
-    await Promise.all([
+  try {
+    const [rooms, openTasks, recentReservations, allInventory, monthlyIncome, currentMonthTx, reservationCount, chartReservations, thisMonthCount] =
+      await Promise.all([
       db.room.findMany({ where: { villaId }, orderBy: { code: 'asc' } }),
       db.task.findMany({
         where: { villaId, status: { in: ['PENDING', 'IN_PROGRESS'] } },
@@ -134,7 +135,7 @@ export default async function DashboardPage() {
       }),
     ])
 
-  const lowStock = allInventory.filter((i) => i.onHand < i.minLevel)
+    const lowStock = allInventory.filter((i) => i.onHand < i.minLevel)
   const occupiedCount = rooms.filter(
     (r) => r.status === 'OCCUPIED' || r.status === 'CLEANING'
   ).length
@@ -521,4 +522,8 @@ export default async function DashboardPage() {
       </div>
     </div>
   )
+  } catch (error) {
+    console.error('Dashboard error:', error)
+    return <div>Error loading dashboard. Please refresh.</div>
+  }
 }
