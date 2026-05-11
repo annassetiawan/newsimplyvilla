@@ -23,7 +23,50 @@ async function SidebarServer() {
 
 function SidebarFallback() {
   return (
-    <aside className="fixed inset-y-0 left-0 z-40 flex w-16 flex-col border-r border-border bg-background" />
+    <aside className="fixed left-0 top-0 z-40 hidden h-full w-[240px] flex-col border-r border-border bg-background lg:flex">
+      {/* Logo */}
+      <div className="flex h-14 shrink-0 items-center gap-2.5 border-b border-border px-3">
+        <div className="h-8 w-8 shrink-0 animate-pulse rounded-lg bg-primary/30" />
+        <div className="flex flex-col gap-1.5">
+          <div className="h-3 w-20 animate-pulse rounded bg-muted" />
+          <div className="h-2.5 w-28 animate-pulse rounded bg-muted" />
+        </div>
+      </div>
+      {/* Nav items */}
+      <nav className="flex-1 overflow-hidden py-3">
+        {[
+          { label: true, items: 1 },
+          { label: true, items: 5 },
+          { label: true, items: 2 },
+          { label: true, items: 2 },
+        ].map((group, gi) => (
+          <div key={gi} className={gi > 0 ? 'mt-4' : ''}>
+            <div className="mb-1 px-4">
+              <div className="h-2 w-16 animate-pulse rounded bg-muted" />
+            </div>
+            <div className="space-y-0.5 px-2">
+              {Array.from({ length: group.items }).map((_, i) => (
+                <div key={i} className="flex items-center gap-2.5 rounded-lg px-2.5 py-2">
+                  <div className="h-4 w-4 shrink-0 animate-pulse rounded bg-muted" />
+                  <div className="h-3 w-24 animate-pulse rounded bg-muted" />
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </nav>
+      {/* Footer */}
+      <div className="shrink-0 border-t border-border p-2">
+        <div className="flex items-center gap-2.5 rounded-lg px-2.5 py-2">
+          <div className="h-7 w-7 shrink-0 animate-pulse rounded-full bg-muted" />
+          <div className="flex flex-col gap-1.5 flex-1">
+            <div className="h-3 w-20 animate-pulse rounded bg-muted" />
+            <div className="h-2.5 w-32 animate-pulse rounded bg-muted" />
+          </div>
+          <div className="h-5 w-5 animate-pulse rounded bg-muted" />
+        </div>
+      </div>
+    </aside>
   )
 }
 
