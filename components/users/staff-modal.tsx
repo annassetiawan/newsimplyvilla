@@ -45,7 +45,7 @@ const schema = z.object({
   position: z.string().min(1, 'Required'),
   role: z.enum(['OWNER', 'STAFF']),
   isActive: z.boolean(),
-  permissions: z.array(z.string()).default([]),
+  permissions: z.array(z.string()),
 })
 type Values = z.infer<typeof schema>
 
