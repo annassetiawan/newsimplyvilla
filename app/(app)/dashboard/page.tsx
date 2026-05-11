@@ -1,7 +1,7 @@
 export const revalidate = 60
 
 import { redirect } from 'next/navigation'
-import { ArrowUp, CalendarDays, Download, Plus, CalendarOff, CheckSquare, BedDouble, PackageCheck } from 'lucide-react'
+import { ArrowUp, ArrowDown, CalendarDays, Download, Plus, CalendarOff, CheckSquare, BedDouble, PackageCheck } from 'lucide-react'
 import { db } from '@/lib/db'
 import { cn } from '@/lib/utils'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
@@ -105,9 +105,11 @@ export default async function DashboardPage() {
   const twelveMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 11, 1)
   const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1)
   const thisMonthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59)
+  const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1)
+  const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59)
 
   try {
-    const [rooms, openTasks, recentReservations, allInventory, monthlyIncome, currentMonthTx, reservationCount, chartReservations, thisMonthCount] =
+    const [rooms, openTasks, recentReservations, allInventory, monthlyIncome, currentMonthTx, reservationCount, chartReservations, thisMonthCount, lastMonthCount] =
       await Promise.all([
       db.room.findMany({ where: { villaId }, orderBy: { code: 'asc' } }),
       db.task.findMany({
@@ -146,6 +148,13 @@ export default async function DashboardPage() {
           createdAt: { gte: thisMonthStart, lte: thisMonthEnd },
         },
       }),
+      db.reservation.count({
+        where: {
+          room: { villaId },
+          status: { notIn: ['CANCELLED'] },
+          createdAt: { gte: lastMonthStart, lte: lastMonthEnd },
+        },
+      }),
     ])
 
     const lowStock = allInventory.filter((i) => i.onHand < i.minLevel)
@@ -155,6 +164,18 @@ export default async function DashboardPage() {
   const occupancyPct = rooms.length ? Math.round((occupiedCount / rooms.length) * 100) : 0
   const highPriorityCount = openTasks.filter((t) => t.priority === 'HIGH').length
   const totalRevenue = currentMonthTx.reduce((s, t) => s + t.amount, 0)
+
+  const lastMonthRevenue = monthlyIncome
+    .filter((tx) => tx.date >= lastMonthStart && tx.date <= lastMonthEnd)
+    .reduce((s, t) => s + t.amount, 0)
+
+  function calcPct(current: number, previous: number): number | null {
+    if (previous === 0) return null
+    return Math.round(((current - previous) / previous) * 100)
+  }
+
+  const revenuePct = calcPct(totalRevenue, lastMonthRevenue)
+  const reservationPct = calcPct(thisMonthCount, lastMonthCount)
 
   const sortedTasks = [...openTasks].sort(
     (a, b) => (PRIORITY_ORDER[a.priority] ?? 2) - (PRIORITY_ORDER[b.priority] ?? 2)
@@ -241,19 +262,37 @@ export default async function DashboardPage() {
           <CardContent className="p-5">
             <div className="flex items-center justify-between">
               <p className="text-sm font-medium text-muted-foreground">Total Revenue</p>
-              <span className="flex items-center gap-0.5 rounded-full bg-green-100 px-2 py-0.5 text-xs font-semibold text-green-700 dark:bg-green-900/30 dark:text-green-400">
-                <ArrowUp className="h-3 w-3" /> +8.4%
-              </span>
+              {revenuePct !== null && (
+                <span className={cn(
+                  'flex items-center gap-0.5 rounded-full px-2 py-0.5 text-xs font-semibold',
+                  revenuePct >= 0
+                    ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                    : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                )}>
+                  {revenuePct >= 0 ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />}
+                  {revenuePct >= 0 ? '+' : ''}{revenuePct}%
+                </span>
+              )}
             </div>
             <p className="mt-3 text-3xl font-bold tracking-tight">{formatRp(totalRevenue)}</p>
             <div className="mt-3 flex items-end justify-between">
               <div>
-                <p className="text-xs text-muted-foreground">Apr 2026</p>
-                <p className="mt-0.5 flex items-center gap-0.5 text-xs font-medium text-green-600 dark:text-green-400">
-                  <ArrowUp className="h-3 w-3" /> +8.4% from last month
+                <p className="text-xs text-muted-foreground">
+                  {now.toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })}
                 </p>
+                {revenuePct !== null ? (
+                  <p className={cn(
+                    'mt-0.5 flex items-center gap-0.5 text-xs font-medium',
+                    revenuePct >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-500 dark:text-red-400'
+                  )}>
+                    {revenuePct >= 0 ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />}
+                    {revenuePct >= 0 ? '+' : ''}{revenuePct}% from last month
+                  </p>
+                ) : (
+                  <p className="mt-0.5 text-xs text-muted-foreground">No data last month</p>
+                )}
               </div>
-              <span className="hidden lg:block"><Sparkline trend="up" /></span>
+              <span className="hidden lg:block"><Sparkline trend={revenuePct === null ? 'neutral' : revenuePct >= 0 ? 'up' : 'down'} /></span>
             </div>
           </CardContent>
         </Card>
@@ -262,21 +301,21 @@ export default async function DashboardPage() {
           <CardContent className="p-5">
             <div className="flex items-center justify-between">
               <p className="text-sm font-medium text-muted-foreground">Occupancy</p>
-              <span className="flex items-center gap-0.5 rounded-full bg-green-100 px-2 py-0.5 text-xs font-semibold text-green-700 dark:bg-green-900/30 dark:text-green-400">
-                <ArrowUp className="h-3 w-3" /> +12%
+              <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-semibold text-muted-foreground">
+                Today
               </span>
             </div>
             <p className="mt-3 text-3xl font-bold tracking-tight">{occupancyPct}%</p>
             <div className="mt-3 flex items-end justify-between">
               <div>
                 <p className="text-xs text-muted-foreground">
-                  {occupiedCount} of {rooms.length} rooms today
+                  {occupiedCount} of {rooms.length} rooms occupied
                 </p>
-                <p className="mt-0.5 flex items-center gap-0.5 text-xs font-medium text-green-600 dark:text-green-400">
-                  <ArrowUp className="h-3 w-3" /> +12% vs last week
+                <p className="mt-0.5 text-xs text-muted-foreground">
+                  {rooms.filter((r) => r.status === 'AVAILABLE').length} available
                 </p>
               </div>
-              <span className="hidden lg:block"><Sparkline trend="up" /></span>
+              <span className="hidden lg:block"><Sparkline trend={occupancyPct > 0 ? 'up' : 'neutral'} /></span>
             </div>
           </CardContent>
         </Card>
@@ -285,19 +324,35 @@ export default async function DashboardPage() {
           <CardContent className="p-5">
             <div className="flex items-center justify-between">
               <p className="text-sm font-medium text-muted-foreground">Reservations</p>
-              <span className="flex items-center gap-0.5 rounded-full bg-green-100 px-2 py-0.5 text-xs font-semibold text-green-700 dark:bg-green-900/30 dark:text-green-400">
-                <ArrowUp className="h-3 w-3" /> +19%
-              </span>
+              {reservationPct !== null && (
+                <span className={cn(
+                  'flex items-center gap-0.5 rounded-full px-2 py-0.5 text-xs font-semibold',
+                  reservationPct >= 0
+                    ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                    : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                )}>
+                  {reservationPct >= 0 ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />}
+                  {reservationPct >= 0 ? '+' : ''}{reservationPct}%
+                </span>
+              )}
             </div>
-            <p className="mt-3 text-3xl font-bold tracking-tight">+{reservationCount}</p>
+            <p className="mt-3 text-3xl font-bold tracking-tight">{thisMonthCount}</p>
             <div className="mt-3 flex items-end justify-between">
               <div>
-                <p className="text-xs text-muted-foreground">Total reservasi aktif</p>
-                <p className="mt-0.5 flex items-center gap-0.5 text-xs font-medium text-green-600 dark:text-green-400">
-                  <ArrowUp className="h-3 w-3" /> +19% from last week
-                </p>
+                <p className="text-xs text-muted-foreground">This month</p>
+                {reservationPct !== null ? (
+                  <p className={cn(
+                    'mt-0.5 flex items-center gap-0.5 text-xs font-medium',
+                    reservationPct >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-500 dark:text-red-400'
+                  )}>
+                    {reservationPct >= 0 ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />}
+                    {reservationPct >= 0 ? '+' : ''}{reservationPct}% from last month
+                  </p>
+                ) : (
+                  <p className="mt-0.5 text-xs text-muted-foreground">No data last month</p>
+                )}
               </div>
-              <span className="hidden lg:block"><Sparkline trend="up" /></span>
+              <span className="hidden lg:block"><Sparkline trend={reservationPct === null ? 'neutral' : reservationPct >= 0 ? 'up' : 'down'} /></span>
             </div>
           </CardContent>
         </Card>
