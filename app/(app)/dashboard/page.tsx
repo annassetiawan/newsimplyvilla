@@ -1,13 +1,18 @@
-export const dynamic = 'force-dynamic'
+export const revalidate = 60
 
 import { redirect } from 'next/navigation'
 import { ArrowUp, CalendarDays, Download, Plus, CalendarOff, CheckSquare, BedDouble, PackageCheck } from 'lucide-react'
 import { db } from '@/lib/db'
 import { cn } from '@/lib/utils'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { RevenueChart } from '@/components/dashboard/revenue-chart'
+import dynamic from 'next/dynamic'
 import { getSessionUser } from '@/lib/getSession'
 import { EmptyState } from '@/components/ui/EmptyState'
+
+const RevenueChart = dynamic(
+  () => import('@/components/dashboard/revenue-chart').then((m) => ({ default: m.RevenueChart })),
+  { loading: () => <div className="h-[270px] animate-pulse rounded-lg bg-muted" /> }
+)
 
 function formatRp(amount: number) {
   return `Rp ${amount.toLocaleString('id-ID')}`
@@ -119,6 +124,7 @@ export default async function DashboardPage() {
       db.inventoryItem.findMany({ where: { villaId } }),
       db.transaction.findMany({
         where: { villaId, type: 'INCOME', date: { gte: twelveMonthsAgo } },
+        select: { amount: true, date: true },
       }),
       db.transaction.findMany({
         where: { villaId, type: 'INCOME', date: { gte: thisMonthStart, lte: thisMonthEnd } },
@@ -131,6 +137,7 @@ export default async function DashboardPage() {
           checkOut: { gte: twelveMonthsAgo },
         },
         select: { checkIn: true, checkOut: true, createdAt: true },
+        take: 1000,
       }),
       db.reservation.count({
         where: {
@@ -154,40 +161,53 @@ export default async function DashboardPage() {
   )
 
   const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-  const monthMap = new Map<string, number>()
+
+  // Single O(n) pass — build revenue, bookings, and occupancy maps before the chart loop
+  const revenueMap = new Map<string, number>()
   for (const tx of monthlyIncome) {
     const key = `${tx.date.getFullYear()}-${tx.date.getMonth()}`
-    monthMap.set(key, (monthMap.get(key) ?? 0) + tx.amount)
+    revenueMap.set(key, (revenueMap.get(key) ?? 0) + tx.amount)
+  }
+
+  const bookingsMap = new Map<string, number>()
+  const occupancyMap = new Map<string, number>()
+  for (const r of chartReservations) {
+    const created = r.createdAt
+    const bKey = `${created.getFullYear()}-${created.getMonth()}`
+    bookingsMap.set(bKey, (bookingsMap.get(bKey) ?? 0) + 1)
+
+    // Walk each month this reservation overlaps and accumulate occupied nights
+    const ci = r.checkIn
+    const co = r.checkOut
+    let cursor = new Date(ci.getFullYear(), ci.getMonth(), 1)
+    while (cursor <= co) {
+      const mStart = new Date(cursor.getFullYear(), cursor.getMonth(), 1)
+      const mEnd = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 0, 23, 59, 59, 999)
+      const overlapStart = Math.max(ci.getTime(), mStart.getTime())
+      const overlapEnd = Math.min(co.getTime(), mEnd.getTime())
+      if (overlapEnd > overlapStart) {
+        const nights = Math.ceil((overlapEnd - overlapStart) / 86400000)
+        const key = `${cursor.getFullYear()}-${cursor.getMonth()}`
+        occupancyMap.set(key, (occupancyMap.get(key) ?? 0) + nights)
+      }
+      cursor = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1)
+    }
   }
 
   const chartData = Array.from({ length: 12 }, (_, i) => {
     const d = new Date(now.getFullYear(), now.getMonth() - 11 + i, 1)
-    const monthStart = new Date(d.getFullYear(), d.getMonth(), 1)
-    const monthEnd = new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59, 999)
     const key = `${d.getFullYear()}-${d.getMonth()}`
-
-    const revenue = monthMap.get(key) ?? 0
-
-    const bookings = chartReservations.filter((r) => {
-      const created = new Date(r.createdAt)
-      return created >= monthStart && created <= monthEnd
-    }).length
-
-    let occupiedNights = 0
-    for (const r of chartReservations) {
-      const ci = new Date(r.checkIn)
-      const co = new Date(r.checkOut)
-      if (ci < monthEnd && co > monthStart) {
-        const overlapStart = Math.max(ci.getTime(), monthStart.getTime())
-        const overlapEnd = Math.min(co.getTime(), monthEnd.getTime())
-        occupiedNights += Math.ceil((overlapEnd - overlapStart) / 86400000)
-      }
-    }
-    const daysInMonth = monthEnd.getDate()
+    const daysInMonth = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate()
     const totalRoomNights = rooms.length * daysInMonth
+    const occupiedNights = occupancyMap.get(key) ?? 0
     const occupancy = totalRoomNights > 0 ? Math.round((occupiedNights / totalRoomNights) * 100) : 0
 
-    return { month: MONTH_LABELS[d.getMonth()], revenue, bookings, occupancy }
+    return {
+      month: MONTH_LABELS[d.getMonth()],
+      revenue: revenueMap.get(key) ?? 0,
+      bookings: bookingsMap.get(key) ?? 0,
+      occupancy,
+    }
   })
 
   const totalBookings = chartData.reduce((s, d) => s + d.bookings, 0)

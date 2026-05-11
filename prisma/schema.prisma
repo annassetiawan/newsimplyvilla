@@ -95,6 +95,10 @@ model Reservation {
   guest         Guest             @relation(fields: [guestId], references: [id])
   room          Room              @relation(fields: [roomId], references: [id])
   transactions  Transaction[]
+
+  @@index([roomId, status])
+  @@index([checkOut, status])
+  @@index([createdAt])
 }
 
 enum ItemCategory {
@@ -130,6 +134,8 @@ model StockMovement {
   date     DateTime      @default(now())
   note     String?
   item     InventoryItem @relation(fields: [itemId], references: [id])
+
+  @@index([itemId, date])
 }
 
 enum TaskType {
@@ -161,6 +167,9 @@ model Task {
   proofPhoto String?
   villaId    String
   villa      Villa        @relation(fields: [villaId], references: [id])
+
+  @@index([villaId, status])
+  @@index([villaId, type])
 }
 
 enum StaffRole {
@@ -215,6 +224,9 @@ model Transaction {
   villaId       String
   villa         Villa           @relation(fields: [villaId], references: [id])
   reservation   Reservation?    @relation(fields: [reservationId], references: [id])
+
+  @@index([villaId, date])
+  @@index([villaId, type, date])
 }
 
 enum SOPCategory {

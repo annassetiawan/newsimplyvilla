@@ -1,4 +1,4 @@
-export const dynamic = 'force-dynamic'
+export const revalidate = 60
 
 import { redirect } from 'next/navigation'
 import { db } from '@/lib/db'
@@ -17,7 +17,7 @@ export default async function InventoryPage() {
     db.inventoryItem.findMany({
       where: { villaId },
       orderBy: { name: 'asc' },
-      include: { movements: { orderBy: { date: 'desc' } } },
+      include: { movements: { orderBy: { date: 'desc' }, take: 20 } },
     }),
     db.stockMovement.findMany({
       where: { item: { villaId }, date: { gte: sevenDaysAgo } },

@@ -29,8 +29,6 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useSidebar } from '@/store/sidebar-store'
-import { useSubscription } from '@/hooks/useSubscription'
-import { useUser } from '@/hooks/useUser'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import {
@@ -93,14 +91,23 @@ function getInitials(name: string) {
 interface SidebarProps {
   userRole: 'OWNER' | 'STAFF'
   userPermissions: string[]
+  userName: string
+  userEmail: string
+  villaName: string
+  isPro: boolean
 }
 
-export function Sidebar({ userRole, userPermissions }: SidebarProps) {
+export function Sidebar({
+  userRole,
+  userPermissions,
+  userName,
+  userEmail,
+  villaName,
+  isPro,
+}: SidebarProps) {
   const { collapsed, toggle, mobileOpen, closeMobile } = useSidebar()
   const pathname = usePathname()
   const router = useRouter()
-  const { isPro } = useSubscription()
-  const { user, isLoading: userLoading } = useUser()
   const [upgradeModal, setUpgradeModal] = useState<{ open: boolean; feature: string }>({
     open: false,
     feature: '',
@@ -120,10 +127,7 @@ export function Sidebar({ userRole, userPermissions }: SidebarProps) {
     router.refresh()
   }
 
-  const displayName = userLoading ? '…' : (user?.name ?? 'User')
-  const displayEmail = userLoading ? '' : (user?.email ?? '')
-  const displayVilla = userLoading ? 'SimplyVilla' : (user?.villaName ?? 'SimplyVilla')
-  const initials = userLoading ? '?' : (user ? getInitials(user.name) : '?')
+  const initials = userName ? getInitials(userName) : '?'
 
   return (
     <TooltipProvider delayDuration={0}>
@@ -176,7 +180,7 @@ export function Sidebar({ userRole, userPermissions }: SidebarProps) {
             {!collapsed && (
               <div className="min-w-0">
                 <p className="truncate text-sm font-bold leading-tight">SimplyVilla</p>
-                <p className="truncate text-[11px] text-muted-foreground">{displayVilla}</p>
+                <p className="truncate text-[11px] text-muted-foreground">{villaName}</p>
               </div>
             )}
           </div>
@@ -379,7 +383,7 @@ export function Sidebar({ userRole, userPermissions }: SidebarProps) {
                 )}
               >
                 <Avatar className="h-7 w-7 shrink-0">
-                  <AvatarImage src="" alt={displayName} />
+                  <AvatarImage src="" alt={userName} />
                   <AvatarFallback className="bg-foreground text-[11px] font-semibold text-background">
                     {initials}
                   </AvatarFallback>
@@ -387,8 +391,8 @@ export function Sidebar({ userRole, userPermissions }: SidebarProps) {
                 {!collapsed && (
                   <>
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium leading-tight">{displayName}</p>
-                      <p className="truncate text-[11px] text-muted-foreground">{displayEmail}</p>
+                      <p className="truncate text-sm font-medium leading-tight">{userName}</p>
+                      <p className="truncate text-[11px] text-muted-foreground">{userEmail}</p>
                     </div>
                     <MoreHorizontal className="h-4 w-4 shrink-0 text-muted-foreground" />
                   </>
@@ -397,8 +401,8 @@ export function Sidebar({ userRole, userPermissions }: SidebarProps) {
             </DropdownMenuTrigger>
             <DropdownMenuContent side="top" align="start" className="w-52">
               <div className="px-2 py-1.5">
-                <p className="text-sm font-medium">{displayName}</p>
-                <p className="text-xs text-muted-foreground">{displayEmail}</p>
+                <p className="text-sm font-medium">{userName}</p>
+                <p className="text-xs text-muted-foreground">{userEmail}</p>
               </div>
               <DropdownMenuSeparator />
               <DropdownMenuItem

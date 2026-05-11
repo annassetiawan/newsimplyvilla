@@ -1,4 +1,4 @@
-export const dynamic = 'force-dynamic'
+export const revalidate = 60
 
 import { redirect } from 'next/navigation'
 import { db } from '@/lib/db'
@@ -32,13 +32,25 @@ export default async function RoomsPage() {
     }),
   ])
 
+  // Pre-group tasks by room code in a single O(t) pass instead of O(t×r) repeated filter
+  const tasksByRoomCode = new Map<string, typeof tasks>()
+  for (const task of tasks) {
+    for (const room of rooms) {
+      if (task.location.includes(room.code)) {
+        const list = tasksByRoomCode.get(room.code) ?? []
+        list.push(task)
+        tasksByRoomCode.set(room.code, list)
+        break
+      }
+    }
+  }
+
   const serializedRooms = rooms.map((room) => {
     const activeRes = room.reservations.find(
       (r) => new Date(r.checkIn) <= today && new Date(r.checkOut) >= today
     )
 
-    const roomTasks = tasks
-      .filter((t) => t.location.includes(room.code))
+    const roomTasks = (tasksByRoomCode.get(room.code) ?? [])
       .slice(0, 3)
       .map((t) => ({
         id: t.id,

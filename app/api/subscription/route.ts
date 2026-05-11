@@ -14,10 +14,8 @@ export async function GET() {
     return NextResponse.json({ plan: 'FREE', status: 'INACTIVE', startDate: null, endDate: null })
   }
 
-  return NextResponse.json({
-    plan: sub.plan,
-    status: sub.status,
-    startDate: sub.startDate.toISOString(),
-    endDate: sub.endDate ? sub.endDate.toISOString() : null,
-  })
+  return NextResponse.json(
+    { plan: sub.plan, status: sub.status, startDate: sub.startDate.toISOString(), endDate: sub.endDate ? sub.endDate.toISOString() : null },
+    { headers: { 'Cache-Control': 'private, max-age=60, stale-while-revalidate=300' } }
+  )
 }

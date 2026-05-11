@@ -1,9 +1,14 @@
-export const dynamic = 'force-dynamic'
+export const revalidate = 300
 
 import { redirect } from 'next/navigation'
+import dynamic from 'next/dynamic'
 import { db } from '@/lib/db'
-import { ReportsClient } from '@/components/reports/reports-client'
 import { getSessionUser } from '@/lib/getSession'
+
+const ReportsClient = dynamic(
+  () => import('@/components/reports/reports-client').then((m) => ({ default: m.ReportsClient })),
+  { loading: () => <div className="space-y-4"><div className="h-24 animate-pulse rounded-xl bg-muted" /><div className="h-64 animate-pulse rounded-xl bg-muted" /></div> }
+)
 
 export default async function ReportsPage() {
   const user = await getSessionUser()
@@ -24,17 +29,21 @@ export default async function ReportsPage() {
     db.transaction.findMany({
       where: { villaId, date: { gte: periodStart, lte: periodEnd } },
       orderBy: { date: 'desc' },
+      select: { type: true, amount: true, date: true, category: true, description: true, id: true, paymentStatus: true },
     }),
     db.transaction.findMany({
       where: { villaId, date: { gte: prevStart, lte: prevEnd } },
+      select: { type: true, amount: true },
     }),
     db.transaction.findMany({
       where: { villaId },
       orderBy: { date: 'desc' },
       take: 20,
+      select: { id: true, date: true, description: true, type: true, category: true, amount: true, paymentStatus: true },
     }),
     db.transaction.findMany({
       where: { villaId, date: { gte: twelveMonthsAgo } },
+      select: { type: true, amount: true, date: true },
     }),
     db.room.findMany({ where: { villaId } }),
   ])

@@ -5,9 +5,17 @@ import { LayoutGrid, List, CalendarDays, Plus, Filter, ClipboardList } from 'luc
 import { EmptyState } from '@/components/ui/EmptyState'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
-import { BoardView } from './board-view'
+import dynamic from 'next/dynamic'
 import { ListView } from './list-view'
 import { CalendarView } from './calendar-view'
+
+const BoardView = dynamic(
+  () => import('./board-view').then((m) => ({ default: m.BoardView })),
+  {
+    ssr: false,
+    loading: () => <div className="h-[420px] animate-pulse rounded-xl bg-muted" />,
+  }
+)
 import { TaskModal } from './task-modal'
 import type { TaskFormData } from './task-modal'
 

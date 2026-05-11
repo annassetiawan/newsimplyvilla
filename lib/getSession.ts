@@ -1,7 +1,8 @@
+import { cache } from 'react'
 import { createServerClient } from '@/lib/supabase/server'
 import { db } from '@/lib/db'
 
-export async function getSessionUser() {
+export const getSessionUser = cache(async function getSessionUser() {
   const supabase = await createServerClient()
   const {
     data: { user },
@@ -29,4 +30,4 @@ export async function getSessionUser() {
   }
 
   return staff
-}
+})

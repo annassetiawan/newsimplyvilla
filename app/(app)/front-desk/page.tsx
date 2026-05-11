@@ -1,4 +1,4 @@
-export const dynamic = 'force-dynamic'
+export const revalidate = 30
 
 import { redirect } from 'next/navigation'
 import { db } from '@/lib/db'
@@ -16,6 +16,7 @@ export default async function FrontDeskPage() {
       where: { room: { villaId }, status: { notIn: ['CANCELLED'] } },
       include: { guest: true, room: true },
       orderBy: { checkIn: 'asc' },
+      take: 300,
     }),
     db.guest.findMany({
       where: { reservations: { some: { room: { villaId } } } },
@@ -24,8 +25,11 @@ export default async function FrontDeskPage() {
           where: { room: { villaId } },
           include: { room: true },
           orderBy: { checkIn: 'desc' },
+          take: 10,
         },
       },
+      orderBy: { createdAt: 'desc' },
+      take: 200,
     }),
     db.lostAndFound.findMany({ where: { villaId }, orderBy: { foundDate: 'desc' } }),
   ])

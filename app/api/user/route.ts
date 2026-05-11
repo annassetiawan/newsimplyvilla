@@ -8,12 +8,8 @@ export async function GET() {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  return NextResponse.json({
-    id: user.id,
-    name: user.name,
-    email: user.email ?? '',
-    role: user.role,
-    villaName: user.villa.name,
-    villaId: user.villaId,
-  })
+  return NextResponse.json(
+    { id: user.id, name: user.name, email: user.email ?? '', role: user.role, villaName: user.villa.name, villaId: user.villaId },
+    { headers: { 'Cache-Control': 'private, max-age=60, stale-while-revalidate=300' } }
+  )
 }
