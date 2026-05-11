@@ -13,7 +13,7 @@ async function findSupabaseUserIdByEmail(
 ): Promise<string | null> {
   // Supabase listUsers is paginated — for small teams this is fine
   const { data } = await adminClient.auth.admin.listUsers({ perPage: 1000 })
-  return data?.users?.find((u) => u.email === email)?.id ?? null
+  return data?.users?.find((u: { id: string; email?: string }) => u.email === email)?.id ?? null
 }
 
 async function getVillaId() {
