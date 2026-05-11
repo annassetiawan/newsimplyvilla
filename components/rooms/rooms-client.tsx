@@ -15,12 +15,16 @@ import {
   BedDouble,
   Filter,
   MapPin,
+  X,
+  Users,
+  Wallet,
+  Wrench,
 } from 'lucide-react'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
+import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet'
 import {
   Dialog,
   DialogContent,
@@ -285,10 +289,11 @@ export function RoomsClient({ rooms, areas }: Props) {
 
       {/* Room detail sheet */}
       <Sheet open={!!selectedRoom} onOpenChange={() => setSelectedRoom(null)}>
-        <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-md">
+        <SheetContent side="right" showCloseButton={false} className="flex w-full flex-col gap-0 p-0 sm:max-w-[420px]">
           {selectedRoom && (
             <RoomDetailSheet
               room={selectedRoom}
+              onClose={() => setSelectedRoom(null)}
               onEdit={() => { setSelectedRoom(null); openEdit(selectedRoom) }}
             />
           )}
@@ -400,113 +405,163 @@ function RoomCard({
   )
 }
 
+function getInitials(name: string) {
+  return name.split(' ').slice(0, 2).map((w) => w[0]).join('').toUpperCase()
+}
+
 function RoomDetailSheet({
   room,
+  onClose,
   onEdit,
 }: {
   room: RoomWithReservation
+  onClose: () => void
   onEdit: () => void
 }) {
   return (
     <>
-      <SheetHeader className="mb-6">
-        <div className="flex items-center justify-between">
-          <SheetTitle>
+      <SheetTitle className="sr-only">Room detail</SheetTitle>
+
+      {/* Header */}
+      <div className="flex items-start justify-between border-b border-border px-6 py-4">
+        <div>
+          <p className="text-base font-semibold">
             <span className="font-id">{room.code}</span>
             {' — '}{room.name}
-          </SheetTitle>
-          <Button variant="outline" size="sm" className="h-7 text-xs" onClick={onEdit}>
-            <Pencil className="mr-1 h-3 w-3" /> Edit
-          </Button>
+          </p>
+          <span
+            className={cn(
+              'mt-1.5 inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold',
+              STATUS_STYLE[room.status]
+            )}
+          >
+            {STATUS_LABEL[room.status]}
+          </span>
         </div>
-        <span
-          className={cn(
-            'inline-flex w-fit rounded-full px-2.5 py-1 text-[11px] font-semibold',
-            STATUS_STYLE[room.status]
-          )}
+        <button
+          onClick={onClose}
+          className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
         >
-          {STATUS_LABEL[room.status]}
-        </span>
-      </SheetHeader>
-
-      <div className="mb-5 h-40 rounded-xl bg-muted/40 flex items-center justify-center text-xs font-semibold tracking-widest text-muted-foreground/60 uppercase">
-        {room.name}
+          <X className="h-4 w-4" />
+        </button>
       </div>
 
-      <div className="space-y-5">
-        <div>
-          <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+      {/* Scrollable body */}
+      <div className="flex-1 overflow-y-auto">
+        {/* Photo placeholder */}
+        <div className="mx-6 mt-5 h-36 rounded-xl bg-muted/40 flex items-center justify-center">
+          <Images className="h-8 w-8 text-muted-foreground/30" />
+        </div>
+
+        {/* Room info */}
+        <div className="px-6 py-5">
+          <p className="mb-3 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
             Room info
           </p>
-          <div className="space-y-1.5 text-sm">
-            {[
-              ['Type', room.type],
-              ['Capacity', `${room.capacity} guests`],
-              ['Price / night', fmtRp(room.pricePerNight)],
-            ].map(([label, value]) => (
-              <div key={label} className="flex justify-between">
-                <span className="text-muted-foreground">{label}</span>
-                <span className="font-medium">{value}</span>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <BedDouble className="h-4 w-4" />
+                <span>Type</span>
               </div>
-            ))}
+              <span className="text-sm font-medium">{room.type}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Users className="h-4 w-4" />
+                <span>Capacity</span>
+              </div>
+              <span className="text-sm font-medium">{room.capacity} guests</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Wallet className="h-4 w-4" />
+                <span>Price / night</span>
+              </div>
+              <span className="text-sm font-medium">{fmtRp(room.pricePerNight)}</span>
+            </div>
           </div>
         </div>
 
+        {/* Current guest */}
         {room.currentReservation && (
-          <div>
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Current guest
-            </p>
-            <div className="rounded-lg border border-border p-3 space-y-1.5 text-sm">
-              <p className="font-semibold">{room.currentReservation.guest.name}</p>
-              {room.currentReservation.guest.phone && (
-                <p className="text-muted-foreground">{room.currentReservation.guest.phone}</p>
-              )}
-              <p className="text-muted-foreground">
-                {fmtDate(room.currentReservation.checkIn)} —{' '}
-                {fmtDate(room.currentReservation.checkOut)}{' '}
-                <span className="font-medium text-foreground">
-                  ({nights(room.currentReservation.checkIn, room.currentReservation.checkOut)}n)
-                </span>
+          <>
+            <div className="mx-6 border-t border-border" />
+            <div className="px-6 py-5">
+              <p className="mb-3 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+                Current guest
               </p>
+              <div className="flex items-start gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-sm font-bold text-primary">
+                  {getInitials(room.currentReservation.guest.name)}
+                </div>
+                <div className="min-w-0 space-y-0.5">
+                  <p className="text-sm font-semibold">{room.currentReservation.guest.name}</p>
+                  {room.currentReservation.guest.phone && (
+                    <p className="text-sm text-muted-foreground">{room.currentReservation.guest.phone}</p>
+                  )}
+                  <p className="text-sm text-muted-foreground">
+                    {fmtDate(room.currentReservation.checkIn)} —{' '}
+                    {fmtDate(room.currentReservation.checkOut)}{' '}
+                    <span className="font-medium text-foreground">
+                      ({nights(room.currentReservation.checkIn, room.currentReservation.checkOut)}n)
+                    </span>
+                  </p>
+                </div>
+              </div>
             </div>
-          </div>
+          </>
         )}
 
+        {/* Recent maintenance */}
         {room.recentTasks.length > 0 && (
-          <div>
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Recent maintenance
-            </p>
-            <div className="space-y-2">
-              {room.recentTasks.map((task) => (
-                <div
-                  key={task.id}
-                  className="flex items-center justify-between rounded-lg border border-border p-2.5"
-                >
-                  <div>
-                    <p className="text-sm font-medium">{task.title}</p>
-                    {task.dueDate && (
-                      <p className="text-[11px] text-muted-foreground">Due {fmtDate(task.dueDate)}</p>
-                    )}
-                  </div>
-                  <span
-                    className={cn(
-                      'rounded-full px-2 py-0.5 text-[10px] font-semibold',
-                      task.priority === 'HIGH'
-                        ? 'bg-red-100 text-red-700'
-                        : task.priority === 'MED'
-                        ? 'bg-amber-100 text-amber-700'
-                        : 'bg-gray-100 text-gray-600'
-                    )}
+          <>
+            <div className="mx-6 border-t border-border" />
+            <div className="px-6 py-5">
+              <p className="mb-3 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+                Recent maintenance
+              </p>
+              <div className="space-y-2">
+                {room.recentTasks.map((task) => (
+                  <div
+                    key={task.id}
+                    className="flex items-center justify-between rounded-lg border border-border p-3"
                   >
-                    {task.priority}
-                  </span>
-                </div>
-              ))}
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <Wrench className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium truncate">{task.title}</p>
+                        {task.dueDate && (
+                          <p className="text-[11px] text-muted-foreground">Due {fmtDate(task.dueDate)}</p>
+                        )}
+                      </div>
+                    </div>
+                    <span
+                      className={cn(
+                        'ml-3 shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold',
+                        task.priority === 'HIGH'
+                          ? 'bg-red-100 text-red-700'
+                          : task.priority === 'MED'
+                          ? 'bg-amber-100 text-amber-700'
+                          : 'bg-gray-100 text-gray-600'
+                      )}
+                    >
+                      {task.priority}
+                    </span>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
+          </>
         )}
+      </div>
+
+      {/* Sticky footer */}
+      <div className="border-t border-border px-6 py-4">
+        <Button variant="outline" className="w-full" onClick={onEdit}>
+          <Pencil className="mr-2 h-4 w-4" />
+          Edit room
+        </Button>
       </div>
     </>
   )
