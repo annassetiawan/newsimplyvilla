@@ -2,8 +2,18 @@
 
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
+import { createClient } from '@supabase/supabase-js'
 import { db } from '@/lib/db'
 import { getSessionUser } from '@/lib/getSession'
+
+async function findSupabaseUserIdByEmail(
+  adminClient: ReturnType<typeof createClient>,
+  email: string
+): Promise<string | null> {
+  // Supabase listUsers is paginated — for small teams this is fine
+  const { data } = await adminClient.auth.admin.listUsers({ perPage: 1000 })
+  return data?.users?.find((u) => u.email === email)?.id ?? null
+}
 
 async function getVillaId() {
   const user = await getSessionUser()
@@ -16,10 +26,16 @@ export async function createStaff(data: {
   email: string
   position: string
   role: 'OWNER' | 'STAFF'
+  permissions: string[]
 }) {
   const villaId = await getVillaId()
   try {
-    await db.staff.create({
+    const adminClient = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      { auth: { autoRefreshToken: false, persistSession: false } }
+    )
+    const staff = await db.staff.create({
       data: {
         villaId,
         name: data.name,
@@ -27,9 +43,20 @@ export async function createStaff(data: {
         position: data.position,
         role: data.role,
         isActive: true,
+        permissions: data.role === 'OWNER' ? [] : data.permissions,
       },
     })
-    console.log(`Email sent to ${data.email}: Welcome to SimplyVilla, ${data.name}!`)
+    // Invite via Supabase and store the returned user ID immediately
+    const { data: inviteData, error: inviteError } = await adminClient.auth.admin.inviteUserByEmail(data.email, {
+      data: { name: data.name },
+    })
+    console.log('[createStaff] invite result:', { userId: inviteData?.user?.id, error: inviteError })
+    if (inviteData?.user?.id) {
+      await db.staff.update({
+        where: { id: staff.id },
+        data: { supabaseUserId: inviteData.user.id },
+      })
+    }
     revalidatePath('/users')
     return { success: true }
   } catch (error) {
@@ -46,6 +73,7 @@ export async function updateStaff(
     position: string
     role: 'OWNER' | 'STAFF'
     isActive: boolean
+    permissions: string[]
   }
 ) {
   await getVillaId()
@@ -58,6 +86,7 @@ export async function updateStaff(
         position: data.position,
         role: data.role,
         isActive: data.isActive,
+        permissions: data.role === 'OWNER' ? [] : data.permissions,
       },
     })
     revalidatePath('/users')
@@ -77,5 +106,91 @@ export async function toggleStaffActive(id: string, isActive: boolean) {
   } catch (error) {
     console.error('toggleStaffActive error:', error)
     return { success: false, message: 'Gagal memperbarui status staff. Coba lagi.' }
+  }
+}
+
+export async function resendInvite(id: string) {
+  await getVillaId()
+  try {
+    const staff = await db.staff.findUnique({ where: { id } })
+    if (!staff?.email) return { success: false, message: 'Email staf tidak ditemukan.' }
+
+    const adminClient = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      { auth: { autoRefreshToken: false, persistSession: false } }
+    )
+
+    // Find and delete existing Supabase auth user by ID or by email lookup
+    const userIdToDelete = staff.supabaseUserId ?? await findSupabaseUserIdByEmail(adminClient, staff.email)
+    console.log('[resendInvite] userIdToDelete:', userIdToDelete)
+    if (userIdToDelete) {
+      const { error: deleteError } = await adminClient.auth.admin.deleteUser(userIdToDelete)
+      console.log('[resendInvite] deleteUser result:', deleteError)
+      if (!deleteError) {
+        await db.staff.update({ where: { id }, data: { supabaseUserId: null } })
+      }
+    }
+
+    const { data: inviteData, error } = await adminClient.auth.admin.inviteUserByEmail(staff.email, {
+      data: { name: staff.name },
+    })
+    console.log('[resendInvite] inviteUserByEmail result:', { userId: inviteData?.user?.id, error })
+    if (error) throw error
+
+    // Store new Supabase user ID
+    if (inviteData?.user?.id) {
+      await db.staff.update({ where: { id }, data: { supabaseUserId: inviteData.user.id } })
+    }
+
+    return { success: true }
+  } catch (error) {
+    console.error('resendInvite error:', error)
+    return { success: false, message: 'Gagal mengirim ulang undangan. Coba lagi.' }
+  }
+}
+
+export async function deleteStaff(id: string) {
+  await getVillaId()
+  try {
+    const staff = await db.staff.findUnique({ where: { id } })
+
+    // If they have a Supabase account, delete it too
+    if (staff?.supabaseUserId) {
+      const adminClient = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!,
+        { auth: { autoRefreshToken: false, persistSession: false } }
+      )
+      await adminClient.auth.admin.deleteUser(staff.supabaseUserId)
+    }
+
+    await db.staff.delete({ where: { id } })
+    revalidatePath('/users')
+    return { success: true }
+  } catch (error) {
+    console.error('deleteStaff error:', error)
+    return { success: false, message: 'Gagal menghapus staf. Coba lagi.' }
+  }
+}
+
+export async function resetStaffPassword(email: string) {
+  await getVillaId()
+  try {
+    const adminClient = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      { auth: { autoRefreshToken: false, persistSession: false } }
+    )
+    // Use admin to generate a password reset link so it goes through our /auth/confirm
+    const { error } = await adminClient.auth.admin.generateLink({
+      type: 'recovery',
+      email,
+    })
+    if (error) throw error
+    return { success: true }
+  } catch (error) {
+    console.error('resetStaffPassword error:', error)
+    return { success: false, message: 'Gagal mengirim reset password. Coba lagi.' }
   }
 }

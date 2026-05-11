@@ -176,6 +176,7 @@ model Staff {
   position       String
   email          String?   @unique
   isActive       Boolean   @default(true)
+  permissions    String[]  @default([])
   villaId        String
   villa          Villa     @relation(fields: [villaId], references: [id])
   shifts         Shift[]

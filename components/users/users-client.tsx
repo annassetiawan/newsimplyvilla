@@ -2,7 +2,6 @@
 
 import { useState, useTransition } from 'react'
 import { Search, Plus, MoreHorizontal, UserPlus, SearchX } from 'lucide-react'
-import { EmptyState } from '@/components/ui/EmptyState'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -28,7 +27,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { toggleStaffActive } from '@/app/actions/staff'
+import { toast } from 'sonner'
+import { toggleStaffActive, resendInvite, deleteStaff, resetStaffPassword } from '@/app/actions/staff'
 import { StaffModal } from './staff-modal'
 
 export interface StaffData {
@@ -38,6 +38,8 @@ export interface StaffData {
   position: string
   role: string
   isActive: boolean
+  confirmed: boolean
+  permissions: string[]
 }
 
 interface Props {
@@ -69,15 +71,11 @@ export function UsersClient({ staff }: Props) {
     const matchRole = roleFilter === 'ALL' || s.role === roleFilter
     const matchStatus =
       statusFilter === 'ALL' ||
-      (statusFilter === 'ACTIVE' ? s.isActive : !s.isActive)
+      (statusFilter === 'ACTIVE' && s.confirmed && s.isActive) ||
+      (statusFilter === 'INACTIVE' && s.confirmed && !s.isActive) ||
+      (statusFilter === 'PENDING' && !s.confirmed)
     return matchSearch && matchRole && matchStatus
   })
-
-  function handleToggleActive(s: StaffData) {
-    startTransition(async () => {
-      await toggleStaffActive(s.id, !s.isActive)
-    })
-  }
 
   function openEdit(s: StaffData) {
     setEditStaff(s)
@@ -87,6 +85,38 @@ export function UsersClient({ staff }: Props) {
   function openNew() {
     setEditStaff(null)
     setModalOpen(true)
+  }
+
+  function handleToggleActive(s: StaffData) {
+    startTransition(async () => {
+      const result = await toggleStaffActive(s.id, !s.isActive)
+      if (!result.success) toast.error(result.message)
+      else toast.success(s.isActive ? `${s.name} dinonaktifkan.` : `${s.name} diaktifkan.`)
+    })
+  }
+
+  function handleResendInvite(s: StaffData) {
+    startTransition(async () => {
+      const result = await resendInvite(s.id)
+      if (!result.success) toast.error(result.message)
+      else toast.success(`Undangan dikirim ulang ke ${s.email}.`)
+    })
+  }
+
+  function handleDelete(s: StaffData) {
+    startTransition(async () => {
+      const result = await deleteStaff(s.id)
+      if (!result.success) toast.error(result.message)
+      else toast.success(`${s.name} dihapus dari tim.`)
+    })
+  }
+
+  function handleResetPassword(s: StaffData) {
+    startTransition(async () => {
+      const result = await resetStaffPassword(s.email)
+      if (!result.success) toast.error(result.message)
+      else toast.success(`Email reset password dikirim ke ${s.email}.`)
+    })
   }
 
   return (
@@ -120,6 +150,7 @@ export function UsersClient({ staff }: Props) {
               <SelectItem value="ALL">All status</SelectItem>
               <SelectItem value="ACTIVE">Active</SelectItem>
               <SelectItem value="INACTIVE">Inactive</SelectItem>
+              <SelectItem value="PENDING">Pending</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -196,40 +227,71 @@ export function UsersClient({ staff }: Props) {
                   </span>
                 </TableCell>
                 <TableCell>
-                  <span
-                    className={cn(
-                      'rounded-full px-2 py-0.5 text-[11px] font-semibold',
-                      s.isActive
-                        ? 'bg-green-100 text-green-700'
-                        : 'bg-gray-100 text-gray-500'
-                    )}
-                  >
-                    {s.isActive ? 'Active' : 'Inactive'}
-                  </span>
+                  {!s.confirmed ? (
+                    <span className="rounded-full bg-yellow-100 px-2 py-0.5 text-[11px] font-semibold text-yellow-700">
+                      Pending
+                    </span>
+                  ) : (
+                    <span
+                      className={cn(
+                        'rounded-full px-2 py-0.5 text-[11px] font-semibold',
+                        s.isActive
+                          ? 'bg-green-100 text-green-700'
+                          : 'bg-gray-100 text-gray-500'
+                      )}
+                    >
+                      {s.isActive ? 'Active' : 'Inactive'}
+                    </span>
+                  )}
                 </TableCell>
                 <TableCell>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => openEdit(s)}>Edit</DropdownMenuItem>
-                      <DropdownMenuItem
-                        disabled={pending}
-                        onClick={() => handleToggleActive(s)}
-                      >
-                        {s.isActive ? 'Deactivate' : 'Activate'}
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem
-                        onClick={() => console.log(`Password reset email sent to ${s.email}`)}
-                      >
-                        Reset password
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                  {s.role !== 'OWNER' && (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0" disabled={pending}>
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => openEdit(s)}>
+                          Edit
+                        </DropdownMenuItem>
+
+                        {!s.confirmed ? (
+                          // Pending: belum accept invite
+                          <>
+                            <DropdownMenuItem onClick={() => handleResendInvite(s)}>
+                              Kirim ulang undangan
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              onClick={() => handleDelete(s)}
+                              className="text-destructive focus:text-destructive"
+                            >
+                              Hapus
+                            </DropdownMenuItem>
+                          </>
+                        ) : (
+                          // Confirmed: sudah join
+                          <>
+                            <DropdownMenuItem onClick={() => handleToggleActive(s)}>
+                              {s.isActive ? 'Nonaktifkan' : 'Aktifkan'}
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={() => handleResetPassword(s)}>
+                              Reset password
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => handleDelete(s)}
+                              className="text-destructive focus:text-destructive"
+                            >
+                              Hapus
+                            </DropdownMenuItem>
+                          </>
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  )}
                 </TableCell>
               </TableRow>
             ))}

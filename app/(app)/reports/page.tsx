@@ -8,6 +8,7 @@ import { getSessionUser } from '@/lib/getSession'
 export default async function ReportsPage() {
   const user = await getSessionUser()
   if (!user) redirect('/login')
+  if (user.role === 'STAFF' && !user.permissions.includes('reports')) redirect('/dashboard')
   const villaId = user.villaId
 
   const now = new Date()

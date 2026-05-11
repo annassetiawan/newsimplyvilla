@@ -156,9 +156,6 @@ export function UpgradeModal({ isOpen, onClose, feature }: Props) {
           <Button className="w-full" onClick={handleUpgrade}>
             Lihat Paket Pro
           </Button>
-          <Button variant="ghost" className="w-full" onClick={onClose}>
-            Pelajari lebih lanjut
-          </Button>
         </div>
       </DialogContent>
     </Dialog>

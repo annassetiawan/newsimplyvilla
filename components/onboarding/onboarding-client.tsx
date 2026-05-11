@@ -44,6 +44,7 @@ const staffMemberSchema = z.object({
   name: z.string().min(1, 'Nama wajib diisi'),
   email: z.string().email('Email tidak valid'),
   position: z.string().min(1, 'Pilih posisi'),
+  permissions: z.array(z.string()).default([]),
 })
 
 const staffFormSchema = z.object({
@@ -60,6 +61,21 @@ const FACILITIES = ['Swimming Pool', 'WiFi', 'Parkir', 'AC', 'Dapur', 'Taman', '
 const BED_TYPES = ['King', 'Queen', 'Twin', 'Single']
 const POSITIONS = ['Front Desk', 'Housekeeper', 'Maintenance', 'Other']
 
+const ALL_MODULES = [
+  { key: 'dashboard',    label: 'Dashboard' },
+  { key: 'front-desk',   label: 'Front Desk' },
+  { key: 'rooms',        label: 'Rooms & Areas' },
+  { key: 'inventory',    label: 'Inventory' },
+  { key: 'maintenance',  label: 'Maintenance' },
+  { key: 'schedule',     label: 'Schedule' },
+  { key: 'reports',      label: 'Reports' },
+  { key: 'sop',          label: 'SOP' },
+  { key: 'users',        label: 'Users' },
+  { key: 'settings',     label: 'Settings' },
+]
+
+const DEFAULT_PERMISSIONS = ['dashboard', 'front-desk', 'rooms', 'maintenance', 'schedule', 'sop']
+
 const ROOM_DEFAULT = {
   code: '',
   name: '',
@@ -69,7 +85,7 @@ const ROOM_DEFAULT = {
   status: 'AVAILABLE' as const,
 }
 
-const STAFF_DEFAULT = { name: '', email: '', position: 'Front Desk' }
+const STAFF_DEFAULT = { name: '', email: '', position: 'Front Desk', permissions: DEFAULT_PERMISSIONS }
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
@@ -150,6 +166,16 @@ export function OnboardingClient({
     control: staffForm.control,
     name: 'staffList',
   })
+  const watchedStaffList = staffForm.watch('staffList')
+
+  function toggleStaffPermission(index: number, key: string) {
+    const current = staffForm.getValues(`staffList.${index}.permissions`) ?? []
+    staffForm.setValue(
+      `staffList.${index}.permissions`,
+      current.includes(key) ? current.filter((k: string) => k !== key) : [...current, key],
+      { shouldDirty: true }
+    )
+  }
 
   function toggleFacility(f: string) {
     setFacilities((prev) => (prev.includes(f) ? prev.filter((x) => x !== f) : [...prev, f]))
@@ -545,6 +571,29 @@ export function OnboardingClient({
                           ))}
                         </SelectContent>
                       </Select>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <Label>Akses modul</Label>
+                      <div className="grid grid-cols-2 gap-1 rounded-lg border border-border bg-background p-2.5">
+                        {ALL_MODULES.map((mod) => {
+                          const checked = (watchedStaffList[index]?.permissions ?? DEFAULT_PERMISSIONS).includes(mod.key)
+                          return (
+                            <label
+                              key={mod.key}
+                              className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-muted"
+                            >
+                              <input
+                                type="checkbox"
+                                className="h-3.5 w-3.5 accent-neutral-800"
+                                checked={checked}
+                                onChange={() => toggleStaffPermission(index, mod.key)}
+                              />
+                              <span>{mod.label}</span>
+                            </label>
+                          )
+                        })}
+                      </div>
                     </div>
                   </div>
                 </div>

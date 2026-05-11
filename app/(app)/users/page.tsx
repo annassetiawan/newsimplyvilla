@@ -8,6 +8,7 @@ import { getSessionUser } from '@/lib/getSession'
 export default async function UsersPage() {
   const user = await getSessionUser()
   if (!user) redirect('/login')
+  if (user.role === 'STAFF' && !user.permissions.includes('users')) redirect('/dashboard')
   const villaId = user.villaId
 
   const staffRaw = await db.staff.findMany({
@@ -22,6 +23,8 @@ export default async function UsersPage() {
     position: s.position,
     role: s.role as string,
     isActive: s.isActive,
+    confirmed: s.supabaseUserId !== null,
+    permissions: s.permissions,
   }))
 
   return (

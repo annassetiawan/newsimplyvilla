@@ -7,6 +7,7 @@ import { getSessionUser } from '@/lib/getSession'
 export default async function SettingsPage() {
   const user = await getSessionUser()
   if (!user) redirect('/login')
+  if (user.role === 'STAFF' && !user.permissions.includes('settings')) redirect('/dashboard')
 
   const profile = {
     id: user.id,

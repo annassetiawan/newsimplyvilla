@@ -8,9 +8,25 @@ export async function getSessionUser() {
   } = await supabase.auth.getUser()
   if (!user) return null
 
-  const staff = await db.staff.findUnique({
+  let staff = await db.staff.findUnique({
     where: { supabaseUserId: user.id },
     include: { villa: { include: { subscription: true } } },
   })
+
+  // Invited staff: supabaseUserId is null until first login — link it by email
+  if (!staff && user.email) {
+    const byEmail = await db.staff.findUnique({
+      where: { email: user.email },
+      include: { villa: { include: { subscription: true } } },
+    })
+    if (byEmail && !byEmail.supabaseUserId) {
+      staff = await db.staff.update({
+        where: { id: byEmail.id },
+        data: { supabaseUserId: user.id },
+        include: { villa: { include: { subscription: true } } },
+      })
+    }
+  }
+
   return staff
 }

@@ -38,10 +38,12 @@ export async function proxy(req: NextRequest) {
   const isAuthPage =
     pathname.startsWith('/login') ||
     pathname.startsWith('/register') ||
-    pathname.startsWith('/forgot-password') ||
-    pathname.startsWith('/reset-password')
+    pathname.startsWith('/forgot-password')
 
-  const isPublicPage = pathname === '/' || pathname.startsWith('/pricing')
+  const isPublicPage =
+    pathname === '/' ||
+    pathname.startsWith('/pricing') ||
+    pathname.startsWith('/auth/')
 
   if (!user && !isAuthPage && !isPublicPage) {
     const loginUrl = new URL('/login', req.url)

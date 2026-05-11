@@ -88,6 +88,12 @@ function Sparkline({ trend = 'up' }: { trend?: 'up' | 'down' | 'neutral' }) {
 export default async function DashboardPage() {
   const user = await getSessionUser()
   if (!user) redirect('/login')
+
+  if (user.role === 'STAFF' && !user.permissions.includes('dashboard')) {
+    const first = user.permissions[0]
+    redirect(first ? `/${first}` : '/login')
+  }
+
   const villaId = user.villaId
 
   const now = new Date()

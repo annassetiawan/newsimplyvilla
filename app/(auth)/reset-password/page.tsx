@@ -42,7 +42,7 @@ export default function ResetPasswordPage() {
       setError('root', { message: error.message })
       return
     }
-    router.push('/login?reset=success')
+    router.push('/dashboard')
   }
 
   return (

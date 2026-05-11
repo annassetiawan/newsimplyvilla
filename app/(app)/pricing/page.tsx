@@ -34,7 +34,6 @@ const PRO_FEATURES = [
   { text: 'User Management (role kustom, unlimited user)', star: true },
   { text: 'Employee Management (absensi, payroll)', star: true },
   { text: 'Channel Manager (Booking.com, Airbnb, Agoda)', star: true },
-  { text: 'Change Management (audit trail, approval)', star: true },
   { text: 'Priority support', star: true },
   { text: 'Unlimited user accounts', star: true },
 ]
@@ -55,7 +54,6 @@ const TABLE_ROWS: { label: string; free: string | boolean; pro: string | boolean
   { label: 'User Management lanjutan', free: false, pro: true },
   { label: 'Employee Management', free: false, pro: true },
   { label: 'Channel Manager (OTA sync)', free: false, pro: true },
-  { label: 'Change Management', free: false, pro: true },
   { label: 'Unlimited user accounts', free: '2', pro: true },
   { label: 'Priority support', free: false, pro: true },
 ]
@@ -296,7 +294,7 @@ export default function PricingPage() {
           <div>
             <p className="font-semibold text-sm">Siap upgrade?</p>
             <p className="text-xs text-muted-foreground mt-0.5">
-              Unlock 6 fitur eksklusif yang mengakselerasi pertumbuhan villa kamu.
+              Unlock 5 fitur eksklusif yang mengakselerasi pertumbuhan villa kamu.
             </p>
           </div>
           <Button

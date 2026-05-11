@@ -74,19 +74,20 @@ export async function inviteStaff(
     name: string
     email: string
     position: string
+    permissions: string[]
   }>
 ) {
   const user = await getUser()
 
-  const adminClient = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { auth: { autoRefreshToken: false, persistSession: false } }
-  )
-
   try {
+    const adminClient = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      { auth: { autoRefreshToken: false, persistSession: false } }
+    )
+
     for (const member of staffList) {
-      await db.staff.create({
+      const staff = await db.staff.create({
         data: {
           name: member.name,
           email: member.email,
@@ -94,20 +95,26 @@ export async function inviteStaff(
           role: 'STAFF',
           isActive: true,
           villaId: user.villaId,
+          permissions: member.permissions,
         },
       })
       try {
-        await adminClient.auth.admin.inviteUserByEmail(member.email, {
+        const { data: inviteData } = await adminClient.auth.admin.inviteUserByEmail(member.email, {
           data: { name: member.name },
         })
+        if (inviteData?.user?.id) {
+          await db.staff.update({
+            where: { id: staff.id },
+            data: { supabaseUserId: inviteData.user.id },
+          })
+        }
       } catch {
         // Invite email failed — DB record still created
       }
     }
-    return { success: true }
   } catch (error) {
     console.error('inviteStaff error:', error)
-    return { success: false, message: 'Gagal mengundang staff. Coba lagi.' }
+    throw new Error('Gagal mengundang staf. Coba lagi.')
   }
 }
 
