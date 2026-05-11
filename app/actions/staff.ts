@@ -7,7 +7,8 @@ import { db } from '@/lib/db'
 import { getSessionUser } from '@/lib/getSession'
 
 async function findSupabaseUserIdByEmail(
-  adminClient: ReturnType<typeof createClient>,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  adminClient: any,
   email: string
 ): Promise<string | null> {
   // Supabase listUsers is paginated — for small teams this is fine
