@@ -8,32 +8,40 @@ export async function upsertShift(data: {
   date: Date
   shiftType: 'MORNING' | 'AFTERNOON' | 'NIGHT' | 'OFF'
 }) {
-  const dayStart = new Date(data.date)
-  dayStart.setHours(0, 0, 0, 0)
-  const dayEnd = new Date(data.date)
-  dayEnd.setHours(23, 59, 59, 999)
+  try {
+    const dayStart = new Date(data.date)
+    dayStart.setHours(0, 0, 0, 0)
+    const dayEnd = new Date(data.date)
+    dayEnd.setHours(23, 59, 59, 999)
 
-  const existing = await db.shift.findFirst({
-    where: {
-      staffId: data.staffId,
-      date: { gte: dayStart, lte: dayEnd },
-    },
-  })
+    const existing = await db.shift.findFirst({
+      where: {
+        staffId: data.staffId,
+        date: { gte: dayStart, lte: dayEnd },
+      },
+    })
 
-  let shift: { id: string; staffId: string; date: Date; shiftType: string }
+    let shift: { id: string; staffId: string; date: Date; shiftType: string }
 
-  if (existing) {
-    shift = await db.shift.update({ where: { id: existing.id }, data: { shiftType: data.shiftType } })
-  } else {
-    shift = await db.shift.create({ data: { staffId: data.staffId, date: data.date, shiftType: data.shiftType } })
-  }
+    if (existing) {
+      shift = await db.shift.update({ where: { id: existing.id }, data: { shiftType: data.shiftType } })
+    } else {
+      shift = await db.shift.create({ data: { staffId: data.staffId, date: data.date, shiftType: data.shiftType } })
+    }
 
-  revalidatePath('/schedule')
+    revalidatePath('/schedule')
 
-  return {
-    id: shift.id,
-    staffId: shift.staffId,
-    date: shift.date.toISOString(),
-    shiftType: shift.shiftType,
+    return {
+      success: true,
+      data: {
+        id: shift.id,
+        staffId: shift.staffId,
+        date: shift.date.toISOString(),
+        shiftType: shift.shiftType,
+      },
+    }
+  } catch (error) {
+    console.error('upsertShift error:', error)
+    return { success: false, message: 'Gagal menyimpan jadwal. Coba lagi.' }
   }
 }

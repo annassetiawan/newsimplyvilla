@@ -20,16 +20,22 @@ export async function createSOP(data: {
   steps: { step: number; text: string }[]
 }) {
   const villaId = await getVillaId()
-  await db.sOP.create({
-    data: {
-      villaId,
-      title: data.title,
-      category: data.category,
-      estimatedMinutes: data.estimatedMinutes,
-      steps: data.steps,
-    },
-  })
-  revalidatePath('/sop')
+  try {
+    await db.sOP.create({
+      data: {
+        villaId,
+        title: data.title,
+        category: data.category,
+        estimatedMinutes: data.estimatedMinutes,
+        steps: data.steps,
+      },
+    })
+    revalidatePath('/sop')
+    return { success: true }
+  } catch (error) {
+    console.error('createSOP error:', error)
+    return { success: false, message: 'Gagal menyimpan SOP. Coba lagi.' }
+  }
 }
 
 export async function updateSOP(
@@ -41,19 +47,33 @@ export async function updateSOP(
     steps: { step: number; text: string }[]
   }
 ) {
-  await db.sOP.update({
-    where: { id },
-    data: {
-      title: data.title,
-      category: data.category,
-      estimatedMinutes: data.estimatedMinutes,
-      steps: data.steps,
-    },
-  })
-  revalidatePath('/sop')
+  await getVillaId()
+  try {
+    await db.sOP.update({
+      where: { id },
+      data: {
+        title: data.title,
+        category: data.category,
+        estimatedMinutes: data.estimatedMinutes,
+        steps: data.steps,
+      },
+    })
+    revalidatePath('/sop')
+    return { success: true }
+  } catch (error) {
+    console.error('updateSOP error:', error)
+    return { success: false, message: 'Gagal memperbarui SOP. Coba lagi.' }
+  }
 }
 
 export async function deleteSOP(id: string) {
-  await db.sOP.delete({ where: { id } })
-  revalidatePath('/sop')
+  await getVillaId()
+  try {
+    await db.sOP.delete({ where: { id } })
+    revalidatePath('/sop')
+    return { success: true }
+  } catch (error) {
+    console.error('deleteSOP error:', error)
+    return { success: false, message: 'Gagal menghapus SOP. Coba lagi.' }
+  }
 }

@@ -20,17 +20,22 @@ export async function saveVillaProfile(data: {
   facilities: string[]
 }) {
   const user = await getUser()
-  await db.villa.update({
-    where: { id: user.villaId },
-    data: {
-      name: data.name,
-      address: `${data.address}, ${data.city}`,
-      contact: data.phone,
-      description: data.description || null,
-      facilities: data.facilities,
-    },
-  })
-  return { success: true }
+  try {
+    await db.villa.update({
+      where: { id: user.villaId },
+      data: {
+        name: data.name,
+        address: `${data.address}, ${data.city}`,
+        contact: data.phone,
+        description: data.description || null,
+        facilities: data.facilities,
+      },
+    })
+    return { success: true }
+  } catch (error) {
+    console.error('saveVillaProfile error:', error)
+    return { success: false, message: 'Gagal menyimpan profil villa. Coba lagi.' }
+  }
 }
 
 export async function saveOnboardingRooms(
@@ -44,19 +49,24 @@ export async function saveOnboardingRooms(
   }>
 ) {
   const user = await getUser()
-  await db.room.createMany({
-    data: rooms.map((r) => ({
-      code: r.code,
-      name: r.name,
-      capacity: r.capacity,
-      type: r.bedType,
-      pricePerNight: r.pricePerNight,
-      status: r.status,
-      photos: [],
-      villaId: user.villaId,
-    })),
-  })
-  return { success: true }
+  try {
+    await db.room.createMany({
+      data: rooms.map((r) => ({
+        code: r.code,
+        name: r.name,
+        capacity: r.capacity,
+        type: r.bedType,
+        pricePerNight: r.pricePerNight,
+        status: r.status,
+        photos: [],
+        villaId: user.villaId,
+      })),
+    })
+    return { success: true }
+  } catch (error) {
+    console.error('saveOnboardingRooms error:', error)
+    return { success: false, message: 'Gagal menyimpan data kamar. Coba lagi.' }
+  }
 }
 
 export async function inviteStaff(
@@ -74,26 +84,31 @@ export async function inviteStaff(
     { auth: { autoRefreshToken: false, persistSession: false } }
   )
 
-  for (const member of staffList) {
-    await db.staff.create({
-      data: {
-        name: member.name,
-        email: member.email,
-        position: member.position,
-        role: 'STAFF',
-        isActive: true,
-        villaId: user.villaId,
-      },
-    })
-    try {
-      await adminClient.auth.admin.inviteUserByEmail(member.email, {
-        data: { name: member.name },
+  try {
+    for (const member of staffList) {
+      await db.staff.create({
+        data: {
+          name: member.name,
+          email: member.email,
+          position: member.position,
+          role: 'STAFF',
+          isActive: true,
+          villaId: user.villaId,
+        },
       })
-    } catch {
-      // Invite email failed — DB record still created
+      try {
+        await adminClient.auth.admin.inviteUserByEmail(member.email, {
+          data: { name: member.name },
+        })
+      } catch {
+        // Invite email failed — DB record still created
+      }
     }
+    return { success: true }
+  } catch (error) {
+    console.error('inviteStaff error:', error)
+    return { success: false, message: 'Gagal mengundang staff. Coba lagi.' }
   }
-  return { success: true }
 }
 
 export async function completeOnboarding() {

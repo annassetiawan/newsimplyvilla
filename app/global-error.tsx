@@ -1,5 +1,9 @@
 'use client'
 
+import { useEffect } from 'react'
+import { Button } from '@/components/ui/button'
+import { AlertTriangle } from 'lucide-react'
+
 export default function GlobalError({
   error,
   reset,
@@ -7,15 +11,37 @@ export default function GlobalError({
   error: Error & { digest?: string }
   reset: () => void
 }) {
+  useEffect(() => {
+    console.error('Global error:', error)
+  }, [error])
+
   return (
     <html>
       <body>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', gap: '16px', fontFamily: 'sans-serif' }}>
-          <h2>Something went wrong</h2>
-          <p style={{ color: '#666' }}>{error.message}</p>
-          <button onClick={reset} style={{ padding: '8px 16px', border: '1px solid #ccc', borderRadius: '6px', cursor: 'pointer' }}>
-            Try again
-          </button>
+        <div className="flex flex-col items-center justify-center min-h-screen gap-4 p-6">
+          <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center">
+            <AlertTriangle className="w-6 h-6 text-red-500" />
+          </div>
+          <div className="text-center">
+            <h2 className="text-lg font-medium text-neutral-800 mb-1">Terjadi kesalahan</h2>
+            <p className="text-sm text-neutral-500 max-w-sm">
+              Aplikasi mengalami error tak terduga. Coba refresh halaman.
+            </p>
+          </div>
+          <div className="flex gap-3">
+            <button
+              onClick={() => (window.location.href = '/dashboard')}
+              className="px-4 py-2 text-sm border border-neutral-200 rounded-lg text-neutral-700 hover:bg-neutral-50"
+            >
+              Kembali ke dashboard
+            </button>
+            <button
+              onClick={() => reset()}
+              className="px-4 py-2 text-sm bg-neutral-800 text-white rounded-lg hover:bg-neutral-700"
+            >
+              Coba lagi
+            </button>
+          </div>
         </div>
       </body>
     </html>

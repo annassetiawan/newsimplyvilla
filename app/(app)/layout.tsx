@@ -1,6 +1,7 @@
 import { Sidebar } from '@/components/layout/sidebar'
 import { Header } from '@/components/layout/header'
 import { SidebarOffset } from '@/components/layout/sidebar-offset'
+import { Toaster } from 'sonner'
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -10,6 +11,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <SidebarOffset>
         <main className="mx-auto max-w-[1400px] p-6">{children}</main>
       </SidebarOffset>
+      <Toaster position="bottom-right" richColors />
     </div>
   )
 }

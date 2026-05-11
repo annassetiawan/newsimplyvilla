@@ -86,12 +86,14 @@ export function ShiftModal({ open, onClose, onSave, initial, staffOptions }: Pro
 
   function onSubmit(data: ShiftValues) {
     startTransition(async () => {
-      const saved = await upsertShift({
+      const result = await upsertShift({
         staffId: data.staffId,
         date: new Date(data.date),
         shiftType: data.shiftType,
       })
-      onSave?.(saved)
+      if (result.success && result.data) {
+        onSave?.(result.data)
+      }
       onClose()
     })
   }

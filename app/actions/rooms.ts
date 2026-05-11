@@ -22,60 +22,72 @@ export async function upsertRoom(data: {
 }) {
   const user = await getSessionUser()
   if (!user) redirect('/login')
-  if (user.role !== 'OWNER') throw new Error('Only owners can manage room settings')
+  if (user.role !== 'OWNER') return { success: false, message: 'Hanya owner yang bisa mengelola kamar.' }
 
-  if (data.id) {
-    const existing = await db.room.findUnique({ where: { id: data.id } })
-    await db.room.update({
-      where: { id: data.id },
-      data: {
-        code: data.code,
-        name: data.name,
-        type: data.type,
-        capacity: data.capacity,
-        pricePerNight: data.pricePerNight,
-        status: data.status,
-      },
-    })
-    if (existing && existing.pricePerNight !== data.pricePerNight) {
-      await db.transaction.create({
+  try {
+    if (data.id) {
+      const existing = await db.room.findUnique({ where: { id: data.id } })
+      await db.room.update({
+        where: { id: data.id },
         data: {
-          date: new Date(),
-          type: 'EXPENSE',
-          description: `Room price updated: ${existing.code} — Rp ${existing.pricePerNight.toLocaleString('id-ID')} → Rp ${data.pricePerNight.toLocaleString('id-ID')}`,
-          amount: 0,
-          category: 'Admin',
-          paymentStatus: 'PAID',
+          code: data.code,
+          name: data.name,
+          type: data.type,
+          capacity: data.capacity,
+          pricePerNight: data.pricePerNight,
+          status: data.status,
+        },
+      })
+      if (existing && existing.pricePerNight !== data.pricePerNight) {
+        await db.transaction.create({
+          data: {
+            date: new Date(),
+            type: 'EXPENSE',
+            description: `Room price updated: ${existing.code} — Rp ${existing.pricePerNight.toLocaleString('id-ID')} → Rp ${data.pricePerNight.toLocaleString('id-ID')}`,
+            amount: 0,
+            category: 'Admin',
+            paymentStatus: 'PAID',
+            villaId: user.villaId,
+          },
+        })
+      }
+    } else {
+      await db.room.create({
+        data: {
+          code: data.code,
+          name: data.name,
+          type: data.type,
+          capacity: data.capacity,
+          pricePerNight: data.pricePerNight,
+          status: data.status,
+          photos: [],
           villaId: user.villaId,
         },
       })
     }
-  } else {
-    await db.room.create({
-      data: {
-        code: data.code,
-        name: data.name,
-        type: data.type,
-        capacity: data.capacity,
-        pricePerNight: data.pricePerNight,
-        status: data.status,
-        photos: [],
-        villaId: user.villaId,
-      },
-    })
+    revalidatePath('/rooms')
+    revalidatePath('/dashboard')
+    return { success: true }
+  } catch (error) {
+    console.error('upsertRoom error:', error)
+    return { success: false, message: 'Gagal menyimpan data kamar. Coba lagi.' }
   }
-  revalidatePath('/rooms')
-  revalidatePath('/dashboard')
 }
 
 export async function createArea(data: { name: string; description?: string }) {
   const villaId = await getVillaId()
-  await db.area.create({
-    data: {
-      name: data.name,
-      description: data.description,
-      villaId,
-    },
-  })
-  revalidatePath('/rooms')
+  try {
+    await db.area.create({
+      data: {
+        name: data.name,
+        description: data.description,
+        villaId,
+      },
+    })
+    revalidatePath('/rooms')
+    return { success: true }
+  } catch (error) {
+    console.error('createArea error:', error)
+    return { success: false, message: 'Gagal menyimpan area. Coba lagi.' }
+  }
 }

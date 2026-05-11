@@ -19,16 +19,22 @@ export async function createExpense(data: {
   paymentStatus: 'PAID' | 'UNPAID'
 }) {
   const villaId = await getVillaId()
-  await db.transaction.create({
-    data: {
-      villaId,
-      date: data.date,
-      type: 'EXPENSE',
-      description: data.description,
-      category: data.category,
-      amount: data.amount,
-      paymentStatus: data.paymentStatus,
-    },
-  })
-  revalidatePath('/reports')
+  try {
+    await db.transaction.create({
+      data: {
+        villaId,
+        date: data.date,
+        type: 'EXPENSE',
+        description: data.description,
+        category: data.category,
+        amount: data.amount,
+        paymentStatus: data.paymentStatus,
+      },
+    })
+    revalidatePath('/reports')
+    return { success: true }
+  } catch (error) {
+    console.error('createExpense error:', error)
+    return { success: false, message: 'Gagal menyimpan pengeluaran. Coba lagi.' }
+  }
 }
