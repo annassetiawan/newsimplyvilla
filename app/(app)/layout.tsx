@@ -9,7 +9,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <Sidebar />
       <Header />
       <SidebarOffset>
-        <main className="mx-auto max-w-[1400px] p-6">{children}</main>
+        <main className="mx-auto max-w-[1400px] p-4 lg:p-6">{children}</main>
       </SidebarOffset>
       <Toaster position="bottom-right" richColors />
     </div>

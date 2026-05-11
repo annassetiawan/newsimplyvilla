@@ -134,7 +134,7 @@ export function UsersClient({ staff }: Props) {
           <TableHeader>
             <TableRow>
               <TableHead>Staff member</TableHead>
-              <TableHead>Position</TableHead>
+              <TableHead className="hidden lg:table-cell">Position</TableHead>
               <TableHead>Role</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="w-10" />
@@ -182,7 +182,7 @@ export function UsersClient({ staff }: Props) {
                     </div>
                   </div>
                 </TableCell>
-                <TableCell className="text-muted-foreground">{s.position}</TableCell>
+                <TableCell className="hidden text-muted-foreground lg:table-cell">{s.position}</TableCell>
                 <TableCell>
                   <span
                     className={cn(

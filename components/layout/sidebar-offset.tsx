@@ -10,7 +10,8 @@ export function SidebarOffset({ children }: { children: React.ReactNode }) {
     <div
       className={cn(
         'pt-14 transition-all duration-300 ease-in-out',
-        collapsed ? 'pl-[64px]' : 'pl-[240px]'
+        'pl-0',
+        collapsed ? 'lg:pl-[64px]' : 'lg:pl-[240px]'
       )}
     >
       {children}

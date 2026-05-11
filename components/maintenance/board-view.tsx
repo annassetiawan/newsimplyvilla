@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { advanceStatus, moveTaskStatus } from '@/app/actions/tasks'
 import type { TaskData } from './maintenance-client'
+import { useMediaQuery } from '@/hooks/useMediaQuery'
 
 interface Props {
   tasks: TaskData[]
@@ -263,6 +264,8 @@ function TaskCard({
 export function BoardView({ tasks, onEdit }: Props) {
   const [detailTask, setDetailTask] = useState<TaskData | null>(null)
   const [, startTransition] = useTransition()
+  const isMobile = useMediaQuery('(max-width: 1024px)')
+  const [mobileCol, setMobileCol] = useState<'PENDING' | 'IN_PROGRESS' | 'DONE'>('PENDING')
 
   function onDragEnd(result: DropResult) {
     const { source, destination, draggableId } = result
@@ -279,10 +282,35 @@ export function BoardView({ tasks, onEdit }: Props) {
 
   return (
     <>
+      {/* Mobile column selector */}
+      {isMobile && (
+        <div className="flex gap-1 rounded-lg bg-muted p-1 lg:hidden">
+          {COLUMNS.map((col) => {
+            const count = tasks.filter((t) => t.status === col.status).length
+            return (
+              <button
+                key={col.status}
+                onClick={() => setMobileCol(col.status)}
+                className={cn(
+                  'flex-1 rounded-md px-3 py-1.5 text-sm font-medium transition-all',
+                  mobileCol === col.status
+                    ? 'bg-background text-foreground shadow'
+                    : 'text-muted-foreground hover:text-foreground'
+                )}
+              >
+                {col.label}
+                <span className="ml-1.5 text-xs tabular-nums">({count})</span>
+              </button>
+            )
+          })}
+        </div>
+      )}
+
       <DragDropContext onDragEnd={onDragEnd}>
-        <div className="grid grid-cols-3 gap-4">
+        <div className={cn(isMobile ? 'block' : 'grid grid-cols-3 gap-4')}>
           {COLUMNS.map((col) => {
             const colTasks = tasks.filter((t) => t.status === col.status)
+            if (isMobile && col.status !== mobileCol) return null
             return (
               <div key={col.status} className="flex flex-col gap-3">
                 <div className="flex items-center gap-2 px-1">

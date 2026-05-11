@@ -140,8 +140,35 @@ export function SettingsClient({ profile }: Props) {
   }
 
   return (
-    <div className="flex gap-6 min-h-[600px]">
-      <div className="w-52 shrink-0 flex flex-col">
+    <div className="flex flex-col gap-4 lg:min-h-[600px] lg:flex-row lg:gap-6">
+      {/* Mobile: horizontal scrollable tabs */}
+      <div className="scrollbar-hide flex overflow-x-auto gap-1 border-b border-border pb-1 lg:hidden">
+        {TABS.map(({ id, label, icon: Icon }) => (
+          <button
+            key={id}
+            onClick={() => setTab(id)}
+            className={cn(
+              'flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+              tab === id
+                ? 'bg-muted text-foreground'
+                : 'text-muted-foreground hover:text-foreground'
+            )}
+          >
+            <Icon className="h-4 w-4 shrink-0" />
+            {label}
+          </button>
+        ))}
+        <button
+          onClick={handleLogout}
+          className="flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-destructive hover:bg-destructive/5 transition-colors"
+        >
+          <LogOut className="h-4 w-4 shrink-0" />
+          Logout
+        </button>
+      </div>
+
+      {/* Desktop: vertical sidebar */}
+      <div className="hidden w-52 shrink-0 flex-col lg:flex">
         <nav className="flex-1 space-y-0.5">
           {TABS.map(({ id, label, icon: Icon }) => (
             <button

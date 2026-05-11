@@ -81,11 +81,11 @@ export function GuestsTab({ guests }: Props) {
           <TableHeader>
             <TableRow>
               <TableHead>Guest</TableHead>
-              <TableHead>Phone</TableHead>
-              <TableHead>ID Number</TableHead>
-              <TableHead className="text-center">Stays</TableHead>
-              <TableHead>Last visit</TableHead>
-              <TableHead>Total spent</TableHead>
+              <TableHead className="hidden lg:table-cell">Phone</TableHead>
+              <TableHead className="hidden lg:table-cell">ID Number</TableHead>
+              <TableHead className="hidden text-center lg:table-cell">Stays</TableHead>
+              <TableHead className="hidden lg:table-cell">Last visit</TableHead>
+              <TableHead className="hidden lg:table-cell">Total spent</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -120,17 +120,17 @@ export function GuestsTab({ guests }: Props) {
                       </div>
                     </div>
                   </TableCell>
-                  <TableCell className="text-muted-foreground">
+                  <TableCell className="hidden text-muted-foreground lg:table-cell">
                     {guest.phone ?? '—'}
                   </TableCell>
-                  <TableCell className="font-id text-muted-foreground">
+                  <TableCell className="hidden font-id text-muted-foreground lg:table-cell">
                     {guest.idNumber ?? '—'}
                   </TableCell>
-                  <TableCell className="text-center font-medium">{validStays.length}</TableCell>
-                  <TableCell className="text-muted-foreground">
+                  <TableCell className="hidden text-center font-medium lg:table-cell">{validStays.length}</TableCell>
+                  <TableCell className="hidden text-muted-foreground lg:table-cell">
                     {lastStay ? fmtDate(lastStay.checkIn) : '—'}
                   </TableCell>
-                  <TableCell className="font-medium">
+                  <TableCell className="hidden font-medium lg:table-cell">
                     {ltv > 0 ? fmtRp(ltv) : '—'}
                   </TableCell>
                 </TableRow>

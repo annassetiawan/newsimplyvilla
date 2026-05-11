@@ -159,11 +159,11 @@ export function ListView({ tasks, staffNames, onEdit }: Props) {
           <TableHeader>
             <TableRow>
               <TableHead>Task</TableHead>
-              <TableHead>Type</TableHead>
-              <TableHead>Location</TableHead>
+              <TableHead className="hidden lg:table-cell">Type</TableHead>
+              <TableHead className="hidden lg:table-cell">Location</TableHead>
               <TableHead>Priority</TableHead>
-              <TableHead>Assigned to</TableHead>
-              <TableHead>Due date</TableHead>
+              <TableHead className="hidden lg:table-cell">Assigned to</TableHead>
+              <TableHead className="hidden lg:table-cell">Due date</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="w-10" />
             </TableRow>
@@ -191,7 +191,7 @@ export function ListView({ tasks, staffNames, onEdit }: Props) {
                     {task.title}
                   </p>
                 </TableCell>
-                <TableCell>
+                <TableCell className="hidden lg:table-cell">
                   <span
                     className={cn(
                       'rounded-full px-2 py-0.5 text-[11px] font-semibold',
@@ -203,7 +203,7 @@ export function ListView({ tasks, staffNames, onEdit }: Props) {
                     {task.type === 'MAINTENANCE' ? 'Maintenance' : 'Cleaning'}
                   </span>
                 </TableCell>
-                <TableCell className="text-muted-foreground">{task.location}</TableCell>
+                <TableCell className="hidden text-muted-foreground lg:table-cell">{task.location}</TableCell>
                 <TableCell>
                   <span
                     className={cn(
@@ -214,10 +214,10 @@ export function ListView({ tasks, staffNames, onEdit }: Props) {
                     {task.priority}
                   </span>
                 </TableCell>
-                <TableCell className="text-muted-foreground">
+                <TableCell className="hidden text-muted-foreground lg:table-cell">
                   {task.assignedTo ?? <span className="italic">Unassigned</span>}
                 </TableCell>
-                <TableCell className="text-muted-foreground">{fmtDate(task.dueDate)}</TableCell>
+                <TableCell className="hidden text-muted-foreground lg:table-cell">{fmtDate(task.dueDate)}</TableCell>
                 <TableCell>
                   <span
                     className={cn(

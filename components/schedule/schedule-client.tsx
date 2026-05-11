@@ -153,7 +153,7 @@ export function ScheduleClient({ staff, shifts: initialShifts }: Props) {
   return (
     <div className="space-y-4">
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
         <div className="rounded-xl border border-border bg-background p-4">
           <div className="flex items-center gap-2 text-muted-foreground">
             <Users className="h-4 w-4" />
@@ -183,9 +183,9 @@ export function ScheduleClient({ staff, shifts: initialShifts }: Props) {
       </div>
 
       {/* Legend + nav */}
-      <div className="flex items-center justify-between">
-        {/* Legend */}
-        <div className="flex items-center gap-5 text-xs text-muted-foreground">
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        {/* Legend — hidden on mobile */}
+        <div className="hidden items-center gap-5 text-xs text-muted-foreground lg:flex">
           {Object.entries(SHIFT_CONFIG).map(([key, cfg]) => (
             <div key={key} className="flex items-center gap-1.5">
               <span className={cn('inline-block h-3.5 w-3.5 rounded-sm', cfg.legend)} />
@@ -196,11 +196,11 @@ export function ScheduleClient({ staff, shifts: initialShifts }: Props) {
         </div>
 
         {/* Week nav + assign */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={prevWeek}>
             <ChevronLeft className="h-4 w-4" />
           </Button>
-          <span className="min-w-[200px] text-center text-sm font-medium">
+          <span className="flex-1 text-center text-sm font-medium lg:min-w-[200px] lg:flex-none">
             {days[0].toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
             {' – '}
             {days[6].toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
@@ -214,7 +214,8 @@ export function ScheduleClient({ staff, shifts: initialShifts }: Props) {
             onClick={() => { setEditShift(null); setModalOpen(true) }}
           >
             <Plus className="h-3.5 w-3.5" />
-            Assign shift
+            <span className="hidden sm:inline">Assign shift</span>
+            <span className="sm:hidden">Assign</span>
           </Button>
         </div>
       </div>

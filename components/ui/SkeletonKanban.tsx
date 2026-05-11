@@ -2,7 +2,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 
 function KanbanCardSkeleton() {
   return (
-    <div className="bg-white border border-neutral-200 rounded-lg p-3 space-y-2">
+    <div className="bg-background border border-border rounded-lg p-3 space-y-2">
       <Skeleton className="h-4 w-16" />
       <Skeleton className="h-5 w-full mt-2" />
       <Skeleton className="h-3 w-24 mt-2" />

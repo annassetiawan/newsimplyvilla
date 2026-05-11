@@ -136,11 +136,11 @@ export function ListTab({ reservations, onNewReservation }: Props) {
             <TableRow>
               <TableHead>Guest</TableHead>
               <TableHead>Room</TableHead>
-              <TableHead>Check-in</TableHead>
-              <TableHead>Check-out</TableHead>
-              <TableHead className="text-center">Nights</TableHead>
-              <TableHead>Amount</TableHead>
-              <TableHead>Payment</TableHead>
+              <TableHead className="hidden lg:table-cell">Check-in</TableHead>
+              <TableHead className="hidden lg:table-cell">Check-out</TableHead>
+              <TableHead className="hidden text-center lg:table-cell">Nights</TableHead>
+              <TableHead className="hidden lg:table-cell">Amount</TableHead>
+              <TableHead className="hidden lg:table-cell">Payment</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="w-10" />
             </TableRow>
@@ -161,13 +161,13 @@ export function ListTab({ reservations, onNewReservation }: Props) {
               >
                 <TableCell className="font-medium">{res.guest.name}</TableCell>
                 <TableCell className="font-id text-muted-foreground">{res.room.code}</TableCell>
-                <TableCell>{fmtDate(res.checkIn)}</TableCell>
-                <TableCell>{fmtDate(res.checkOut)}</TableCell>
-                <TableCell className="text-center">
+                <TableCell className="hidden lg:table-cell">{fmtDate(res.checkIn)}</TableCell>
+                <TableCell className="hidden lg:table-cell">{fmtDate(res.checkOut)}</TableCell>
+                <TableCell className="hidden text-center lg:table-cell">
                   {nightCount(res.checkIn, res.checkOut)}
                 </TableCell>
-                <TableCell className="font-medium">{fmtRp(res.totalAmount)}</TableCell>
-                <TableCell>
+                <TableCell className="hidden font-medium lg:table-cell">{fmtRp(res.totalAmount)}</TableCell>
+                <TableCell className="hidden lg:table-cell">
                   <span
                     className={cn(
                       'inline-flex rounded-full px-2 py-0.5 text-[11px] font-semibold',

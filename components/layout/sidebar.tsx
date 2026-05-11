@@ -26,6 +26,7 @@ import {
   TrendingUp,
   Crown,
   MoreHorizontal,
+  X,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useSidebar } from '@/store/sidebar-store'
@@ -93,7 +94,7 @@ function getInitials(name: string) {
 }
 
 export function Sidebar() {
-  const { collapsed, toggle } = useSidebar()
+  const { collapsed, toggle, mobileOpen, closeMobile } = useSidebar()
   const pathname = usePathname()
   const router = useRouter()
   const { isPro } = useSubscription()
@@ -121,16 +122,39 @@ export function Sidebar() {
 
   return (
     <TooltipProvider delayDuration={0}>
+      {/* Mobile overlay */}
+      <div
+        className={cn(
+          'fixed inset-0 z-40 bg-black/40 transition-opacity duration-300 lg:hidden',
+          mobileOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+        )}
+        onClick={closeMobile}
+      />
+
       <aside
         className={cn(
-          'fixed left-0 top-0 z-40 flex h-full flex-col border-r border-border bg-background transition-all duration-300 ease-in-out',
-          collapsed ? 'w-[64px]' : 'w-[240px]'
+          'fixed left-0 top-0 flex h-full flex-col border-r border-border bg-background transition-all duration-300 ease-in-out',
+          // Desktop: always visible, width controlled by collapsed
+          'lg:z-40',
+          collapsed ? 'lg:w-[64px]' : 'lg:w-[240px]',
+          // Mobile: slides in/out, fixed width
+          'z-50 w-[280px]',
+          mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0',
         )}
       >
-        {/* Collapse toggle */}
+        {/* Mobile close button */}
+        <button
+          onClick={closeMobile}
+          className="absolute right-3 top-3.5 flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground lg:hidden"
+          aria-label="Close sidebar"
+        >
+          <X className="h-4 w-4" />
+        </button>
+
+        {/* Collapse toggle — desktop only */}
         <button
           onClick={toggle}
-          className="absolute -right-3 top-5 z-50 flex h-6 w-6 items-center justify-center rounded-full border border-border bg-background text-muted-foreground shadow-sm transition-colors hover:bg-muted hover:text-foreground"
+          className="absolute -right-3 top-5 z-50 hidden h-6 w-6 items-center justify-center rounded-full border border-border bg-background text-muted-foreground shadow-sm transition-colors hover:bg-muted hover:text-foreground lg:flex"
           aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         >
           {collapsed ? (
@@ -178,6 +202,7 @@ export function Sidebar() {
                       <TooltipTrigger asChild>
                         <Link
                           href={item.href}
+                          onClick={closeMobile}
                           className={cn(
                             'flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-medium transition-colors',
                             isActive

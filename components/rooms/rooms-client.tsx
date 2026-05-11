@@ -168,14 +168,14 @@ export function RoomsClient({ rooms, areas }: Props) {
       </div>
 
       {/* Filter tabs + search */}
-      <div className="flex items-center justify-between gap-3">
-        <div className="inline-flex h-9 items-center rounded-lg border border-border bg-background p-1 text-muted-foreground">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="scrollbar-hide flex overflow-x-auto rounded-lg border border-border bg-background p-1 text-muted-foreground">
           {FILTER_TABS.map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
               className={cn(
-                'inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1 text-sm font-medium transition-all',
+                'inline-flex shrink-0 items-center justify-center whitespace-nowrap rounded-md px-3 py-1 text-sm font-medium transition-all',
                 tab === t
                   ? 'bg-muted text-foreground shadow-sm'
                   : 'hover:text-foreground'
@@ -190,7 +190,7 @@ export function RoomsClient({ rooms, areas }: Props) {
           <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder="Filter rooms..."
-            className="h-9 w-52 pl-8 text-sm"
+            className="h-9 w-full pl-8 text-sm sm:w-52"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -256,7 +256,7 @@ export function RoomsClient({ rooms, areas }: Props) {
               minHeight="min-h-[200px]"
             />
           ) : (
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+            <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
               {areas.map((area) => {
                 const Icon = areaIcon(area.name)
                 return (

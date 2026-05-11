@@ -138,7 +138,23 @@ export function CalendarTab({ rooms, reservations, onNewReservation }: Props) {
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-3 overflow-hidden">
+      {/* Mobile: notice + list prompt only */}
+      <div className="lg:hidden">
+        <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-3 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-300">
+          <p className="font-medium">Tampilan kalender tersedia di desktop</p>
+          <p className="mt-0.5 text-xs opacity-80">Di perangkat mobile, gunakan tab <strong>List</strong> untuk melihat reservasi.</p>
+        </div>
+        <div className="mt-3 flex justify-center">
+          <Button size="sm" onClick={onNewReservation} className="bg-primary text-white hover:bg-[#C8911A]">
+            <Plus className="mr-1.5 h-4 w-4" />
+            New reservation
+          </Button>
+        </div>
+      </div>
+
+      {/* Desktop: full calendar */}
+      <div className="hidden lg:block">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={prevWeek}>
@@ -291,6 +307,7 @@ export function CalendarTab({ rooms, reservations, onNewReservation }: Props) {
           Klik &apos;New reservation&apos; untuk tambah reservasi baru
         </p>
       )}
+      </div>{/* end desktop wrapper */}
 
       <ReservationDetailSheet
         selected={selected}

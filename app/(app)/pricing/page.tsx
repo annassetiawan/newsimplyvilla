@@ -160,7 +160,7 @@ export default function PricingPage() {
       </div>
 
       {/* Pricing cards */}
-      <div ref={cardsRef} className="mx-auto grid max-w-2xl grid-cols-2 gap-5">
+      <div ref={cardsRef} className="mx-auto grid max-w-2xl grid-cols-1 gap-5 sm:grid-cols-2">
         {/* FREE */}
         <div className="rounded-2xl border border-border bg-background p-6 space-y-5">
           <div>
@@ -292,7 +292,7 @@ export default function PricingPage() {
         </div>
 
         {/* CTA below table */}
-        <div className="rounded-xl border border-[#E1A62F33] bg-[#FFFBF0] px-6 py-4 flex items-center justify-between gap-4">
+        <div className="rounded-xl border border-[#E1A62F33] bg-[#FFFBF0] px-4 py-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-6">
           <div>
             <p className="font-semibold text-sm">Siap upgrade?</p>
             <p className="text-xs text-muted-foreground mt-0.5">
@@ -300,7 +300,7 @@ export default function PricingPage() {
             </p>
           </div>
           <Button
-            className="shrink-0 font-semibold"
+            className="w-full shrink-0 font-semibold sm:w-auto"
             style={{ backgroundColor: '#E1A62F', color: 'white' }}
             onClick={() => setWaitlistOpen(true)}
           >
@@ -333,18 +333,19 @@ export default function PricingPage() {
           showSticky ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none'
         )}
       >
-        <div>
+        <div className="min-w-0">
           <p className="text-sm font-semibold">Siap upgrade ke Pro?</p>
-          <p className="text-xs text-muted-foreground">
+          <p className="truncate text-xs text-muted-foreground">
             {monthlyPrice}/bln · Unlock semua fitur eksklusif
           </p>
         </div>
         <Button
-          className="shrink-0 font-semibold"
+          className="shrink-0 text-xs font-semibold sm:text-sm"
           style={{ backgroundColor: '#E1A62F', color: 'white' }}
           onClick={() => setWaitlistOpen(true)}
         >
-          Subscribe sekarang
+          <span className="hidden sm:inline">Subscribe sekarang</span>
+          <span className="sm:hidden">Subscribe</span>
         </Button>
       </div>
 

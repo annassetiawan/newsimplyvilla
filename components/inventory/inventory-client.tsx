@@ -116,7 +116,7 @@ export function InventoryClient({ items, recentStats }: Props) {
   return (
     <div className="space-y-5">
       {/* Stat cards */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
         <Card>
           <CardContent className="p-5">
             <p className="text-sm font-medium text-muted-foreground">Items tracked</p>
@@ -183,10 +183,36 @@ export function InventoryClient({ items, recentStats }: Props) {
         </div>
 
         <div className="ml-auto flex items-center gap-2">
+          {/* Mobile: combined dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button size="sm" className="h-8 gap-1.5 lg:hidden">
+                <Plus className="h-3.5 w-3.5" />
+                Actions
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => openStockIn()}>
+                <ArrowDownToLine className="mr-1.5 h-3.5 w-3.5 text-green-700" />
+                Stock In
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => openStockOut()}>
+                <ArrowUpFromLine className="mr-1.5 h-3.5 w-3.5 text-red-700" />
+                Stock Out
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => setNewItemOpen(true)}>
+                <Plus className="mr-1.5 h-3.5 w-3.5" />
+                New item
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* Desktop: 3 separate buttons */}
           <Button
             variant="outline"
             size="sm"
-            className="h-8 gap-1.5 text-green-700 border-green-200 hover:bg-green-50"
+            className="hidden h-8 gap-1.5 border-green-200 text-green-700 hover:bg-green-50 lg:flex"
             onClick={() => openStockIn()}
           >
             <ArrowDownToLine className="h-3.5 w-3.5" /> Stock In
@@ -194,14 +220,14 @@ export function InventoryClient({ items, recentStats }: Props) {
           <Button
             variant="outline"
             size="sm"
-            className="h-8 gap-1.5 text-red-700 border-red-200 hover:bg-red-50"
+            className="hidden h-8 gap-1.5 border-red-200 text-red-700 hover:bg-red-50 lg:flex"
             onClick={() => openStockOut()}
           >
             <ArrowUpFromLine className="h-3.5 w-3.5" /> Stock Out
           </Button>
           <Button
             size="sm"
-            className="h-8 bg-primary text-white hover:bg-[#C8911A]"
+            className="hidden h-8 bg-primary text-white hover:bg-[#C8911A] lg:flex"
             onClick={() => setNewItemOpen(true)}
           >
             <Plus className="mr-1.5 h-3.5 w-3.5" /> New item
@@ -224,9 +250,9 @@ export function InventoryClient({ items, recentStats }: Props) {
           <TableHeader>
             <TableRow>
               <TableHead>Item</TableHead>
-              <TableHead>Category</TableHead>
+              <TableHead className="hidden lg:table-cell">Category</TableHead>
               <TableHead className="text-center">On hand</TableHead>
-              <TableHead className="text-center">Min level</TableHead>
+              <TableHead className="hidden text-center lg:table-cell">Min level</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="w-10" />
             </TableRow>
@@ -266,7 +292,7 @@ export function InventoryClient({ items, recentStats }: Props) {
                     <p className="font-medium">{item.name}</p>
                     <p className="text-[11px] text-muted-foreground">{item.sku}</p>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="hidden lg:table-cell">
                     <span className="text-sm text-muted-foreground">{CAT_LABEL[item.category] ?? item.category}</span>
                   </TableCell>
                   <TableCell className="text-center">
@@ -275,7 +301,7 @@ export function InventoryClient({ items, recentStats }: Props) {
                       {item.onHand} {item.unit}
                     </span>
                   </TableCell>
-                  <TableCell className="text-center text-muted-foreground">
+                  <TableCell className="hidden text-center text-muted-foreground lg:table-cell">
                     {item.minLevel} {item.unit}
                   </TableCell>
                   <TableCell>

@@ -79,28 +79,39 @@ export function MaintenanceClient({ tasks, staffOptions, locationOptions }: Prop
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+        <div className="flex items-center justify-between gap-2 sm:justify-start sm:gap-3">
           <div className="inline-flex h-9 items-center justify-center rounded-lg bg-muted p-1 text-muted-foreground">
             {VIEWS.map(({ id, label, icon: Icon }) => (
               <button
                 key={id}
                 onClick={() => setView(id)}
                 className={cn(
-                  'inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-md px-3 py-1 text-sm font-medium transition-all',
+                  'inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-md px-2.5 py-1 text-sm font-medium transition-all sm:px-3',
                   view === id ? 'bg-background text-foreground shadow' : 'hover:text-foreground'
                 )}
               >
                 <Icon className="h-3.5 w-3.5" />
-                {label}
+                <span className="hidden sm:inline">{label}</span>
               </button>
             ))}
           </div>
           <p className="text-sm text-muted-foreground">
             {openTasks.length} open task{openTasks.length !== 1 ? 's' : ''}
           </p>
+          {/* Mobile: action buttons inline with view tabs */}
+          <div className="flex items-center gap-2 sm:hidden">
+            <Button variant="outline" size="sm" className="h-8 w-8 p-0">
+              <Filter className="h-3.5 w-3.5" />
+            </Button>
+            <Button size="sm" className="h-8 gap-1" onClick={handleNew}>
+              <Plus className="h-3.5 w-3.5" />
+              New
+            </Button>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
+        {/* Desktop: action buttons */}
+        <div className="hidden items-center gap-2 sm:flex">
           <Button variant="outline" size="sm" className="gap-1.5">
             <Filter className="h-3.5 w-3.5" />
             Filter

@@ -1,7 +1,7 @@
 'use client'
 
 import { usePathname } from 'next/navigation'
-import { Bell, Moon, Sun } from 'lucide-react'
+import { Bell, Moon, Sun, Menu } from 'lucide-react'
 import { useTheme } from 'next-themes'
 import { cn } from '@/lib/utils'
 import { useSidebar } from '@/store/sidebar-store'
@@ -25,7 +25,7 @@ const NOTIFICATION_COUNT = 3
 export function Header() {
   const pathname = usePathname()
   const { theme, setTheme } = useTheme()
-  const { collapsed } = useSidebar()
+  const { collapsed, openMobile } = useSidebar()
 
   const matchedKey = Object.keys(pageLabels).find(
     (key) => pathname === key || pathname.startsWith(key + '/')
@@ -35,22 +35,37 @@ export function Header() {
   return (
     <header
       className={cn(
-        'fixed right-0 top-0 z-30 flex h-14 items-center justify-between border-b border-border bg-background/95 px-5 backdrop-blur transition-all duration-300 ease-in-out',
-        collapsed ? 'left-[64px]' : 'left-[240px]'
+        'fixed right-0 top-0 z-30 flex h-14 items-center justify-between border-b border-border bg-background/95 px-4 backdrop-blur transition-all duration-300 ease-in-out',
+        'left-0',
+        collapsed ? 'lg:left-[64px]' : 'lg:left-[240px]'
       )}
     >
-      {/* Breadcrumb */}
-      <nav className="flex items-center gap-1.5 text-sm">
-        <span className="text-muted-foreground">SimplyVilla</span>
-        {page.parent && (
-          <>
-            <span className="text-muted-foreground/50">/</span>
-            <span className="text-muted-foreground">{page.parent}</span>
-          </>
-        )}
-        <span className="text-muted-foreground/50">/</span>
-        <span className="font-medium">{page.title}</span>
-      </nav>
+      <div className="flex items-center gap-3">
+        {/* Hamburger — mobile only */}
+        <button
+          className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground lg:hidden"
+          onClick={openMobile}
+          aria-label="Open menu"
+        >
+          <Menu className="h-5 w-5" />
+        </button>
+
+        {/* Logo — mobile only */}
+        <span className="text-sm font-bold lg:hidden">SimplyVilla</span>
+
+        {/* Breadcrumb — desktop only */}
+        <nav className="hidden items-center gap-1.5 text-sm lg:flex">
+          <span className="text-muted-foreground">SimplyVilla</span>
+          {page.parent && (
+            <>
+              <span className="text-muted-foreground/50">/</span>
+              <span className="text-muted-foreground">{page.parent}</span>
+            </>
+          )}
+          <span className="text-muted-foreground/50">/</span>
+          <span className="font-medium">{page.title}</span>
+        </nav>
+      </div>
 
       {/* Actions */}
       <div className="flex items-center gap-1">

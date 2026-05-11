@@ -189,7 +189,7 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-5">
-      <div className="flex items-start justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
           <p className="mt-0.5 text-sm text-muted-foreground">
@@ -199,17 +199,18 @@ export default async function DashboardPage() {
         <div className="flex items-center gap-2">
           <button className="flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-1.5 text-sm font-medium text-foreground shadow-sm hover:bg-muted">
             <CalendarDays className="h-3.5 w-3.5 text-muted-foreground" />
-            Apr 1 – 24, 2026
+            <span className="hidden sm:inline">Apr 1 – 24, 2026</span>
+            <span className="sm:hidden">Apr 2026</span>
           </button>
           <button className="flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-sm font-medium text-white hover:bg-[#C8911A]">
             <Download className="h-3.5 w-3.5" />
-            Download
+            <span className="hidden sm:inline">Download</span>
           </button>
         </div>
       </div>
 
       {/* KPI cards */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
         <Card>
           <CardContent className="p-5">
             <div className="flex items-center justify-between">
@@ -226,7 +227,7 @@ export default async function DashboardPage() {
                   <ArrowUp className="h-3 w-3" /> +8.4% from last month
                 </p>
               </div>
-              <Sparkline trend="up" />
+              <span className="hidden lg:block"><Sparkline trend="up" /></span>
             </div>
           </CardContent>
         </Card>
@@ -249,7 +250,7 @@ export default async function DashboardPage() {
                   <ArrowUp className="h-3 w-3" /> +12% vs last week
                 </p>
               </div>
-              <Sparkline trend="up" />
+              <span className="hidden lg:block"><Sparkline trend="up" /></span>
             </div>
           </CardContent>
         </Card>
@@ -270,7 +271,7 @@ export default async function DashboardPage() {
                   <ArrowUp className="h-3 w-3" /> +19% from last week
                 </p>
               </div>
-              <Sparkline trend="up" />
+              <span className="hidden lg:block"><Sparkline trend="up" /></span>
             </div>
           </CardContent>
         </Card>
@@ -298,8 +299,8 @@ export default async function DashboardPage() {
       </div>
 
       {/* Chart + Recent Reservations */}
-      <div className="grid grid-cols-5 gap-4">
-        <Card className="col-span-3">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-5">
+        <Card className="lg:col-span-3">
           <CardContent className="p-5">
             <RevenueChart
               data={chartData}
@@ -311,7 +312,7 @@ export default async function DashboardPage() {
           </CardContent>
         </Card>
 
-        <Card className="col-span-2">
+        <Card className="lg:col-span-2">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <CardTitle className="text-base">Recent reservations</CardTitle>
@@ -371,7 +372,7 @@ export default async function DashboardPage() {
       </div>
 
       {/* Bottom row */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <Card>
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">

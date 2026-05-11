@@ -7,6 +7,7 @@ import { ListTab, type ListReservation } from './list-tab'
 import { GuestsTab, type GuestData } from './guests-tab'
 import { LostFoundTab, type LostFoundItem } from './lost-found-tab'
 import { ReservationModal } from './reservation-modal'
+import { useMediaQuery } from '@/hooks/useMediaQuery'
 
 interface RoomData {
   id: string
@@ -28,15 +29,16 @@ interface Props {
 
 export function FrontDeskClient({ rooms, reservations, guests, lostAndFound }: Props) {
   const [modalOpen, setModalOpen] = useState(false)
+  const isMobile = useMediaQuery('(max-width: 1024px)')
 
   return (
     <>
-      <Tabs defaultValue="calendar">
-        <TabsList className="mb-4 h-9">
-          <TabsTrigger value="calendar">Calendar</TabsTrigger>
-          <TabsTrigger value="list">List</TabsTrigger>
-          <TabsTrigger value="guests">Guests</TabsTrigger>
-          <TabsTrigger value="lost-found">Lost &amp; Found</TabsTrigger>
+      <Tabs defaultValue={isMobile ? 'list' : 'calendar'}>
+        <TabsList className="scrollbar-hide mb-4 h-9 w-full overflow-x-auto justify-start">
+          <TabsTrigger value="calendar" className="shrink-0">Calendar</TabsTrigger>
+          <TabsTrigger value="list" className="shrink-0">List</TabsTrigger>
+          <TabsTrigger value="guests" className="shrink-0">Guests</TabsTrigger>
+          <TabsTrigger value="lost-found" className="shrink-0">Lost &amp; Found</TabsTrigger>
         </TabsList>
 
         <TabsContent value="calendar">

@@ -121,21 +121,21 @@ export function SOPClient({ sops }: Props) {
   return (
     <div className="space-y-6">
       {/* Page header */}
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Standard Operating Procedures</h1>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+        <div className="min-w-0">
+          <h1 className="text-xl font-bold tracking-tight sm:text-2xl">Standard Operating Procedures</h1>
           <p className="mt-0.5 text-sm text-muted-foreground">
             {sops.length} active procedures &middot; last updated {lastUpdated}
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-2">
           {searchOpen ? (
-            <div className="relative">
+            <div className="relative flex-1 sm:flex-none">
               <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
               <Input
                 autoFocus
                 placeholder="Search SOPs..."
-                className="h-9 w-52 pl-8 pr-8 text-sm"
+                className="h-9 w-full pl-8 pr-8 text-sm sm:w-52"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
@@ -149,27 +149,47 @@ export function SOPClient({ sops }: Props) {
           ) : (
             <button
               onClick={() => setSearchOpen(true)}
-              className="flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-1.5 text-sm font-medium text-foreground shadow-sm hover:bg-muted"
+              className="flex items-center gap-1.5 rounded-lg border border-border bg-background px-2.5 py-1.5 text-sm font-medium text-foreground shadow-sm hover:bg-muted"
             >
               <Search className="h-3.5 w-3.5 text-muted-foreground" />
-              Search SOPs
+              <span className="hidden sm:inline">Search SOPs</span>
             </button>
           )}
           <Button size="sm" className="gap-1.5" onClick={openNew}>
             <Plus className="h-3.5 w-3.5" />
-            New SOP
+            <span className="hidden sm:inline">New SOP</span>
+            <span className="sm:hidden">New</span>
           </Button>
         </div>
       </div>
 
       {/* Body */}
-      <div className="flex gap-6">
-        {/* Sidebar categories */}
-        <div className="w-52 shrink-0">
-          <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+      <div className="flex flex-col gap-4 lg:flex-row lg:gap-6">
+        {/* Categories — horizontal pills on mobile, vertical sidebar on desktop */}
+        <div className="lg:w-52 lg:shrink-0">
+          <p className="mb-2 hidden text-xs font-semibold uppercase tracking-wider text-muted-foreground lg:block">
             Categories
           </p>
-          <div className="space-y-0.5">
+          {/* Mobile: horizontal scrollable pills */}
+          <div className="scrollbar-hide flex gap-2 overflow-x-auto pb-1 lg:hidden">
+            {CATEGORIES.map(({ key, label }) => (
+              <button
+                key={key}
+                onClick={() => setActiveCategory(key)}
+                className={cn(
+                  'shrink-0 rounded-full px-3 py-1.5 text-sm font-medium transition-colors',
+                  activeCategory === key
+                    ? 'bg-foreground text-background'
+                    : 'border border-border text-muted-foreground hover:text-foreground'
+                )}
+              >
+                {label}
+                <span className="ml-1.5 text-xs tabular-nums opacity-70">({countFor(key)})</span>
+              </button>
+            ))}
+          </div>
+          {/* Desktop: vertical list */}
+          <div className="hidden space-y-0.5 lg:block">
             {CATEGORIES.map(({ key, label }) => (
               <button
                 key={key}
@@ -213,10 +233,10 @@ export function SOPClient({ sops }: Props) {
           {/* Featured card — two-column layout */}
           {featured && (
             <div
-              className="rounded-xl border border-border bg-background p-6 cursor-pointer hover:shadow-sm transition-shadow"
+              className="rounded-xl border border-border bg-background p-4 cursor-pointer hover:shadow-sm transition-shadow lg:p-6"
               onClick={() => setDetailSOP(featured)}
             >
-              <div className="flex gap-8">
+              <div className="flex flex-col gap-4 lg:flex-row lg:gap-8">
                 {/* Left */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-3">
@@ -248,8 +268,8 @@ export function SOPClient({ sops }: Props) {
                   </div>
                 </div>
 
-                {/* Right — first 3 steps */}
-                <div className="w-64 shrink-0">
+                {/* Right — first 3 steps, hidden on mobile */}
+                <div className="hidden w-64 shrink-0 lg:block">
                   <p className="mb-2.5 text-xs font-semibold text-muted-foreground">
                     First 3 steps
                   </p>
@@ -275,7 +295,7 @@ export function SOPClient({ sops }: Props) {
 
           {/* Grid cards */}
           {grid.length > 0 && (
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
               {grid.map((sop) => (
                 <div
                   key={sop.id}
