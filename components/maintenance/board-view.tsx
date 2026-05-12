@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState, useTransition, useEffect } from 'react'
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd'
 import { Clock, MapPin, ChevronRight, Loader, CheckCircle } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -262,21 +262,33 @@ function TaskCard({
 }
 
 export function BoardView({ tasks, onEdit }: Props) {
+  const [localTasks, setLocalTasks] = useState<TaskData[]>(tasks)
   const [detailTask, setDetailTask] = useState<TaskData | null>(null)
   const [, startTransition] = useTransition()
   const isMobile = useMediaQuery('(max-width: 1024px)')
   const [mobileCol, setMobileCol] = useState<'PENDING' | 'IN_PROGRESS' | 'DONE'>('PENDING')
+
+  useEffect(() => {
+    setLocalTasks(tasks)
+  }, [tasks])
 
   function onDragEnd(result: DropResult) {
     const { source, destination, draggableId } = result
     if (!destination) return
     if (source.droppableId === destination.droppableId) return
 
+    const newStatus = destination.droppableId as 'PENDING' | 'IN_PROGRESS' | 'DONE'
+    const previousTasks = localTasks
+
+    setLocalTasks((prev) =>
+      prev.map((t) => (t.id === draggableId ? { ...t, status: newStatus } : t))
+    )
+
     startTransition(async () => {
-      await moveTaskStatus(
-        draggableId,
-        destination.droppableId as 'PENDING' | 'IN_PROGRESS' | 'DONE'
-      )
+      const res = await moveTaskStatus(draggableId, newStatus)
+      if (!res.success) {
+        setLocalTasks(previousTasks)
+      }
     })
   }
 
@@ -286,7 +298,7 @@ export function BoardView({ tasks, onEdit }: Props) {
       {isMobile && (
         <div className="flex gap-1 rounded-lg bg-muted p-1 lg:hidden">
           {COLUMNS.map((col) => {
-            const count = tasks.filter((t) => t.status === col.status).length
+            const count = localTasks.filter((t) => t.status === col.status).length
             return (
               <button
                 key={col.status}
@@ -309,7 +321,7 @@ export function BoardView({ tasks, onEdit }: Props) {
       <DragDropContext onDragEnd={onDragEnd}>
         <div className={cn(isMobile ? 'block' : 'grid grid-cols-3 gap-4')}>
           {COLUMNS.map((col) => {
-            const colTasks = tasks.filter((t) => t.status === col.status)
+            const colTasks = localTasks.filter((t) => t.status === col.status)
             if (isMobile && col.status !== mobileCol) return null
             return (
               <div key={col.status} className="flex flex-col gap-3">
