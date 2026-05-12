@@ -4,12 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { db } from '@/lib/db'
 import { getSessionUser } from '@/lib/getSession'
-
-async function getVillaId() {
-  const user = await getSessionUser()
-  if (!user) redirect('/login')
-  return user.villaId
-}
+import { logActivity } from '@/lib/activity-log'
 
 export async function createTask(data: {
   title: string
@@ -19,7 +14,8 @@ export async function createTask(data: {
   assignedTo?: string
   dueDate?: Date
 }) {
-  const villaId = await getVillaId()
+  const user = await getSessionUser()
+  if (!user) redirect('/login')
   try {
     await db.task.create({
       data: {
@@ -30,9 +26,10 @@ export async function createTask(data: {
         assignedTo: data.assignedTo || null,
         dueDate: data.dueDate || null,
         status: 'PENDING',
-        villaId,
+        villaId: user.villaId,
       },
     })
+    await logActivity({ villaId: user.villaId, staffName: user.name, action: `Added task: ${data.title}`, module: 'Maintenance' })
     revalidatePath('/maintenance')
     revalidatePath('/dashboard')
     return { success: true }
@@ -54,7 +51,8 @@ export async function updateTask(
     status?: 'PENDING' | 'IN_PROGRESS' | 'DONE'
   }
 ) {
-  await getVillaId()
+  const user = await getSessionUser()
+  if (!user) redirect('/login')
   try {
     await db.task.update({ where: { id }, data })
     revalidatePath('/maintenance')
@@ -67,7 +65,8 @@ export async function updateTask(
 }
 
 export async function deleteTask(id: string) {
-  await getVillaId()
+  const user = await getSessionUser()
+  if (!user) redirect('/login')
   try {
     await db.task.delete({ where: { id } })
     revalidatePath('/maintenance')
@@ -80,7 +79,8 @@ export async function deleteTask(id: string) {
 }
 
 export async function advanceStatus(id: string, current: string) {
-  await getVillaId()
+  const user = await getSessionUser()
+  if (!user) redirect('/login')
   try {
     const next = current === 'PENDING' ? 'IN_PROGRESS' : 'DONE'
     await db.task.update({ where: { id }, data: { status: next } })
@@ -94,7 +94,8 @@ export async function advanceStatus(id: string, current: string) {
 }
 
 export async function moveTaskStatus(id: string, status: 'PENDING' | 'IN_PROGRESS' | 'DONE') {
-  await getVillaId()
+  const user = await getSessionUser()
+  if (!user) redirect('/login')
   try {
     await db.task.update({ where: { id }, data: { status } })
     revalidatePath('/maintenance')

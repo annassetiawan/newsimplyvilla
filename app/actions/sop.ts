@@ -4,14 +4,10 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { db } from '@/lib/db'
 import { getSessionUser } from '@/lib/getSession'
+import { logActivity } from '@/lib/activity-log'
 
 type SOPCategory = 'FRONT_DESK' | 'HOUSEKEEPING' | 'MAINTENANCE' | 'INVENTORY' | 'SAFETY'
 
-async function getVillaId() {
-  const user = await getSessionUser()
-  if (!user) redirect('/login')
-  return user.villaId
-}
 
 export async function createSOP(data: {
   title: string
@@ -19,17 +15,19 @@ export async function createSOP(data: {
   estimatedMinutes: number
   steps: { step: number; text: string }[]
 }) {
-  const villaId = await getVillaId()
+  const user = await getSessionUser()
+  if (!user) redirect('/login')
   try {
     await db.sOP.create({
       data: {
-        villaId,
+        villaId: user.villaId,
         title: data.title,
         category: data.category,
         estimatedMinutes: data.estimatedMinutes,
         steps: data.steps,
       },
     })
+    await logActivity({ villaId: user.villaId, staffName: user.name, action: `Added SOP: ${data.title}`, module: 'SOP' })
     revalidatePath('/sop')
     return { success: true }
   } catch (error) {
@@ -47,7 +45,8 @@ export async function updateSOP(
     steps: { step: number; text: string }[]
   }
 ) {
-  await getVillaId()
+  const user = await getSessionUser()
+  if (!user) redirect('/login')
   try {
     await db.sOP.update({
       where: { id },
@@ -58,6 +57,7 @@ export async function updateSOP(
         steps: data.steps,
       },
     })
+    await logActivity({ villaId: user.villaId, staffName: user.name, action: `Updated SOP: ${data.title}`, module: 'SOP' })
     revalidatePath('/sop')
     return { success: true }
   } catch (error) {
@@ -67,9 +67,12 @@ export async function updateSOP(
 }
 
 export async function deleteSOP(id: string) {
-  await getVillaId()
+  const user = await getSessionUser()
+  if (!user) redirect('/login')
   try {
+    const sop = await db.sOP.findUnique({ where: { id } })
     await db.sOP.delete({ where: { id } })
+    if (sop) await logActivity({ villaId: user.villaId, staffName: user.name, action: `Deleted SOP: ${sop.title}`, module: 'SOP' })
     revalidatePath('/sop')
     return { success: true }
   } catch (error) {

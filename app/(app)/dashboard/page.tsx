@@ -1,13 +1,16 @@
 export const revalidate = 60
 
 import { redirect } from 'next/navigation'
-import { ArrowUp, ArrowDown, CalendarDays, Download, Plus, CalendarOff, CheckSquare, BedDouble, PackageCheck } from 'lucide-react'
+import { ArrowUp, ArrowDown, Download, CalendarOff, BedDouble, PackageCheck } from 'lucide-react'
 import { db } from '@/lib/db'
 import { cn } from '@/lib/utils'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import dynamic from 'next/dynamic'
 import { getSessionUser } from '@/lib/getSession'
 import { EmptyState } from '@/components/ui/EmptyState'
+import { DashboardTaskWidget } from '@/components/dashboard/task-widget'
+import { DashboardDateFilter } from '@/components/dashboard/date-filter'
+import { getDateRange } from '@/lib/dashboard-date'
 
 const RevenueChart = dynamic(
   () => import('@/components/dashboard/revenue-chart').then((m) => ({ default: m.RevenueChart })),
@@ -62,11 +65,6 @@ const STATUS_STYLES = {
   },
 } as const
 
-const PRIORITY_BADGE: Record<string, string> = {
-  HIGH: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
-  MED: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
-  LOW: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
-}
 
 const PRIORITY_ORDER: Record<string, number> = { HIGH: 0, MED: 1, LOW: 2 }
 
@@ -90,7 +88,11 @@ function Sparkline({ trend = 'up' }: { trend?: 'up' | 'down' | 'neutral' }) {
   )
 }
 
-export default async function DashboardPage() {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ preset?: string }>
+}) {
   const user = await getSessionUser()
   if (!user) redirect('/login')
 
@@ -100,13 +102,11 @@ export default async function DashboardPage() {
   }
 
   const villaId = user.villaId
+  const { preset = 'this_month' } = await searchParams
 
   const now = new Date()
   const twelveMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 11, 1)
-  const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1)
-  const thisMonthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59)
-  const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1)
-  const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59)
+  const { from: rangeFrom, to: rangeTo, prevFrom, prevTo } = getDateRange(preset)
 
   try {
     const [rooms, openTasks, recentReservations, allInventory, monthlyIncome, chartReservations, thisMonthCount, lastMonthCount] =
@@ -144,14 +144,14 @@ export default async function DashboardPage() {
         where: {
           room: { villaId },
           status: { notIn: ['CANCELLED'] },
-          createdAt: { gte: thisMonthStart, lte: thisMonthEnd },
+          createdAt: { gte: rangeFrom, lte: rangeTo },
         },
       }),
       db.reservation.count({
         where: {
           room: { villaId },
           status: { notIn: ['CANCELLED'] },
-          createdAt: { gte: lastMonthStart, lte: lastMonthEnd },
+          createdAt: { gte: prevFrom, lte: prevTo },
         },
       }),
     ])
@@ -163,11 +163,11 @@ export default async function DashboardPage() {
   const occupancyPct = rooms.length ? Math.round((occupiedCount / rooms.length) * 100) : 0
   const highPriorityCount = openTasks.filter((t) => t.priority === 'HIGH').length
   const totalRevenue = monthlyIncome
-    .filter((tx) => tx.date >= thisMonthStart && tx.date <= thisMonthEnd)
+    .filter((tx) => tx.date >= rangeFrom && tx.date <= rangeTo)
     .reduce((s, t) => s + t.amount, 0)
 
   const lastMonthRevenue = monthlyIncome
-    .filter((tx) => tx.date >= lastMonthStart && tx.date <= lastMonthEnd)
+    .filter((tx) => tx.date >= prevFrom && tx.date <= prevTo)
     .reduce((s, t) => s + t.amount, 0)
 
   function calcPct(current: number, previous: number): number | null {
@@ -245,11 +245,7 @@ export default async function DashboardPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <button className="flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-1.5 text-sm font-medium text-foreground shadow-sm hover:bg-muted">
-            <CalendarDays className="h-3.5 w-3.5 text-muted-foreground" />
-            <span className="hidden sm:inline">Apr 1 – 24, 2026</span>
-            <span className="sm:hidden">Apr 2026</span>
-          </button>
+          <DashboardDateFilter />
           <button className="flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-sm font-medium text-white hover:bg-[#C8911A]">
             <Download className="h-3.5 w-3.5" />
             <span className="hidden sm:inline">Download</span>
@@ -455,57 +451,16 @@ export default async function DashboardPage() {
 
       {/* Bottom row */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        <Card>
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-base">Today&apos;s tasks</CardTitle>
-              <button className="flex items-center gap-1 rounded-md border border-border bg-background px-2.5 py-1 text-xs font-medium text-foreground hover:bg-muted">
-                <Plus className="h-3 w-3" /> New
-              </button>
-            </div>
-            <CardDescription>
-              {openTasks.length} open &middot; {highPriorityCount} high priority
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {sortedTasks.length === 0 ? (
-              <EmptyState
-                icon={CheckSquare}
-                title="Tidak ada tugas hari ini"
-                description="Semua beres! Tidak ada tugas yang perlu dikerjakan hari ini."
-                minHeight="min-h-[180px]"
-              />
-            ) : (
-              <div className="space-y-3">
-                {sortedTasks.map((task) => (
-                  <div key={task.id} className="flex items-start gap-3">
-                    <div className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2 border-border" />
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium leading-tight">{task.title}</p>
-                      <p className="mt-0.5 text-[11px] text-muted-foreground">
-                        {task.assignedTo ?? 'Unassigned'} &middot;{' '}
-                        {task.dueDate
-                          ? new Date(task.dueDate).toLocaleDateString('en-GB', {
-                              day: 'numeric',
-                              month: 'short',
-                            })
-                          : 'No due date'}
-                      </p>
-                    </div>
-                    <span
-                      className={cn(
-                        'shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold',
-                        PRIORITY_BADGE[task.priority] ?? PRIORITY_BADGE.LOW
-                      )}
-                    >
-                      {task.priority}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+        <DashboardTaskWidget
+          initialTasks={sortedTasks.map((t) => ({
+            id: t.id,
+            title: t.title,
+            priority: t.priority,
+            status: t.status,
+            assignedTo: t.assignedTo,
+            dueDate: t.dueDate?.toISOString() ?? null,
+          }))}
+        />
 
         <Card>
           <CardHeader className="pb-3">

@@ -29,8 +29,17 @@ export interface ProfileData {
   position: string
 }
 
+export interface ActivityLogEntry {
+  id: string
+  action: string
+  module: string
+  staffName: string | null
+  createdAt: string
+}
+
 interface Props {
   profile: ProfileData
+  activityLog: ActivityLogEntry[]
 }
 
 const TABS = [
@@ -43,18 +52,6 @@ const TABS = [
 
 type TabId = (typeof TABS)[number]['id']
 
-const ACTIVITY_LOG = [
-  { id: 1, ts: '2026-05-06 09:14', action: 'Created reservation for Made Wirawan', module: 'Front Desk' },
-  { id: 2, ts: '2026-05-06 08:52', action: 'Updated inventory: Stock In mineral water 600ml ×48', module: 'Inventory' },
-  { id: 3, ts: '2026-05-05 16:30', action: 'Added task: Deep clean Heliconia Villa', module: 'Maintenance' },
-  { id: 4, ts: '2026-05-05 14:10', action: 'Checked in guest: Wayan Sudira → Room Anggrek', module: 'Front Desk' },
-  { id: 5, ts: '2026-05-05 11:22', action: 'Added SOP: Pool Safety Procedures', module: 'SOP' },
-  { id: 6, ts: '2026-05-04 17:45', action: 'Recorded expense: Staff salary Rp 15,000,000', module: 'Reports' },
-  { id: 7, ts: '2026-05-04 15:00', action: 'Assigned shift: Morning – I Made Susanta', module: 'Schedule' },
-  { id: 8, ts: '2026-05-03 10:30', action: 'Marked lost item as claimed: iPhone 14 Pro case', module: 'Front Desk' },
-  { id: 9, ts: '2026-05-03 09:15', action: 'Stock Out: Bath Mat ×2', module: 'Inventory' },
-  { id: 10, ts: '2026-05-02 14:00', action: 'Updated room status: Frangipani → Available', module: 'Rooms' },
-]
 
 const FAQ = [
   {
@@ -88,7 +85,12 @@ function initials(name: string) {
     .toUpperCase()
 }
 
-export function SettingsClient({ profile }: Props) {
+function formatTs(iso: string) {
+  const d = new Date(iso)
+  return d.toLocaleString('sv-SE', { timeZone: 'Asia/Jakarta' }).slice(0, 16).replace('T', ' ')
+}
+
+export function SettingsClient({ profile, activityLog }: Props) {
   const [tab, setTab] = useState<TabId>('profile')
   const router = useRouter()
 
@@ -354,19 +356,28 @@ export function SettingsClient({ profile }: Props) {
               <h2 className="text-base font-semibold">Activity Log</h2>
               <p className="text-sm text-muted-foreground">Recent actions in your account</p>
             </div>
-            <div className="rounded-xl border border-border divide-y divide-border">
-              {ACTIVITY_LOG.map((entry) => (
-                <div key={entry.id} className="flex items-start gap-4 px-4 py-3">
-                  <div className="shrink-0 text-right min-w-[120px]">
-                    <p className="text-xs text-muted-foreground">{entry.ts}</p>
+            {activityLog.length === 0 ? (
+              <div className="rounded-xl border border-border px-4 py-10 text-center text-sm text-muted-foreground">
+                No activity recorded yet.
+              </div>
+            ) : (
+              <div className="rounded-xl border border-border divide-y divide-border">
+                {activityLog.map((entry) => (
+                  <div key={entry.id} className="flex items-start gap-4 px-4 py-3">
+                    <div className="shrink-0 text-right min-w-[130px]">
+                      <p className="text-xs text-muted-foreground">{formatTs(entry.createdAt)}</p>
+                      {entry.staffName && (
+                        <p className="text-xs text-muted-foreground/60">{entry.staffName}</p>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm">{entry.action}</p>
+                      <p className="text-xs text-muted-foreground">{entry.module}</p>
+                    </div>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm">{entry.action}</p>
-                    <p className="text-xs text-muted-foreground">{entry.module}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 

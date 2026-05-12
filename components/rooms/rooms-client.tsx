@@ -105,6 +105,7 @@ export function RoomsClient({ rooms, areas }: Props) {
   const [selectedRoom, setSelectedRoom] = useState<RoomWithReservation | null>(null)
   const [editRoom, setEditRoom] = useState<RoomFormData | null>(null)
   const [roomModalOpen, setRoomModalOpen] = useState(false)
+  const [galleryOpen, setGalleryOpen] = useState(false)
   const [areaModalOpen, setAreaModalOpen] = useState(false)
   const [areaName, setAreaName] = useState('')
   const [areaDesc, setAreaDesc] = useState('')
@@ -134,6 +135,7 @@ export function RoomsClient({ rooms, areas }: Props) {
       capacity: room.capacity,
       pricePerNight: room.pricePerNight,
       status: room.status,
+      photos: room.photos,
     })
     setRoomModalOpen(true)
   }
@@ -160,7 +162,10 @@ export function RoomsClient({ rooms, areas }: Props) {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <button className="flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-1.5 text-sm font-medium text-foreground shadow-sm hover:bg-muted">
+          <button
+            onClick={() => setGalleryOpen(true)}
+            className="flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-1.5 text-sm font-medium text-foreground shadow-sm transition-colors hover:bg-muted"
+          >
             <Images className="h-3.5 w-3.5 text-muted-foreground" />
             Gallery
           </button>
@@ -342,6 +347,13 @@ export function RoomsClient({ rooms, areas }: Props) {
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* Gallery modal */}
+      <GalleryModal
+        open={galleryOpen}
+        onClose={() => setGalleryOpen(false)}
+        rooms={rooms}
+      />
     </div>
   )
 }
@@ -357,11 +369,19 @@ function RoomCard({
 }) {
   return (
     <div className="rounded-xl border border-border bg-background overflow-hidden">
-      {/* Image placeholder */}
-      <div className="relative h-44 bg-muted/40 flex items-center justify-center">
-        <p className="text-xs font-semibold tracking-widest text-muted-foreground/60 uppercase select-none">
-          {room.name}
-        </p>
+      {/* Image */}
+      <div className="relative h-44 bg-muted/40 flex items-center justify-center overflow-hidden">
+        {room.photos && room.photos.length > 0 ? (
+          <img
+            src={room.photos[0]}
+            alt={room.name}
+            className="h-full w-full object-cover"
+          />
+        ) : (
+          <p className="text-xs font-semibold tracking-widest text-muted-foreground/60 uppercase select-none">
+            {room.name}
+          </p>
+        )}
         <span
           className={cn(
             'absolute top-3 right-3 rounded-full px-2.5 py-0.5 text-[11px] font-semibold',
@@ -402,6 +422,94 @@ function RoomCard({
         </div>
       </div>
     </div>
+  )
+}
+
+function GalleryModal({
+  open,
+  onClose,
+  rooms,
+}: {
+  open: boolean
+  onClose: () => void
+  rooms: RoomWithReservation[]
+}) {
+  const [lightbox, setLightbox] = useState<{ url: string; room: string } | null>(null)
+
+  const roomsWithPhotos = rooms.filter((r) => r.photos && r.photos.length > 0)
+  const totalPhotos = roomsWithPhotos.reduce((s, r) => s + (r.photos?.length ?? 0), 0)
+
+  return (
+    <>
+      <Dialog open={open} onOpenChange={onClose}>
+        <DialogContent className="max-w-3xl max-h-[80vh] flex flex-col p-0">
+          <DialogHeader className="px-6 pt-5 pb-4 border-b border-border shrink-0">
+            <DialogTitle>Room Gallery</DialogTitle>
+            <p className="text-sm text-muted-foreground mt-0.5">
+              {totalPhotos} photos · {roomsWithPhotos.length} rooms
+            </p>
+          </DialogHeader>
+
+          <div className="flex-1 overflow-y-auto px-6 py-5">
+            {roomsWithPhotos.length === 0 ? (
+              <div className="flex flex-col items-center justify-center gap-2 py-16 text-center">
+                <Images className="h-8 w-8 text-muted-foreground/30" strokeWidth={1.5} />
+                <p className="text-sm font-medium text-muted-foreground">No photos yet</p>
+                <p className="text-xs text-muted-foreground">Upload photos when editing a room.</p>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {roomsWithPhotos.map((room) => (
+                  <div key={room.id}>
+                    <p className="mb-2 text-xs font-semibold text-muted-foreground">
+                      <span className="font-id">{room.code}</span> — {room.name}
+                    </p>
+                    <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
+                      {room.photos!.map((url, i) => (
+                        <button
+                          key={i}
+                          onClick={() => setLightbox({ url, room: `${room.code} — ${room.name}` })}
+                          className="group relative aspect-square overflow-hidden rounded-lg bg-muted/40"
+                        >
+                          <img
+                            src={url}
+                            alt=""
+                            className="h-full w-full object-cover transition-transform group-hover:scale-105"
+                          />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Lightbox */}
+      {lightbox && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 p-4"
+          onClick={() => setLightbox(null)}
+        >
+          <button
+            className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20"
+            onClick={() => setLightbox(null)}
+          >
+            <X className="h-4 w-4" />
+          </button>
+          <div className="flex flex-col items-center gap-3" onClick={(e) => e.stopPropagation()}>
+            <img
+              src={lightbox.url}
+              alt=""
+              className="max-h-[80vh] max-w-[90vw] rounded-xl object-contain shadow-2xl"
+            />
+            <p className="text-sm text-white/70">{lightbox.room}</p>
+          </div>
+        </div>
+      )}
+    </>
   )
 }
 
@@ -448,10 +556,23 @@ function RoomDetailSheet({
 
       {/* Scrollable body */}
       <div className="flex-1 overflow-y-auto">
-        {/* Photo placeholder */}
-        <div className="mx-6 mt-5 h-36 rounded-xl bg-muted/40 flex items-center justify-center">
-          <Images className="h-8 w-8 text-muted-foreground/30" />
-        </div>
+        {/* Photos */}
+        {room.photos && room.photos.length > 0 ? (
+          <div className="mx-6 mt-5 flex gap-2 overflow-x-auto pb-0.5">
+            {room.photos.map((url, i) => (
+              <img
+                key={i}
+                src={url}
+                alt=""
+                className="h-36 w-48 shrink-0 rounded-xl object-cover"
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="mx-6 mt-5 h-36 rounded-xl bg-muted/40 flex items-center justify-center">
+            <Images className="h-8 w-8 text-muted-foreground/30" />
+          </div>
+        )}
 
         {/* Room info */}
         <div className="px-6 py-5">

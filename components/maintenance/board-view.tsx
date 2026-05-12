@@ -2,10 +2,10 @@
 
 import { useState, useTransition, useEffect } from 'react'
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd'
-import { Clock, MapPin, ChevronRight, Loader, CheckCircle } from 'lucide-react'
+import { Clock, MapPin, ChevronRight, Loader, CheckCircle, X, Pencil, Users, Tag } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
+import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet'
 import { advanceStatus, moveTaskStatus } from '@/app/actions/tasks'
 import type { TaskData } from './maintenance-client'
 import { useMediaQuery } from '@/hooks/useMediaQuery'
@@ -49,7 +49,7 @@ const TYPE_STYLE: Record<string, string> = {
 
 const PRIORITY_STYLE: Record<string, string> = {
   HIGH: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300',
-  MED: 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300',
+  MED: 'bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-400',
   LOW: 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400',
 }
 
@@ -101,89 +101,111 @@ function TaskDetailSheet({
 
   return (
     <Sheet open={!!task} onOpenChange={(o) => !o && onClose()}>
-      <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
-        <SheetHeader className="mb-5">
-          <div className="flex items-center gap-2 mb-2">
-            <span className={cn('rounded-full px-2 py-0.5 text-[11px] font-semibold', TYPE_STYLE[task.type])}>
-              {task.type === 'MAINTENANCE' ? 'Maintenance' : 'Cleaning'}
-            </span>
-            <span className={cn('rounded-full px-2 py-0.5 text-[11px] font-semibold', PRIORITY_STYLE[task.priority])}>
-              {task.priority === 'HIGH' ? 'High' : task.priority === 'MED' ? 'Medium' : 'Low'}
-            </span>
-          </div>
-          <SheetTitle className={cn(isDone && 'line-through text-muted-foreground')}>
-            {task.title}
-          </SheetTitle>
-        </SheetHeader>
+      <SheetContent side="right" showCloseButton={false} className="flex flex-col gap-0 p-0 w-full sm:max-w-md">
+        <SheetTitle className="sr-only">Task detail</SheetTitle>
 
-        <div className="space-y-4">
-          <div className="rounded-lg border border-border divide-y divide-border">
-            <div className="flex items-center gap-3 px-4 py-3">
-              <span className="text-xs font-medium text-muted-foreground w-24 shrink-0">Status</span>
-              <span
-                className={cn(
-                  'rounded-full px-2 py-0.5 text-[11px] font-semibold',
-                  task.status === 'PENDING'
-                    ? 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300'
-                    : task.status === 'IN_PROGRESS'
-                    ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300'
-                    : 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300'
-                )}
-              >
+        {/* Header */}
+        <div className="flex items-start justify-between border-b border-border px-6 py-4">
+          <div className="min-w-0 flex-1 pr-3">
+            <p className={cn('text-base font-semibold leading-snug mb-2', isDone && 'line-through text-muted-foreground')}>
+              {task.title}
+            </p>
+            <div className="flex items-center gap-1.5">
+              <span className={cn('rounded-full px-2 py-0.5 text-[11px] font-semibold', TYPE_STYLE[task.type])}>
+                {task.type === 'MAINTENANCE' ? 'Maintenance' : 'Cleaning'}
+              </span>
+              <span className={cn('rounded-full px-2 py-0.5 text-[11px] font-semibold', PRIORITY_STYLE[task.priority])}>
+                {task.priority === 'HIGH' ? 'High' : task.priority === 'MED' ? 'Medium' : 'Low'}
+              </span>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        {/* Body */}
+        <div className="flex-1 overflow-y-auto px-6 py-5">
+          <p className="mb-3 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+            Task Info
+          </p>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Tag className="h-4 w-4" />
+                <span>Status</span>
+              </div>
+              <span className={cn('rounded-full px-2 py-0.5 text-[11px] font-semibold',
+                task.status === 'PENDING'
+                  ? 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300'
+                  : task.status === 'IN_PROGRESS'
+                  ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300'
+                  : 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300'
+              )}>
                 {STATUS_LABEL[task.status]}
               </span>
             </div>
-            <div className="flex items-center gap-3 px-4 py-3">
-              <span className="text-xs font-medium text-muted-foreground w-24 shrink-0">Location</span>
-              <div className="flex items-center gap-1 text-sm">
-                <MapPin className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                <span>{task.location}</span>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <MapPin className="h-4 w-4" />
+                <span>Location</span>
               </div>
+              <span className="text-sm font-medium">{task.location}</span>
             </div>
-            <div className="flex items-center gap-3 px-4 py-3">
-              <span className="text-xs font-medium text-muted-foreground w-24 shrink-0">Assigned to</span>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Users className="h-4 w-4" />
+                <span>Assigned to</span>
+              </div>
               {task.assignedTo ? (
                 <div className="flex items-center gap-2">
-                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#E1A62F] text-[10px] font-bold text-white">
+                  <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-neutral-800 text-[9px] font-bold text-white">
                     {initials(task.assignedTo)}
                   </div>
-                  <span className="text-sm">{task.assignedTo}</span>
+                  <span className="text-sm font-medium">{task.assignedTo}</span>
                 </div>
               ) : (
                 <span className="text-sm text-muted-foreground italic">Unassigned</span>
               )}
             </div>
-            <div className="flex items-center gap-3 px-4 py-3">
-              <span className="text-xs font-medium text-muted-foreground w-24 shrink-0">Due date</span>
-              <span className="text-sm">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Clock className="h-4 w-4" />
+                <span>Due date</span>
+              </div>
+              <span className="text-sm font-medium">
                 {task.dueDate ? fmtDate(task.dueDate) : <span className="text-muted-foreground italic">Not set</span>}
               </span>
             </div>
           </div>
+        </div>
 
-          <div className="flex gap-2">
-            {!isDone && (
-              <Button
-                size="sm"
-                className="gap-1.5"
-                disabled={pending}
-                onClick={handleAdvance}
-              >
-                {task.status === 'PENDING' ? 'Start task' : 'Mark as done'}
-                <ChevronRight className="h-3.5 w-3.5" />
-              </Button>
-            )}
+        {/* Sticky footer */}
+        <div className="border-t border-border px-6 py-4 space-y-2">
+          {!isDone && (
             <Button
-              size="sm"
-              variant="outline"
-              onClick={() => {
-                onClose()
-                onEdit(task)
-              }}
+              className="w-full bg-neutral-800 text-white hover:bg-neutral-700 gap-1.5"
+              disabled={pending}
+              onClick={handleAdvance}
             >
-              Edit task
+              {task.status === 'PENDING' ? 'Start task' : 'Mark as done'}
+              <ChevronRight className="h-4 w-4" />
             </Button>
-          </div>
+          )}
+          <Button
+            variant="outline"
+            className="w-full"
+            onClick={() => {
+              onClose()
+              onEdit(task)
+            }}
+          >
+            <Pencil className="h-4 w-4" />
+            Edit task
+          </Button>
         </div>
       </SheetContent>
     </Sheet>
@@ -239,7 +261,7 @@ function TaskCard({
         <div className="flex items-center gap-1.5 min-w-0">
           {task.assignedTo ? (
             <>
-              <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#E1A62F] text-[9px] font-bold text-white">
+              <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-neutral-800 text-[9px] font-bold text-white">
                 {initials(task.assignedTo)}
               </div>
               <span className="text-[11px] text-muted-foreground truncate">

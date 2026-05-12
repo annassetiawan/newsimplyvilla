@@ -68,6 +68,7 @@ export default async function RoomsPage() {
       capacity: room.capacity,
       pricePerNight: room.pricePerNight,
       status: room.status as 'AVAILABLE' | 'OCCUPIED' | 'CLEANING' | 'MAINTENANCE',
+      photos: room.photos,
       currentReservation: activeRes
         ? {
             id: activeRes.id,

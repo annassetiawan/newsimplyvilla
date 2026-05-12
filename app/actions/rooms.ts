@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { db } from '@/lib/db'
 import { getSessionUser } from '@/lib/getSession'
+import { logActivity } from '@/lib/activity-log'
 
 async function getVillaId() {
   const user = await getSessionUser()
@@ -19,6 +20,7 @@ export async function upsertRoom(data: {
   capacity: number
   pricePerNight: number
   status: 'AVAILABLE' | 'OCCUPIED' | 'CLEANING' | 'MAINTENANCE'
+  photos?: string[]
 }) {
   const user = await getSessionUser()
   if (!user) redirect('/login')
@@ -36,6 +38,7 @@ export async function upsertRoom(data: {
           capacity: data.capacity,
           pricePerNight: data.pricePerNight,
           status: data.status,
+          ...(data.photos !== undefined && { photos: data.photos }),
         },
       })
       if (existing && existing.pricePerNight !== data.pricePerNight) {
@@ -51,6 +54,7 @@ export async function upsertRoom(data: {
           },
         })
       }
+      await logActivity({ villaId: user.villaId, staffName: user.name, action: `Updated room: ${data.name}`, module: 'Rooms' })
     } else {
       await db.room.create({
         data: {
@@ -60,10 +64,11 @@ export async function upsertRoom(data: {
           capacity: data.capacity,
           pricePerNight: data.pricePerNight,
           status: data.status,
-          photos: [],
+          photos: data.photos ?? [],
           villaId: user.villaId,
         },
       })
+      await logActivity({ villaId: user.villaId, staffName: user.name, action: `Added room: ${data.name}`, module: 'Rooms' })
     }
     revalidatePath('/rooms')
     revalidatePath('/dashboard')

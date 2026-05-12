@@ -26,6 +26,7 @@ model Villa {
   transactions Transaction[]
   lostAndFound LostAndFound[]
   subscription Subscription?
+  activityLogs ActivityLog[]
 }
 
 enum RoomStatus {
@@ -292,4 +293,16 @@ model Waitlist {
   email     String   @unique
   plan      Plan     @default(PRO)
   createdAt DateTime @default(now())
+}
+
+model ActivityLog {
+  id        String   @id @default(cuid())
+  villaId   String
+  villa     Villa    @relation(fields: [villaId], references: [id])
+  staffName String?
+  action    String
+  module    String
+  createdAt DateTime @default(now())
+
+  @@index([villaId, createdAt])
 }

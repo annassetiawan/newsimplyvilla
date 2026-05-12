@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { db } from '@/lib/db'
 import { getSessionUser } from '@/lib/getSession'
+import { logActivity } from '@/lib/activity-log'
 
 async function getVillaId() {
   const user = await getSessionUser()
@@ -20,7 +21,9 @@ export async function createReservation(data: {
   checkOut: Date
   paymentStatus: 'PAID' | 'UNPAID'
 }) {
-  const villaId = await getVillaId()
+  const user = await getSessionUser()
+  if (!user) redirect('/login')
+  const villaId = user.villaId
   try {
     const nights = Math.ceil(
       (data.checkOut.getTime() - data.checkIn.getTime()) / 86400000
@@ -67,6 +70,8 @@ export async function createReservation(data: {
       })
     }
 
+    await logActivity({ villaId, staffName: user.name, action: `Created reservation for ${data.guestName} → ${room.name}`, module: 'Front Desk' })
+
     revalidatePath('/front-desk')
     revalidatePath('/dashboard')
     return { success: true, data: reservation }
@@ -85,7 +90,9 @@ export async function updateReservation(
     paymentStatus: 'PAID' | 'UNPAID'
   }
 ) {
-  await getVillaId()
+  const user = await getSessionUser()
+  if (!user) redirect('/login')
+  const villaId = user.villaId
   try {
     const reservation = await db.reservation.findUnique({
       where: { id },
@@ -112,12 +119,13 @@ export async function updateReservation(
 
     if (data.status === 'CHECKEDOUT') {
       await db.room.update({ where: { id: reservation.roomId }, data: { status: 'AVAILABLE' } })
+      await logActivity({ villaId, staffName: user.name, action: `Checked out guest: ${reservation.guest.name} → ${reservation.room.name}`, module: 'Front Desk' })
     } else if (data.status === 'CHECKEDIN') {
       await db.room.update({ where: { id: reservation.roomId }, data: { status: 'OCCUPIED' } })
+      await logActivity({ villaId, staffName: user.name, action: `Checked in guest: ${reservation.guest.name} → ${reservation.room.name}`, module: 'Front Desk' })
     }
 
     if (data.paymentStatus === 'PAID' && reservation.paymentStatus === 'UNPAID') {
-      const villaId = await getVillaId()
       const existing = await db.transaction.findFirst({ where: { reservationId: id } })
       if (!existing) {
         await db.transaction.create({
@@ -145,7 +153,9 @@ export async function updateReservation(
 }
 
 export async function markAsPaid(reservationId: string) {
-  const villaId = await getVillaId()
+  const user = await getSessionUser()
+  if (!user) redirect('/login')
+  const villaId = user.villaId
   try {
     const reservation = await db.reservation.findUnique({
       where: { id: reservationId },
@@ -172,6 +182,8 @@ export async function markAsPaid(reservationId: string) {
       },
     })
 
+    await logActivity({ villaId, staffName: user.name, action: `Marked payment as paid: ${reservation.guest.name} (${reservation.room.name})`, module: 'Front Desk' })
+
     revalidatePath('/front-desk')
     revalidatePath('/dashboard')
     return { success: true }
@@ -182,15 +194,18 @@ export async function markAsPaid(reservationId: string) {
 }
 
 export async function cancelReservation(reservationId: string) {
-  await getVillaId()
+  const user = await getSessionUser()
+  if (!user) redirect('/login')
   try {
     const reservation = await db.reservation.findUnique({
       where: { id: reservationId },
+      include: { guest: true, room: true },
     })
     if (!reservation) return { success: false, message: 'Reservasi tidak ditemukan.' }
 
     await db.reservation.update({ where: { id: reservationId }, data: { status: 'CANCELLED' } })
     await db.room.update({ where: { id: reservation.roomId }, data: { status: 'AVAILABLE' } })
+    await logActivity({ villaId: user.villaId, staffName: user.name, action: `Cancelled reservation: ${reservation.guest.name} → ${reservation.room.name}`, module: 'Front Desk' })
 
     revalidatePath('/front-desk')
     revalidatePath('/dashboard')
@@ -207,7 +222,8 @@ export async function createLostAndFound(data: {
   location: string
   foundDate: Date
 }) {
-  const villaId = await getVillaId()
+  const user = await getSessionUser()
+  if (!user) redirect('/login')
   try {
     await db.lostAndFound.create({
       data: {
@@ -216,9 +232,10 @@ export async function createLostAndFound(data: {
         location: data.location,
         foundDate: data.foundDate,
         status: 'FOUND',
-        villaId,
+        villaId: user.villaId,
       },
     })
+    await logActivity({ villaId: user.villaId, staffName: user.name, action: `Added lost item: ${data.item}`, module: 'Front Desk' })
     revalidatePath('/front-desk')
     return { success: true }
   } catch (error) {
@@ -228,9 +245,12 @@ export async function createLostAndFound(data: {
 }
 
 export async function claimLostAndFound(id: string) {
-  await getVillaId()
+  const user = await getSessionUser()
+  if (!user) redirect('/login')
   try {
+    const item = await db.lostAndFound.findUnique({ where: { id } })
     await db.lostAndFound.update({ where: { id }, data: { status: 'CLAIMED' } })
+    if (item) await logActivity({ villaId: user.villaId, staffName: user.name, action: `Marked lost item as claimed: ${item.item}`, module: 'Front Desk' })
     revalidatePath('/front-desk')
     return { success: true }
   } catch (error) {
