@@ -109,7 +109,7 @@ export default async function DashboardPage() {
   const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59)
 
   try {
-    const [rooms, openTasks, recentReservations, allInventory, monthlyIncome, currentMonthTx, reservationCount, chartReservations, thisMonthCount, lastMonthCount] =
+    const [rooms, openTasks, recentReservations, allInventory, monthlyIncome, chartReservations, thisMonthCount, lastMonthCount] =
       await Promise.all([
       db.room.findMany({ where: { villaId }, orderBy: { code: 'asc' } }),
       db.task.findMany({
@@ -123,15 +123,14 @@ export default async function DashboardPage() {
         take: 5,
         include: { guest: true, room: true },
       }),
-      db.inventoryItem.findMany({ where: { villaId } }),
+      db.inventoryItem.findMany({
+        where: { villaId },
+        select: { id: true, name: true, onHand: true, minLevel: true },
+      }),
       db.transaction.findMany({
         where: { villaId, type: 'INCOME', date: { gte: twelveMonthsAgo } },
         select: { amount: true, date: true },
       }),
-      db.transaction.findMany({
-        where: { villaId, type: 'INCOME', date: { gte: thisMonthStart, lte: thisMonthEnd } },
-      }),
-      db.reservation.count({ where: { room: { villaId }, status: { not: 'CANCELLED' } } }),
       db.reservation.findMany({
         where: {
           room: { villaId },
@@ -163,7 +162,9 @@ export default async function DashboardPage() {
   ).length
   const occupancyPct = rooms.length ? Math.round((occupiedCount / rooms.length) * 100) : 0
   const highPriorityCount = openTasks.filter((t) => t.priority === 'HIGH').length
-  const totalRevenue = currentMonthTx.reduce((s, t) => s + t.amount, 0)
+  const totalRevenue = monthlyIncome
+    .filter((tx) => tx.date >= thisMonthStart && tx.date <= thisMonthEnd)
+    .reduce((s, t) => s + t.amount, 0)
 
   const lastMonthRevenue = monthlyIncome
     .filter((tx) => tx.date >= lastMonthStart && tx.date <= lastMonthEnd)

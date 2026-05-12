@@ -25,15 +25,11 @@ export default async function ReportsPage() {
 
   const twelveMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 11, 1)
 
-  const [txCurrent, txPrev, txRecent, txMonthly, rooms] = await Promise.all([
+  const [txCurrent, txRecent, txMonthly, rooms] = await Promise.all([
     db.transaction.findMany({
       where: { villaId, date: { gte: periodStart, lte: periodEnd } },
       orderBy: { date: 'desc' },
       select: { type: true, amount: true, date: true, category: true, description: true, id: true, paymentStatus: true },
-    }),
-    db.transaction.findMany({
-      where: { villaId, date: { gte: prevStart, lte: prevEnd } },
-      select: { type: true, amount: true },
     }),
     db.transaction.findMany({
       where: { villaId },
@@ -52,6 +48,7 @@ export default async function ReportsPage() {
   const expenses = txCurrent.filter((t) => t.type === 'EXPENSE').reduce((s, t) => s + t.amount, 0)
   const netProfit = revenue - expenses
 
+  const txPrev = txMonthly.filter((t) => t.date >= prevStart && t.date <= prevEnd)
   const prevRevenue = txPrev.filter((t) => t.type === 'INCOME').reduce((s, t) => s + t.amount, 0)
   const prevExpenses = txPrev.filter((t) => t.type === 'EXPENSE').reduce((s, t) => s + t.amount, 0)
   const prevNetProfit = prevRevenue - prevExpenses
