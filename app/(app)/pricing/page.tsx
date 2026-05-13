@@ -85,7 +85,7 @@ function CellValue({ value, isPro: isProCol }: { value: string | boolean; isPro:
   if (value === true) {
     return (
       <Check
-        className={cn('h-4 w-4 mx-auto', isProCol ? 'text-[#E1A62F]' : 'text-green-600')}
+        className={cn('h-4 w-4 mx-auto', isProCol ? 'text-[#E1A62F]' : 'text-green-600 dark:text-green-400')}
         strokeWidth={2.5}
       />
     )
@@ -150,7 +150,7 @@ export default function PricingPage() {
             ))}
           </div>
           {billing === 'tahunan' && (
-            <span className="rounded-full bg-green-100 px-2.5 py-1 text-[11px] font-semibold text-green-700">
+            <span className="rounded-full bg-green-100 px-2.5 py-1 text-[11px] font-semibold text-green-700 dark:bg-green-900/30 dark:text-green-300">
               Hemat 2 bulan
             </span>
           )}
@@ -185,7 +185,7 @@ export default function PricingPage() {
           <ul className="space-y-2.5">
             {FREE_FEATURES.map((f) => (
               <li key={f} className="flex items-start gap-2 text-sm">
-                <Check className="mt-0.5 h-4 w-4 shrink-0 text-green-600" strokeWidth={2.5} />
+                <Check className="mt-0.5 h-4 w-4 shrink-0 text-green-600 dark:text-green-400" strokeWidth={2.5} />
                 <span>{f}</span>
               </li>
             ))}
@@ -193,7 +193,7 @@ export default function PricingPage() {
         </div>
 
         {/* PRO */}
-        <div className="relative flex flex-col rounded-2xl border-2 border-[#E1A62F] bg-[#FFFBF0] p-6 space-y-5">
+        <div className="relative flex flex-col rounded-2xl border-2 border-[#E1A62F] bg-[#FFFBF0] dark:bg-[#1C1800] p-6 space-y-5">
           <div className="absolute -top-3 left-1/2 -translate-x-1/2">
             <span className="rounded-full bg-[#E1A62F] px-3 py-1 text-[11px] font-bold text-white shadow">
               Paling populer
@@ -232,7 +232,7 @@ export default function PricingPage() {
                     className="mt-0.5 h-4 w-4 shrink-0 fill-[#E1A62F] text-[#E1A62F]"
                   />
                 ) : (
-                  <Check className="mt-0.5 h-4 w-4 shrink-0 text-green-600" strokeWidth={2.5} />
+                  <Check className="mt-0.5 h-4 w-4 shrink-0 text-green-600 dark:text-green-400" strokeWidth={2.5} />
                 )}
                 <span>{f.text}</span>
               </li>
@@ -290,7 +290,7 @@ export default function PricingPage() {
         </div>
 
         {/* CTA below table */}
-        <div className="rounded-xl border border-[#E1A62F33] bg-[#FFFBF0] px-4 py-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-6">
+        <div className="rounded-xl border border-[#E1A62F33] bg-[#FFFBF0] dark:bg-[#1C1800] px-4 py-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-6">
           <div>
             <p className="font-semibold text-sm">Siap upgrade?</p>
             <p className="text-xs text-muted-foreground mt-0.5">

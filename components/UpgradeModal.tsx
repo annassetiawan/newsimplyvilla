@@ -136,7 +136,7 @@ export function UpgradeModal({ isOpen, onClose, feature }: Props) {
         <ul className="space-y-1.5">
           {content.benefits.map((b) => (
             <li key={b} className="flex items-start gap-2 text-xs">
-              <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-green-100 text-green-600 font-bold text-[10px]">
+              <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400 font-bold text-[10px]">
                 ✓
               </span>
               <span>{b}</span>
@@ -148,7 +148,7 @@ export function UpgradeModal({ isOpen, onClose, feature }: Props) {
           <p className="text-xl font-bold text-[#E1A62F]">Rp 299.000 / bulan</p>
           <p className="text-xs text-muted-foreground">
             atau Rp 2.990.000 / tahun{' '}
-            <span className="text-green-600 font-medium">(hemat 2 bulan)</span>
+            <span className="text-green-600 dark:text-green-400 font-medium">(hemat 2 bulan)</span>
           </p>
         </div>
 

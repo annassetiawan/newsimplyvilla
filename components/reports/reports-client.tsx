@@ -43,6 +43,8 @@ interface Props {
     prevRevenue: number
     prevExpenses: number
     prevNetProfit: number
+    cancellations: number
+    netRevenue: number
   }
   expenseByCategory: { category: string; amount: number }[]
 }
@@ -62,18 +64,20 @@ function StatCard({
   sub,
   delta,
   positive,
+  danger,
 }: {
   label: string
   value: string
   sub: string
   delta: number
   positive: boolean
+  danger?: boolean
 }) {
   const isGood = positive ? delta >= 0 : delta <= 0
   return (
     <div className="rounded-xl border border-border bg-background p-4 space-y-1">
       <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{label}</p>
-      <p className="text-2xl font-bold">{value}</p>
+      <p className={cn('text-2xl font-bold', danger && 'text-red-600 dark:text-red-400')}>{value}</p>
       <div className="flex items-center justify-between">
         <p className="text-xs text-muted-foreground">{sub}</p>
         {delta !== 0 && (
@@ -173,12 +177,27 @@ export function ReportsClient({ transactions, monthlyData, stats, expenseByCateg
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
         <StatCard
-          label="Revenue"
+          label="Gross Revenue"
           value={formatRp(stats.revenue)}
           sub="this period"
           delta={pct(stats.revenue, stats.prevRevenue)}
+          positive
+        />
+        <StatCard
+          label="Cancellations"
+          value={formatRp(stats.cancellations)}
+          sub="cancelled reservations"
+          delta={0}
+          positive={false}
+          danger={stats.cancellations > 0}
+        />
+        <StatCard
+          label="Net Revenue"
+          value={formatRp(stats.netRevenue)}
+          sub="after cancellations"
+          delta={0}
           positive
         />
         <StatCard
@@ -191,15 +210,8 @@ export function ReportsClient({ transactions, monthlyData, stats, expenseByCateg
         <StatCard
           label="Net Profit"
           value={formatRp(stats.netProfit)}
-          sub="revenue minus expenses"
+          sub="net revenue minus expenses"
           delta={pct(stats.netProfit, stats.prevNetProfit)}
-          positive
-        />
-        <StatCard
-          label="Avg Occupancy"
-          value={`${stats.avgOccupancy}%`}
-          sub="rooms occupied"
-          delta={0}
           positive
         />
       </div>

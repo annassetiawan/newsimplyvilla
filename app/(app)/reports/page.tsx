@@ -25,7 +25,7 @@ export default async function ReportsPage() {
 
   const twelveMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 11, 1)
 
-  const [txCurrent, txRecent, txMonthly, rooms] = await Promise.all([
+  const [txCurrent, txRecent, txMonthly, rooms, txCancelled] = await Promise.all([
     db.transaction.findMany({
       where: { villaId, date: { gte: periodStart, lte: periodEnd } },
       orderBy: { date: 'desc' },
@@ -42,11 +42,22 @@ export default async function ReportsPage() {
       select: { type: true, amount: true, date: true },
     }),
     db.room.findMany({ where: { villaId } }),
+    db.transaction.findMany({
+      where: {
+        villaId,
+        date: { gte: periodStart, lte: periodEnd },
+        type: 'INCOME',
+        reservation: { status: 'CANCELLED' },
+      },
+      select: { amount: true },
+    }),
   ])
 
   const revenue = txCurrent.filter((t) => t.type === 'INCOME').reduce((s, t) => s + t.amount, 0)
   const expenses = txCurrent.filter((t) => t.type === 'EXPENSE').reduce((s, t) => s + t.amount, 0)
-  const netProfit = revenue - expenses
+  const cancellations = txCancelled.reduce((s, t) => s + t.amount, 0)
+  const netRevenue = revenue - cancellations
+  const netProfit = netRevenue - expenses
 
   const txPrev = txMonthly.filter((t) => t.date >= prevStart && t.date <= prevEnd)
   const prevRevenue = txPrev.filter((t) => t.type === 'INCOME').reduce((s, t) => s + t.amount, 0)
@@ -109,7 +120,7 @@ export default async function ReportsPage() {
       <ReportsClient
         transactions={transactions}
         monthlyData={monthlyData}
-        stats={{ revenue, expenses, netProfit, avgOccupancy, prevRevenue, prevExpenses, prevNetProfit }}
+        stats={{ revenue, expenses, netProfit, avgOccupancy, prevRevenue, prevExpenses, prevNetProfit, cancellations, netRevenue }}
         expenseByCategory={expenseByCategory}
       />
     </div>

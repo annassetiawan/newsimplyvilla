@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react'
 import { ChevronLeft, ChevronRight, Plus, BedDouble } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { cn } from '@/lib/utils'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { cancelReservation, markAsPaid } from '@/app/actions/reservations'
@@ -57,6 +58,18 @@ export function CalendarTab({ rooms, reservations, onNewReservation }: Props) {
       n.setDate(n.getDate() + 7)
       return n
     })
+  }
+
+  const monthOptions = Array.from({ length: 24 }, (_, i) => {
+    const d = new Date(todayBase.getFullYear(), todayBase.getMonth() - 12 + i, 1)
+    return d
+  })
+
+  const selectedMonthValue = `${viewStart.getFullYear()}-${String(viewStart.getMonth() + 1).padStart(2, '0')}`
+
+  function jumpToMonth(value: string) {
+    const [y, m] = value.split('-').map(Number)
+    setViewStart(startOfDay(new Date(y, m - 1, 1)))
   }
 
   function getBlock(res: ListReservation) {
@@ -155,18 +168,27 @@ export function CalendarTab({ rooms, reservations, onNewReservation }: Props) {
 
       {/* Desktop: full calendar */}
       <div className="hidden lg:block">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-3">
           <Button variant="outline" size="sm" onClick={prevWeek}>
             <ChevronLeft className="h-4 w-4" />
           </Button>
-          <span className="min-w-[190px] text-center text-sm font-medium">
+          <Select value={selectedMonthValue} onValueChange={jumpToMonth}>
+            <SelectTrigger className="h-8 w-[160px] text-sm font-medium">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {monthOptions.map((d) => {
+                const value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+                const label = d.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' })
+                return <SelectItem key={value} value={value}>{label}</SelectItem>
+              })}
+            </SelectContent>
+          </Select>
+          <span className="h-4 w-px bg-border" />
+          <span className="text-sm text-muted-foreground">
             {days[0].toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} –{' '}
-            {days[13].toLocaleDateString('en-GB', {
-              day: 'numeric',
-              month: 'short',
-              year: 'numeric',
-            })}
+            {days[13].toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
           </span>
           <Button variant="outline" size="sm" onClick={nextWeek}>
             <ChevronRight className="h-4 w-4" />
@@ -286,7 +308,7 @@ export function CalendarTab({ rooms, reservations, onNewReservation }: Props) {
       </div>
 
       {/* Legend */}
-      <div className="flex items-center gap-4 text-[11px] text-muted-foreground">
+      <div className="flex items-center gap-4 text-[11px] text-muted-foreground mt-3">
         <div className="flex items-center gap-1.5">
           <div className="h-3.5 w-8 rounded bg-primary" />
           <span>Confirmed</span>
