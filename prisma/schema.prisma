@@ -28,6 +28,9 @@ model Villa {
   subscription Subscription?
   activityLogs ActivityLog[]
   businesses   Business[]
+  pettyCash    PettyCash[]
+  payrolls     Payroll[]
+  budgets      Budget[]
 }
 
 enum RoomStatus {
@@ -191,6 +194,7 @@ model Staff {
   villaId        String
   villa          Villa     @relation(fields: [villaId], references: [id])
   shifts         Shift[]
+  payrolls       Payroll[]
   createdAt      DateTime  @default(now())
 }
 
@@ -357,4 +361,57 @@ model PosTransaction {
 
   @@index([businessId, createdAt])
   @@index([villaId, createdAt])
+}
+
+enum PettyCashType {
+  IN
+  OUT
+}
+
+model PettyCash {
+  id          String        @id @default(cuid())
+  date        DateTime      @default(now())
+  description String
+  type        PettyCashType
+  amount      Float
+  note        String?
+  villaId     String
+  villa       Villa         @relation(fields: [villaId], references: [id])
+  createdAt   DateTime      @default(now())
+
+  @@index([villaId, date])
+}
+
+enum PayrollStatus {
+  PAID
+  UNPAID
+}
+
+model Payroll {
+  id        String        @id @default(cuid())
+  staffId   String
+  staff     Staff         @relation(fields: [staffId], references: [id])
+  month     Int
+  year      Int
+  amount    Float
+  status    PayrollStatus @default(UNPAID)
+  paidAt    DateTime?
+  note      String?
+  villaId   String
+  villa     Villa         @relation(fields: [villaId], references: [id])
+  createdAt DateTime      @default(now())
+
+  @@unique([staffId, month, year])
+  @@index([villaId, year, month])
+}
+
+model Budget {
+  id      String @id @default(cuid())
+  month   Int
+  year    Int
+  target  Float
+  villaId String
+  villa   Villa  @relation(fields: [villaId], references: [id])
+
+  @@unique([villaId, month, year])
 }
