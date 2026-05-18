@@ -35,6 +35,7 @@ import {
 import { Label } from '@/components/ui/label'
 import { RoomModal, type RoomFormData } from './room-modal'
 import { createArea } from '@/app/actions/rooms'
+import { ProGate } from '@/components/ProGate'
 
 const STATUS_STYLE = {
   OCCUPIED: 'bg-green-500 text-white',
@@ -97,9 +98,11 @@ export interface AreaData {
 interface Props {
   rooms: RoomWithReservation[]
   areas: AreaData[]
+  plan: 'FREE' | 'PRO'
+  roomCount: number
 }
 
-export function RoomsClient({ rooms, areas }: Props) {
+export function RoomsClient({ rooms, areas, plan, roomCount }: Props) {
   const [tab, setTab] = useState<FilterTab>('All rooms')
   const [search, setSearch] = useState('')
   const [selectedRoom, setSelectedRoom] = useState<RoomWithReservation | null>(null)
@@ -160,6 +163,14 @@ export function RoomsClient({ rooms, areas }: Props) {
           <p className="mt-0.5 text-sm text-muted-foreground">
             {rooms.length} rooms and {areas.length} shared areas at Villa Senja Ubud.
           </p>
+          {plan === 'FREE' && (
+            <p className="mt-1 text-sm text-muted-foreground">
+              {roomCount}/10 kamar digunakan
+              {roomCount >= 8 && (
+                <span className="text-amber-500 ml-2">— Mendekati batas</span>
+              )}
+            </p>
+          )}
         </div>
         <div className="flex items-center gap-2">
           <button
@@ -243,53 +254,55 @@ export function RoomsClient({ rooms, areas }: Props) {
 
       {/* Shared areas */}
       {(tab === 'All rooms' || tab === 'Areas') && (
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-base font-semibold">Shared areas</h2>
-              <p className="text-sm text-muted-foreground">
-                Common spaces and amenities across the property.
-              </p>
+        <ProGate feature="Area Management" description="Kelola area bersama seperti kolam renang, taman, dan lobby villa.">
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-base font-semibold">Shared areas</h2>
+                <p className="text-sm text-muted-foreground">
+                  Common spaces and amenities across the property.
+                </p>
+              </div>
+              <Button size="sm" variant="outline" onClick={() => setAreaModalOpen(true)}>
+                <Plus className="mr-1.5 h-3.5 w-3.5" /> Add area
+              </Button>
             </div>
-            <Button size="sm" variant="outline" onClick={() => setAreaModalOpen(true)}>
-              <Plus className="mr-1.5 h-3.5 w-3.5" /> Add area
-            </Button>
+            {areas.length === 0 ? (
+              <EmptyState
+                icon={MapPin}
+                title="Belum ada area bersama"
+                description="Tambahkan area seperti kolam renang, taman, atau lobby."
+                actionLabel="+ Tambah area"
+                onAction={() => setAreaModalOpen(true)}
+                minHeight="min-h-[200px]"
+              />
+            ) : (
+              <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+                {areas.map((area) => {
+                  const Icon = areaIcon(area.name)
+                  return (
+                    <div
+                      key={area.id}
+                      className="rounded-xl border border-border bg-background p-4 flex flex-col gap-3"
+                    >
+                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-teal-50 dark:bg-teal-900/20">
+                        <Icon className="h-5 w-5 text-teal-600 dark:text-teal-400" />
+                      </div>
+                      <div>
+                        <p className="font-semibold text-sm">{area.name}</p>
+                        {area.description && (
+                          <p className="text-[11px] text-muted-foreground mt-0.5 line-clamp-2">
+                            {area.description}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
           </div>
-          {areas.length === 0 ? (
-            <EmptyState
-              icon={MapPin}
-              title="Belum ada area bersama"
-              description="Tambahkan area seperti kolam renang, taman, atau lobby."
-              actionLabel="+ Tambah area"
-              onAction={() => setAreaModalOpen(true)}
-              minHeight="min-h-[200px]"
-            />
-          ) : (
-            <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-              {areas.map((area) => {
-                const Icon = areaIcon(area.name)
-                return (
-                  <div
-                    key={area.id}
-                    className="rounded-xl border border-border bg-background p-4 flex flex-col gap-3"
-                  >
-                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-teal-50 dark:bg-teal-900/20">
-                      <Icon className="h-5 w-5 text-teal-600 dark:text-teal-400" />
-                    </div>
-                    <div>
-                      <p className="font-semibold text-sm">{area.name}</p>
-                      {area.description && (
-                        <p className="text-[11px] text-muted-foreground mt-0.5 line-clamp-2">
-                          {area.description}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          )}
-        </div>
+        </ProGate>
       )}
 
       {/* Room detail sheet */}

@@ -15,6 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ImagePlus, X, Plus } from 'lucide-react'
 import { upsertRoom } from '@/app/actions/rooms'
 import { createClient } from '@/lib/supabase/client'
+import { toast } from 'sonner'
 
 export interface RoomFormData {
   id?: string
@@ -125,7 +126,7 @@ export function RoomModal({ open, onClose, initial }: Props) {
     startTransition(async () => {
       try {
         const photoUrls = await uploadPhotos()
-        await upsertRoom({
+        const result = await upsertRoom({
           id: initial?.id,
           code: code.trim(),
           name: name.trim(),
@@ -135,6 +136,10 @@ export function RoomModal({ open, onClose, initial }: Props) {
           status,
           photos: photoUrls,
         })
+        if (!result.success) {
+          toast.error(result.message ?? 'Gagal menyimpan data kamar.')
+          return
+        }
         onClose()
       } catch (err: unknown) {
         setError(err instanceof Error ? err.message : 'Failed to save room')

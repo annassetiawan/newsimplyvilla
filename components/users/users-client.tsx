@@ -44,6 +44,8 @@ export interface StaffData {
 
 interface Props {
   staff: StaffData[]
+  plan: 'FREE' | 'PRO'
+  activeStaffCount: number
 }
 
 function initials(name: string) {
@@ -55,7 +57,7 @@ function initials(name: string) {
     .toUpperCase()
 }
 
-export function UsersClient({ staff }: Props) {
+export function UsersClient({ staff, plan, activeStaffCount }: Props) {
   const [search, setSearch] = useState('')
   const [roleFilter, setRoleFilter] = useState('ALL')
   const [statusFilter, setStatusFilter] = useState('ALL')
@@ -122,6 +124,11 @@ export function UsersClient({ staff }: Props) {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-3">
+        {plan === 'FREE' && (
+          <p className="text-sm text-muted-foreground shrink-0">
+            {activeStaffCount}/2 akun staff aktif
+          </p>
+        )}
         <div className="flex flex-wrap items-center gap-2">
           <div className="relative">
             <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />

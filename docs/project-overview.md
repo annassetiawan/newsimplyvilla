@@ -22,17 +22,32 @@ SimplyVilla is a multi-tenant villa and resort management SaaS. Each registered 
 
 | Feature | Free | Pro |
 |---|---|---|
-| Reservations & guest management | Yes | Yes |
-| Room management | Yes | Yes |
+| Reservations (list view) | Yes | Yes |
+| Guest management | Yes | Yes |
+| Reservation calendar | No | Yes |
+| Lost & Found | No | Yes |
+| Room management | Max 10 rooms | Unlimited |
+| Area management | No | Yes |
 | Inventory tracking | Yes | Yes |
-| Maintenance task board | Yes | Yes |
-| Staff scheduling | Limited (Needs verification) | Yes |
-| Financial reports | Limited (Needs verification) | Yes |
+| Maintenance (list view) | Yes | Yes |
+| Maintenance Kanban & Calendar | No | Yes |
+| Staff scheduling | Yes | Yes |
+| Staff accounts | Max 2 active | Unlimited |
+| Financial reports (basic) | Yes | Yes |
+| Export reports (xlsx) | No | Yes |
+| Activity log | No | Yes |
 | SOP management | No | Yes |
 | Business & POS | No | Yes |
-| Activity log | No (Needs verification) | Yes |
+| Employee Management | No | Yes (planned) |
+| Finance & Account | No | Yes (planned) |
+| Channel Manager (OTA sync) | No | Yes (planned) |
 
-Subscription state is stored in the `Subscription` model. The `ProGate` component blocks Pro-only UI and shows the upgrade modal to Free users.
+Subscription state is stored in the `Subscription` model linked to the villa.
+
+**Gating mechanisms:**
+- `ProGate` component wraps section-level Pro-only UI (tabs, view content); shows a lock screen with a link to `/pricing` for Free users
+- Button-level gate pattern: `useSubscription` + `useRouter` redirect to `/pricing` on click (used for Export xlsx button); amber lock icon shown inline
+- Server actions enforce hard limits (max 10 rooms, max 2 active staff) and return structured errors surfaced via Sonner toast
 
 ## Onboarding Flow
 

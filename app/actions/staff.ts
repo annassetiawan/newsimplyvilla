@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@supabase/supabase-js'
 import { db } from '@/lib/db'
 import { getSessionUser } from '@/lib/getSession'
+import { getVillaPlan } from '@/lib/subscription'
 
 async function findSupabaseUserIdByEmail(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -30,6 +31,15 @@ export async function createStaff(data: {
   permissions: string[]
 }) {
   const villaId = await getVillaId()
+
+  const plan = await getVillaPlan()
+  if (plan === 'FREE') {
+    const staffCount = await db.staff.count({ where: { villaId, isActive: true } })
+    if (staffCount >= 2) {
+      return { success: false, message: 'Paket Free hanya mendukung maksimal 2 akun staff. Upgrade ke Pro untuk menambah lebih banyak.' }
+    }
+  }
+
   try {
     const adminClient = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,

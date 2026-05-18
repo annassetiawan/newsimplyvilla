@@ -21,6 +21,7 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion'
 import { useRouter } from 'next/navigation'
+import { ProGate } from '@/components/ProGate'
 
 export interface ProfileData {
   id: string
@@ -351,34 +352,36 @@ export function SettingsClient({ profile, activityLog }: Props) {
         )}
 
         {tab === 'activity' && (
-          <div className="space-y-4">
-            <div>
-              <h2 className="text-base font-semibold">Activity Log</h2>
-              <p className="text-sm text-muted-foreground">Recent actions in your account</p>
+          <ProGate feature="Activity Log" description="Lihat histori semua aksi dan perubahan yang terjadi di villa kamu.">
+            <div className="space-y-4">
+              <div>
+                <h2 className="text-base font-semibold">Activity Log</h2>
+                <p className="text-sm text-muted-foreground">Recent actions in your account</p>
+              </div>
+              {activityLog.length === 0 ? (
+                <div className="rounded-xl border border-border px-4 py-10 text-center text-sm text-muted-foreground">
+                  No activity recorded yet.
+                </div>
+              ) : (
+                <div className="rounded-xl border border-border divide-y divide-border">
+                  {activityLog.map((entry) => (
+                    <div key={entry.id} className="flex items-start gap-4 px-4 py-3">
+                      <div className="shrink-0 text-right min-w-[130px]">
+                        <p className="text-xs text-muted-foreground">{formatTs(entry.createdAt)}</p>
+                        {entry.staffName && (
+                          <p className="text-xs text-muted-foreground/60">{entry.staffName}</p>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm">{entry.action}</p>
+                        <p className="text-xs text-muted-foreground">{entry.module}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
-            {activityLog.length === 0 ? (
-              <div className="rounded-xl border border-border px-4 py-10 text-center text-sm text-muted-foreground">
-                No activity recorded yet.
-              </div>
-            ) : (
-              <div className="rounded-xl border border-border divide-y divide-border">
-                {activityLog.map((entry) => (
-                  <div key={entry.id} className="flex items-start gap-4 px-4 py-3">
-                    <div className="shrink-0 text-right min-w-[130px]">
-                      <p className="text-xs text-muted-foreground">{formatTs(entry.createdAt)}</p>
-                      {entry.staffName && (
-                        <p className="text-xs text-muted-foreground/60">{entry.staffName}</p>
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm">{entry.action}</p>
-                      <p className="text-xs text-muted-foreground">{entry.module}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+          </ProGate>
         )}
 
         {tab === 'help' && (

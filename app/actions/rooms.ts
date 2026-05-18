@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation'
 import { db } from '@/lib/db'
 import { getSessionUser } from '@/lib/getSession'
 import { logActivity } from '@/lib/activity-log'
+import { getVillaPlan } from '@/lib/subscription'
 
 async function getVillaId() {
   const user = await getSessionUser()
@@ -25,6 +26,16 @@ export async function upsertRoom(data: {
   const user = await getSessionUser()
   if (!user) redirect('/login')
   if (user.role !== 'OWNER') return { success: false, message: 'Hanya owner yang bisa mengelola kamar.' }
+
+  if (!data.id) {
+    const plan = await getVillaPlan()
+    if (plan === 'FREE') {
+      const roomCount = await db.room.count({ where: { villaId: user.villaId } })
+      if (roomCount >= 10) {
+        return { success: false, message: 'Paket Free hanya mendukung maksimal 10 kamar. Upgrade ke Pro untuk menambah lebih banyak kamar.' }
+      }
+    }
+  }
 
   try {
     if (data.id) {

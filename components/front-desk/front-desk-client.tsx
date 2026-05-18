@@ -8,6 +8,7 @@ import { GuestsTab, type GuestData } from './guests-tab'
 import { LostFoundTab, type LostFoundItem } from './lost-found-tab'
 import { ReservationModal } from './reservation-modal'
 import { useMediaQuery } from '@/hooks/useMediaQuery'
+import { ProGate } from '@/components/ProGate'
 
 interface RoomData {
   id: string
@@ -42,11 +43,13 @@ export function FrontDeskClient({ rooms, reservations, guests, lostAndFound }: P
         </TabsList>
 
         <TabsContent value="calendar">
-          <CalendarTab
-            rooms={rooms}
-            reservations={reservations}
-            onNewReservation={() => setModalOpen(true)}
-          />
+          <ProGate feature="Reservation Calendar" description="Lihat seluruh reservasi dalam tampilan kalender interaktif.">
+            <CalendarTab
+              rooms={rooms}
+              reservations={reservations}
+              onNewReservation={() => setModalOpen(true)}
+            />
+          </ProGate>
         </TabsContent>
 
         <TabsContent value="list">
@@ -61,7 +64,9 @@ export function FrontDeskClient({ rooms, reservations, guests, lostAndFound }: P
         </TabsContent>
 
         <TabsContent value="lost-found">
-          <LostFoundTab items={lostAndFound} />
+          <ProGate feature="Lost & Found" description="Kelola barang temuan tamu dan histori laporan kehilangan.">
+            <LostFoundTab items={lostAndFound} />
+          </ProGate>
         </TabsContent>
       </Tabs>
 

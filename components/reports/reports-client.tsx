@@ -10,11 +10,13 @@ import {
   ResponsiveContainer,
   Legend,
 } from 'recharts'
-import { TrendingUp, TrendingDown, Plus, Download, BarChart2, Receipt } from 'lucide-react'
+import { TrendingUp, TrendingDown, Plus, Download, BarChart2, Receipt, Lock } from 'lucide-react'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { ExpenseModal } from './expense-modal'
+import { useSubscription } from '@/hooks/useSubscription'
+import { useRouter } from 'next/navigation'
 
 export interface TransactionData {
   id: string
@@ -114,6 +116,8 @@ const CustomTooltip = ({ active, payload, label }: { active?: boolean; payload?:
 
 export function ReportsClient({ transactions, monthlyData, stats, expenseByCategory }: Props) {
   const [expenseOpen, setExpenseOpen] = useState(false)
+  const { isPro } = useSubscription()
+  const router = useRouter()
 
   const maxExpense = Math.max(...expenseByCategory.map((e) => e.amount), 1)
   const recent = transactions.slice(0, 5)
@@ -166,9 +170,15 @@ export function ReportsClient({ transactions, monthlyData, stats, expenseByCateg
           Financial overview · all values in IDR
         </p>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" className="gap-1.5" onClick={exportExcel}>
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-1.5"
+            onClick={isPro ? exportExcel : () => router.push('/pricing')}
+          >
             <Download className="h-3.5 w-3.5" />
             <span className="hidden sm:inline">Export Excel</span>
+            {!isPro && <Lock className="h-3 w-3 text-[#E1A62F]" />}
           </Button>
           <Button size="sm" className="gap-1.5" onClick={() => setExpenseOpen(true)}>
             <Plus className="h-3.5 w-3.5" />

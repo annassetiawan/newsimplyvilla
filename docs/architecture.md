@@ -180,11 +180,64 @@ Two client configurations exist in `lib/supabase/`:
 
 ## Subscription Gating
 
-`ProGate` component wraps any Pro-only feature. It reads the subscription plan from context or the `/api/subscription` endpoint and:
-- Renders children if plan is `PRO`
-- Renders `UpgradeModal` trigger if plan is `FREE`
+### ProGate (section-level)
 
-Amber color (`amber-*`) is reserved exclusively for Pro/upgrade UI elements. Action buttons use `neutral-800`.
+`ProGate` is a client component that reads the subscription via `useSubscription()` (fetches `/api/subscription`). It:
+- Renders children if plan is `PRO`
+- Renders a lock screen (`min-h-[500px]`) with an "Upgrade ke Pro" button linking to `/pricing` if plan is `FREE`
+- Shows a spinner while loading
+
+Use `ProGate` for full sections: tab content, view renders (Kanban/Calendar), full settings panels.
+
+```tsx
+<ProGate feature="Kanban Board" description="Kelola tugas dalam tampilan Kanban.">
+  <BoardView ... />
+</ProGate>
+```
+
+**Do NOT** use `ProGate` for individual buttons, stat cards inside a grid, or any small element — the `min-h-[500px]` lock UI breaks layout proportions.
+
+### Button-level gating
+
+For small elements (e.g. Export xlsx button), use `useSubscription` + `useRouter` directly:
+
+```tsx
+const { isPro } = useSubscription()
+const router = useRouter()
+
+<Button onClick={isPro ? doAction : () => router.push('/pricing')}>
+  Export Excel
+  {!isPro && <Lock className="h-3 w-3 text-[#E1A62F]" />}
+</Button>
+```
+
+### Server-side plan helper
+
+`lib/subscription.ts` exports `getVillaPlan()` for server components and actions:
+
+```typescript
+import { getVillaPlan } from '@/lib/subscription'
+const plan = await getVillaPlan() // 'FREE' | 'PRO'
+```
+
+This reads from `getSessionUser()` (already cached) — no extra DB query.
+
+### Hard limits in server actions
+
+Free-tier limits are enforced in server actions, not only in the UI:
+
+```typescript
+if (plan === 'FREE') {
+  const count = await db.room.count({ where: { villaId } })
+  if (count >= 10) return { success: false, message: '...' }
+}
+```
+
+Errors are returned as `{ success: false, message: string }` and surfaced via Sonner toast in the calling client component.
+
+### Color convention
+
+Amber (`#E1A62F` / `amber-*`) is reserved exclusively for Pro/upgrade UI (ProGate lock screen, pricing highlights, lock icons on gated buttons). Action buttons use `neutral-800`.
 
 ---
 

@@ -18,13 +18,12 @@ type Billing = 'bulanan' | 'tahunan'
 const FREE_FEATURES = [
   '1 properti villa',
   'Dashboard & laporan dasar',
-  'Front Desk & reservasi manual',
-  'Manajemen kamar & area',
+  'Front Desk & reservasi (List view)',
+  'Maksimal 10 kamar',
   'Inventory management',
-  'Maintenance & cleaning tasks',
+  'Maintenance & cleaning (List view)',
   'Staff schedule',
-  'SOP management',
-  'Maksimal 2 user account',
+  'Maksimal 2 akun staff',
 ]
 
 const PRO_FEATURES = [
@@ -40,21 +39,26 @@ const PRO_FEATURES = [
 
 const TABLE_ROWS: { label: string; free: string | boolean; pro: string | boolean; category?: string }[] = [
   { label: 'OPERASIONAL DASAR', free: '', pro: '', category: 'header' },
-  { label: 'Dashboard & analytics', free: true, pro: true },
-  { label: 'Front Desk & reservasi', free: true, pro: true },
-  { label: 'Manajemen kamar & area', free: true, pro: true },
+  { label: 'Jumlah kamar', free: 'Maks 10', pro: 'Unlimited' },
+  { label: 'Akun staff', free: 'Maks 2', pro: 'Unlimited' },
+  { label: 'Front Desk & reservasi (List)', free: true, pro: true },
   { label: 'Inventory management', free: true, pro: true },
-  { label: 'Maintenance & cleaning', free: true, pro: true },
+  { label: 'Maintenance (List view)', free: true, pro: true },
   { label: 'Staff schedule', free: true, pro: true },
-  { label: 'SOP management', free: true, pro: true },
   { label: 'Laporan keuangan dasar', free: true, pro: true },
   { label: 'FITUR PRO', free: '', pro: '', category: 'header' },
-  { label: 'Business analytics lanjutan', free: false, pro: true },
+  { label: 'Kalender reservasi', free: false, pro: true },
+  { label: 'Lost & Found', free: false, pro: true },
+  { label: 'Maintenance Kanban & Kalender', free: false, pro: true },
+  { label: 'Export laporan (xlsx)', free: false, pro: true },
+  { label: 'Activity log', free: false, pro: true },
+  { label: 'Low-stock alerts', free: false, pro: true },
+  { label: 'Area management', free: false, pro: true },
+  { label: 'SOP management', free: false, pro: true },
+  { label: 'Business & POS', free: false, pro: true },
   { label: 'Finance & Account', free: false, pro: true },
-  { label: 'User Management lanjutan', free: false, pro: true },
   { label: 'Employee Management', free: false, pro: true },
   { label: 'Channel Manager (OTA sync)', free: false, pro: true },
-  { label: 'Unlimited user accounts', free: '2', pro: true },
   { label: 'Priority support', free: false, pro: true },
 ]
 

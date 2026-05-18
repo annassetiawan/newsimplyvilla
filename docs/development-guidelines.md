@@ -95,16 +95,61 @@ export async function createThing(data: FormData | SomeType) {
 
 ## Subscription Gating
 
-Use the `ProGate` component to wrap any feature that requires a Pro subscription:
+### Section-level gates — use `ProGate`
+
+Use `ProGate` for full sections: tab content, Kanban/Calendar view renders, settings panels.
 
 ```tsx
-<ProGate>
-  <ProOnlyFeature />
+import { ProGate } from '@/components/ProGate'
+
+<ProGate
+  feature="Kanban Board"
+  description="Kelola tugas maintenance dalam tampilan Kanban yang intuitif."
+>
+  <BoardView tasks={tasks} />
 </ProGate>
 ```
 
-- Do not add Pro checks inline in page logic — always use `ProGate`
+Both `feature` and `description` props are required — they appear in the lock screen copy.
+
+**Do NOT** use `ProGate` for buttons, stat cards inside a grid, or any small element. `ProGate` renders with `min-h-[500px]` which breaks layout proportions in those contexts.
+
+### Button-level gates — useSubscription + redirect
+
+For individual buttons or small controls, use `useSubscription` and `useRouter`:
+
+```tsx
+const { isPro } = useSubscription()
+const router = useRouter()
+
+<Button onClick={isPro ? handleAction : () => router.push('/pricing')}>
+  Export Excel
+  {!isPro && <Lock className="h-3 w-3 text-[#E1A62F]" />}
+</Button>
+```
+
+The amber lock icon signals the feature is Pro-only without blocking layout.
+
+### Server-side limit checks
+
+Free-tier hard limits (max 10 rooms, max 2 active staff) are enforced in server actions:
+
+```typescript
+import { getVillaPlan } from '@/lib/subscription'
+
+const plan = await getVillaPlan()
+if (plan === 'FREE') {
+  const count = await db.room.count({ where: { villaId } })
+  if (count >= 10) {
+    return { success: false, message: 'Paket Free hanya mendukung maksimal 10 kamar.' }
+  }
+}
+```
+
+Return `{ success: false, message }` — the calling client component should surface this via Sonner `toast.error()`.
+
 - Do not use amber colors outside of Pro/upgrade UI contexts
+- Do not add inline `isPro` checks in page-level JSX — use the patterns above
 
 ---
 
@@ -180,4 +225,4 @@ npm run build   # verify no type errors or build failures
 5. Add Prisma model(s) if needed + run migration
 6. Add navigation link to sidebar (`components/layout/sidebar.tsx`)
 7. Add route to middleware allowlist if needed (`proxy.ts`)
-8. Gate with `ProGate` if it's a Pro feature
+8. Gate Pro features: use `ProGate` for section-level content, button-level gate pattern for individual controls

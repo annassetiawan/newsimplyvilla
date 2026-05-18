@@ -1,6 +1,6 @@
 # Features
 
-Status legend: **Live** = fully implemented | **Partial** = skeleton or incomplete | **Planned** = future roadmap
+Status legend: **Live** = fully implemented | **Partial** = skeleton or incomplete | **Planned** = future roadmap | **Pro** = requires Pro subscription
 
 ---
 
@@ -29,7 +29,7 @@ Four tabs:
 - View reservation detail in a side sheet
 - Cancel reservation
 
-### Calendar
+### Calendar *(Pro only — gated with ProGate)*
 - Visual calendar showing reservation blocks per room per day
 
 ### Guests
@@ -38,7 +38,7 @@ Four tabs:
 - Click-through to individual guest page (`/front-desk/guests/[id]`)
   - Full reservation history for the guest
 
-### Lost & Found
+### Lost & Found *(Pro only — gated with ProGate)*
 - Log found items (item name, description, location, date found)
 - Mark items as Claimed
 
@@ -52,6 +52,8 @@ Four tabs:
 - Status management: AVAILABLE / OCCUPIED / CLEANING / MAINTENANCE
 - Create and edit rooms via modal
 - Room photo support (stored as URL array — Needs verification on upload flow)
+- **Free plan limit:** max 10 rooms enforced in `upsertRoom` server action; counter shown in header (e.g. `3/10 kamar digunakan`)
+- **Area management** *(Pro only — gated with ProGate)*: add/edit/delete shared areas (pool, lobby, garden, etc.)
 
 ---
 
@@ -60,7 +62,7 @@ Four tabs:
 **Status: Live**
 
 - Item registry by category: Linen, Amenity, F&B, Maintenance
-- Track `onHand` stock vs. `minLevel` (low-stock alerts — Needs verification on alert mechanism)
+- Track `onHand` stock vs. `minLevel`; "Below minimum" stat card and red/green stock bar visible to all users (no gate)
 - Record stock movements (IN / OUT) with notes
 - SKU and unit tracking
 
@@ -72,14 +74,14 @@ Four tabs:
 
 Three views, switchable:
 
-### Board (Kanban)
+### Board (Kanban) *(Pro only — gated with ProGate)*
 - Drag-and-drop tasks between PENDING / IN_PROGRESS / DONE columns
 - Local state optimistic updates for smooth DnD
 
-### Calendar
+### Calendar *(Pro only — gated with ProGate)*
 - Task due dates displayed on a monthly calendar
 
-### List
+### List *(available to all plans)*
 - Sortable/filterable table of all tasks
 
 Task fields: title, type (Maintenance/Cleaning), location, priority (High/Med/Low), status, assigned staff, due date, proof photo upload
@@ -105,8 +107,8 @@ Task fields: title, type (Maintenance/Cleaning), location, priority (High/Med/Lo
 - Add expense entries manually
 - Cancel/void transactions
 - Filter by month (dropdown)
-- Export to Excel (xlsx)
-- Summary totals: gross income, expenses, net
+- **Export to Excel (xlsx)** *(Pro only — button-level gate: button always visible, clicking redirects Free users to `/pricing`; amber lock icon shown on button)*
+- Summary totals: gross revenue, cancellations, net revenue, expenses, net profit
 
 ---
 
@@ -125,7 +127,7 @@ Task fields: title, type (Maintenance/Cleaning), location, priority (High/Med/Lo
 **Status: Live**
 
 - Villa profile (name, address, description, contact, facilities)
-- Area management (add/edit/delete areas like rooms, pool, lobby)
+- **Activity log** *(Pro only — gated with ProGate)*: histori semua aksi dan perubahan yang terjadi di villa
 - (Additional settings — Needs verification on full scope)
 
 ---
@@ -138,6 +140,7 @@ Task fields: title, type (Maintenance/Cleaning), location, priority (High/Med/Lo
 - Invite new staff via email
 - Assign permissions
 - Activate / deactivate staff accounts
+- **Free plan limit:** max 2 active staff enforced in `inviteStaff` server action; counter shown in header (e.g. `1/2 akun staff aktif`)
 
 ---
 
@@ -192,7 +195,9 @@ Two tabs:
 
 - **Dark mode** — via `next-themes`, fully supported across all modules
 - **Role-based access** — OWNER has full access; STAFF access determined by `permissions` array
-- **ProGate** — wraps Pro-only UI; shows upgrade modal to Free users
+- **ProGate** — section-level gate for Pro-only UI; shows a lock screen with "Upgrade ke Pro" button (links to `/pricing`) for Free users
+- **Button-level gating** — for small elements (Export button), `useSubscription` + `useRouter` redirects Free users to `/pricing` on click; amber lock icon shown inline
+- **Plan limits** — server actions enforce Free-tier hard limits (max 10 rooms, max 2 active staff); return `{ success: false, message }` surfaced via Sonner toast
 - **Activity log** — records key actions (module, action, staff name, timestamp) per villa
 - **Toast notifications** — Sonner library for success/error feedback
 - **Loading skeletons** — `SkeletonCard`, `SkeletonTable`, `SkeletonKanban` per page type

@@ -90,5 +90,7 @@ export default async function RoomsPage() {
     description: a.description,
   }))
 
-  return <RoomsClient rooms={serializedRooms} areas={serializedAreas} />
+  const plan = (user.villa.subscription?.plan ?? 'FREE') as 'FREE' | 'PRO'
+
+  return <RoomsClient rooms={serializedRooms} areas={serializedAreas} plan={plan} roomCount={rooms.length} />
 }

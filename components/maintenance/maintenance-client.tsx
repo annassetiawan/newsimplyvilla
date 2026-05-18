@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import dynamic from 'next/dynamic'
 import { ListView } from './list-view'
 import { CalendarView } from './calendar-view'
+import { ProGate } from '@/components/ProGate'
 
 const BoardView = dynamic(
   () => import('./board-view').then((m) => ({ default: m.BoardView })),
@@ -132,17 +133,19 @@ export function MaintenanceClient({ tasks, staffOptions, locationOptions }: Prop
       </div>
 
       {view === 'board' && (
-        tasks.length === 0 ? (
-          <EmptyState
-            icon={ClipboardList}
-            title="Belum ada tugas"
-            description="Buat tugas maintenance atau kebersihan untuk staf kamu."
-            actionLabel="+ Tugas baru"
-            onAction={handleNew}
-          />
-        ) : (
-          <BoardView tasks={tasks} onEdit={handleEdit} />
-        )
+        <ProGate feature="Kanban Board" description="Kelola tugas maintenance dalam tampilan Kanban yang intuitif.">
+          {tasks.length === 0 ? (
+            <EmptyState
+              icon={ClipboardList}
+              title="Belum ada tugas"
+              description="Buat tugas maintenance atau kebersihan untuk staf kamu."
+              actionLabel="+ Tugas baru"
+              onAction={handleNew}
+            />
+          ) : (
+            <BoardView tasks={tasks} onEdit={handleEdit} />
+          )}
+        </ProGate>
       )}
       {view === 'list' && (
         tasks.length === 0 ? (
@@ -157,7 +160,11 @@ export function MaintenanceClient({ tasks, staffOptions, locationOptions }: Prop
           <ListView tasks={tasks} staffNames={staffNames} onEdit={handleEdit} />
         )
       )}
-      {view === 'calendar' && <CalendarView tasks={tasks} onEdit={handleEdit} />}
+      {view === 'calendar' && (
+        <ProGate feature="Maintenance Calendar" description="Lihat jadwal tugas maintenance dalam tampilan kalender.">
+          <CalendarView tasks={tasks} onEdit={handleEdit} />
+        </ProGate>
+      )}
 
       <TaskModal
         open={modalOpen}
