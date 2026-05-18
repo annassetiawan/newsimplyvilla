@@ -151,13 +151,38 @@ Task fields: title, type (Maintenance/Cleaning), location, priority (High/Med/Lo
 
 ---
 
+## Business (`/business`)
+
+**Status: Live (Pro only)**
+
+Two tabs:
+
+### Manage
+- List all businesses added to the villa (cafe, laundry, spa, minimarket, etc.)
+- Create new business: name, type/category, description, status (Active / Inactive)
+- Per-business item catalog:
+  - Item fields: name, price, category (free-text), photo (URL), stock quantity
+  - Add / edit / delete catalog items
+  - Low-stock indicator when stock reaches 0 or below threshold
+- Edit and archive businesses
+
+### POS
+- Business selector at top (dropdown or card — choose active business)
+- Display item catalog grid for selected business
+- Cart: add items, adjust qty, auto-calculate total
+- Payment method: Cash / Transfer
+- Confirm & record transaction → saved as `PosTransaction`
+- Transaction history per business (list, filterable by date)
+- Summary: total sales per business today / this month
+
+---
+
 ## Planned / Skeleton Modules
 
 | Route | Module | Notes |
 |---|---|---|
 | `/employee` | Employee management | Advanced HR features |
 | `/finance` | Finance dashboard | Extended financial analytics |
-| `/business` | Business settings | Multi-property, branding |
 | `/change-management` | Change logs | Audit/version history |
 | `/channel-manager` | OTA integration | Booking.com, Airbnb sync |
 

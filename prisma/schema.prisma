@@ -27,6 +27,7 @@ model Villa {
   lostAndFound LostAndFound[]
   subscription Subscription?
   activityLogs ActivityLog[]
+  businesses   Business[]
 }
 
 enum RoomStatus {
@@ -304,5 +305,56 @@ model ActivityLog {
   module    String
   createdAt DateTime @default(now())
 
+  @@index([villaId, createdAt])
+}
+
+enum BusinessStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum PaymentMethod {
+  CASH
+  TRANSFER
+}
+
+model Business {
+  id           String           @id @default(cuid())
+  name         String
+  type         String
+  description  String?
+  status       BusinessStatus   @default(ACTIVE)
+  villaId      String
+  villa        Villa            @relation(fields: [villaId], references: [id])
+  items        BusinessItem[]
+  transactions PosTransaction[]
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+}
+
+model BusinessItem {
+  id         String   @id @default(cuid())
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id])
+  name       String
+  price      Float
+  category   String
+  photo      String?
+  stock      Int      @default(0)
+  villaId    String
+}
+
+model PosTransaction {
+  id            String        @id @default(cuid())
+  businessId    String
+  business      Business      @relation(fields: [businessId], references: [id])
+  items         Json
+  total         Float
+  paymentMethod PaymentMethod
+  note          String?
+  villaId       String
+  createdAt     DateTime      @default(now())
+
+  @@index([businessId, createdAt])
   @@index([villaId, createdAt])
 }

@@ -11,8 +11,12 @@ interface Props {
   children: React.ReactNode
 }
 
+const DEV_FORCE_PRO = process.env.NEXT_PUBLIC_FORCE_PRO === 'true'
+
 export function ProGate({ feature, description, children }: Props) {
   const { isPro, isLoading } = useSubscription()
+
+  if (DEV_FORCE_PRO) return <>{children}</>
 
   if (isLoading) {
     return (

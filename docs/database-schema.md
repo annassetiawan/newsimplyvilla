@@ -19,6 +19,7 @@ Villa
  ├── Transaction[]
  ├── SOP[]
  ├── LostAndFound[]
+ ├── Business[]       → BusinessItem[] → PosTransaction[]
  ├── Subscription (1:1)
  └── ActivityLog[]
 ```
@@ -270,6 +271,59 @@ One-to-one billing record per villa.
 
 ---
 
+### Business
+
+A business unit operated within or alongside the villa (cafe, laundry, spa, etc.).
+
+| Field | Type | Notes |
+|---|---|---|
+| `id` | String (cuid) | |
+| `name` | String | Display name |
+| `type` | String | Category label (e.g. "Cafe", "Laundry", "Spa") |
+| `description` | String? | Optional |
+| `status` | BusinessStatus | ACTIVE / INACTIVE |
+| `villaId` | String | FK → Villa |
+| `createdAt` | DateTime | |
+| `updatedAt` | DateTime | Auto-updated |
+
+---
+
+### BusinessItem
+
+Catalog items belonging to a business (menu items, services, products).
+
+| Field | Type | Notes |
+|---|---|---|
+| `id` | String (cuid) | |
+| `businessId` | String | FK → Business |
+| `name` | String | Item name |
+| `price` | Float | Selling price |
+| `category` | String | Free-text category |
+| `photo` | String? | URL |
+| `stock` | Int | Current stock quantity |
+| `villaId` | String | FK → Villa (for scoped queries) |
+
+---
+
+### PosTransaction
+
+A sales transaction recorded via the POS module.
+
+| Field | Type | Notes |
+|---|---|---|
+| `id` | String (cuid) | |
+| `businessId` | String | FK → Business |
+| `items` | Json | Array of `{ itemId, name, price, qty, subtotal }` |
+| `total` | Float | Grand total |
+| `paymentMethod` | PaymentMethod | CASH / TRANSFER |
+| `note` | String? | Optional cashier note |
+| `villaId` | String | FK → Villa |
+| `createdAt` | DateTime | Transaction timestamp |
+
+**Indexes:** `(businessId, createdAt)`, `(villaId, createdAt)`
+
+---
+
 ### Waitlist
 
 Email signups for upcoming plan features.
@@ -317,6 +371,8 @@ Audit log of significant user actions.
 | `TransactionType` | INCOME, EXPENSE |
 | `SOPCategory` | FRONT_DESK, HOUSEKEEPING, MAINTENANCE, INVENTORY, SAFETY |
 | `LostAndFoundStatus` | FOUND, CLAIMED |
+| `BusinessStatus` | ACTIVE, INACTIVE |
+| `PaymentMethod` | CASH, TRANSFER |
 | `Plan` | FREE, PRO |
 | `SubscriptionStatus` | ACTIVE, INACTIVE, TRIAL |
 

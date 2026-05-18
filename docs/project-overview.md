@@ -29,7 +29,7 @@ SimplyVilla is a multi-tenant villa and resort management SaaS. Each registered 
 | Staff scheduling | Limited (Needs verification) | Yes |
 | Financial reports | Limited (Needs verification) | Yes |
 | SOP management | No | Yes |
-| Channel manager (OTA) | No | Planned |
+| Business & POS | No | Yes |
 | Activity log | No (Needs verification) | Yes |
 
 Subscription state is stored in the `Subscription` model. The `ProGate` component blocks Pro-only UI and shows the upgrade modal to Free users.
@@ -49,6 +49,6 @@ All data is scoped to a `villaId`. There is no shared data between villas. Staff
 
 ## Current State (as of May 2026)
 
-- Core modules live: dashboard, front-desk, rooms, inventory, maintenance, schedule, reports, SOP, settings, users
-- Skeleton/planned modules: employee, finance, business, change-management, channel-manager
+- Core modules live: dashboard, front-desk, rooms, inventory, maintenance, schedule, reports, SOP, settings, users, business (Pro)
+- Skeleton/planned modules: employee, finance, change-management, channel-manager
 - Authentication, onboarding, and subscription gates are functional

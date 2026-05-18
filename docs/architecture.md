@@ -21,6 +21,7 @@ newsimplyvilla/
 │   │   ├── schedule/
 │   │   ├── reports/
 │   │   ├── sop/
+│   │   ├── business/
 │   │   ├── settings/
 │   │   ├── pricing/
 │   │   └── users/
@@ -46,6 +47,7 @@ newsimplyvilla/
 │   ├── schedule/
 │   ├── settings/
 │   ├── sop/
+│   ├── business/
 │   ├── users/
 │   └── onboarding/
 ├── hooks/                  # Custom React hooks

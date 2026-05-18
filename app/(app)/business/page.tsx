@@ -1,22 +1,44 @@
+import { redirect } from 'next/navigation'
+import { db } from '@/lib/db'
+import { getSessionUser } from '@/lib/getSession'
 import { ProGate } from '@/components/ProGate'
+import BusinessClient from '@/components/business/business-client'
 
-export default function BusinessPage() {
+export default async function BusinessPage() {
+  const user = await getSessionUser()
+  if (!user) redirect('/login')
+
+  const businesses = await db.business.findMany({
+    where: { villaId: user.villaId },
+    include: { items: true },
+    orderBy: { createdAt: 'desc' },
+  })
+
+  const serialized = businesses.map((b) => ({
+    id: b.id,
+    name: b.name,
+    type: b.type,
+    description: b.description,
+    status: b.status as 'ACTIVE' | 'INACTIVE',
+    createdAt: b.createdAt.toISOString(),
+    items: b.items.map((item) => ({
+      id: item.id,
+      businessId: item.businessId,
+      name: item.name,
+      price: item.price,
+      category: item.category,
+      photo: item.photo,
+      stock: item.stock,
+      villaId: item.villaId,
+    })),
+  }))
+
   return (
     <ProGate
       feature="Business"
-      description="Pantau performa villa secara mendalam dengan insight revenue, tren okupansi, dan rekomendasi harga otomatis."
+      description="Kelola unit bisnis tambahan villa (cafe, laundry, spa, dll) dan transaksi penjualan via POS."
     >
-      <div className="space-y-5">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Business</h1>
-          <p className="mt-0.5 text-sm text-muted-foreground">
-            Advanced business analytics and revenue insights.
-          </p>
-        </div>
-        <div className="rounded-xl border-2 border-dashed border-border p-16 text-center text-sm text-muted-foreground">
-          Business analytics — coming soon
-        </div>
-      </div>
+      <BusinessClient businesses={serialized} villaId={user.villaId} />
     </ProGate>
   )
 }
