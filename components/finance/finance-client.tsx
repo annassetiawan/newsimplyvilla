@@ -44,14 +44,14 @@ interface PettyCash {
 
 interface Payroll {
   id: string
-  staffId: string
+  staffId: string | null
   month: number
   year: number
   amount: number
   status: string
   paidAt: string | null
   note: string | null
-  staff: { id: string; name: string; position: string }
+  staff: { id: string; name: string; position: string } | null
 }
 
 interface StaffMember {

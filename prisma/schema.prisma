@@ -31,6 +31,7 @@ model Villa {
   pettyCash    PettyCash[]
   payrolls     Payroll[]
   budgets      Budget[]
+  employees    Employee[]
 }
 
 enum RoomStatus {
@@ -195,6 +196,7 @@ model Staff {
   villa          Villa     @relation(fields: [villaId], references: [id])
   shifts         Shift[]
   payrolls       Payroll[]
+  employee       Employee?
   createdAt      DateTime  @default(now())
 }
 
@@ -388,18 +390,20 @@ enum PayrollStatus {
 }
 
 model Payroll {
-  id        String        @id @default(cuid())
-  staffId   String
-  staff     Staff         @relation(fields: [staffId], references: [id])
-  month     Int
-  year      Int
-  amount    Float
-  status    PayrollStatus @default(UNPAID)
-  paidAt    DateTime?
-  note      String?
-  villaId   String
-  villa     Villa         @relation(fields: [villaId], references: [id])
-  createdAt DateTime      @default(now())
+  id         String        @id @default(cuid())
+  staffId    String?
+  staff      Staff?        @relation(fields: [staffId], references: [id])
+  employeeId String?
+  employee   Employee?     @relation(fields: [employeeId], references: [id])
+  month      Int
+  year       Int
+  amount     Float
+  status     PayrollStatus @default(UNPAID)
+  paidAt     DateTime?
+  note       String?
+  villaId    String
+  villa      Villa         @relation(fields: [villaId], references: [id])
+  createdAt  DateTime      @default(now())
 
   @@unique([staffId, month, year])
   @@index([villaId, year, month])
@@ -414,4 +418,110 @@ model Budget {
   villa   Villa  @relation(fields: [villaId], references: [id])
 
   @@unique([villaId, month, year])
+}
+
+// --- Employee Management ---
+
+enum Gender {
+  MALE
+  FEMALE
+}
+
+enum EmploymentType {
+  PERMANENT
+  CONTRACT
+  FREELANCE
+}
+
+enum EmployeeStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  SICK
+  LEAVE
+  OFF
+}
+
+enum LeaveStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model Employee {
+  id               String           @id @default(cuid())
+  name             String
+  photo            String?
+  idNumber         String?
+  birthPlace       String?
+  birthDate        DateTime?
+  gender           Gender?
+  phone            String?
+  address          String?
+  position         String
+  department       String?
+  employmentType   EmploymentType   @default(PERMANENT)
+  startDate        DateTime
+  endDate          DateTime?
+  baseSalary       Float?
+  staffId          String?          @unique
+  staff            Staff?           @relation(fields: [staffId], references: [id])
+  status           EmployeeStatus   @default(ACTIVE)
+  villaId          String
+  villa            Villa            @relation(fields: [villaId], references: [id])
+  attendances      Attendance[]
+  leaveRequests    LeaveRequest[]
+  leaveAllocations LeaveAllocation[]
+  payrolls         Payroll[]
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  @@index([villaId, status])
+}
+
+model Attendance {
+  id         String           @id @default(cuid())
+  employeeId String
+  employee   Employee         @relation(fields: [employeeId], references: [id])
+  date       DateTime
+  status     AttendanceStatus
+  note       String?
+  villaId    String
+
+  @@unique([employeeId, date])
+  @@index([villaId, date])
+}
+
+model LeaveRequest {
+  id         String      @id @default(cuid())
+  employeeId String
+  employee   Employee    @relation(fields: [employeeId], references: [id])
+  startDate  DateTime
+  endDate    DateTime
+  totalDays  Int
+  reason     String
+  status     LeaveStatus @default(PENDING)
+  reviewedBy String?
+  reviewNote String?
+  villaId    String
+  createdAt  DateTime    @default(now())
+
+  @@index([villaId, status])
+  @@index([employeeId, startDate])
+}
+
+model LeaveAllocation {
+  id         String   @id @default(cuid())
+  employeeId String
+  employee   Employee @relation(fields: [employeeId], references: [id])
+  year       Int
+  totalDays  Int      @default(12)
+  usedDays   Int      @default(0)
+  villaId    String
+
+  @@unique([employeeId, year])
 }

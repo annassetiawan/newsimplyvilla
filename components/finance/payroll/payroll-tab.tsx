@@ -12,14 +12,14 @@ import { EmptyState } from '@/components/ui/EmptyState'
 
 interface Payroll {
   id: string
-  staffId: string
+  staffId: string | null
   month: number
   year: number
   amount: number
   status: string
   paidAt: string | null
   note: string | null
-  staff: { id: string; name: string; position: string }
+  staff: { id: string; name: string; position: string } | null
 }
 
 interface StaffMember { id: string; name: string; position: string }
@@ -146,8 +146,8 @@ export function PayrollTab({ payrolls, staffList, currentMonth, currentYear }: P
               <tbody>
                 {filtered.map((p) => (
                   <tr key={p.id} className="border-b border-border last:border-0 hover:bg-muted/30">
-                    <td className="px-4 py-3 font-medium">{p.staff.name}</td>
-                    <td className="px-4 py-3 text-muted-foreground">{p.staff.position}</td>
+                    <td className="px-4 py-3 font-medium">{p.staff?.name ?? '—'}</td>
+                    <td className="px-4 py-3 text-muted-foreground">{p.staff?.position ?? '—'}</td>
                     <td className="px-4 py-3 text-right tabular-nums font-medium">{formatRp(p.amount)}</td>
                     <td className="px-4 py-3 text-center">
                       {p.status === 'PAID' ? (
@@ -185,7 +185,7 @@ export function PayrollTab({ payrolls, staffList, currentMonth, currentYear }: P
                           </button>
                         )}
                         <button
-                          onClick={() => openInputForStaff(p.staffId)}
+                          onClick={() => openInputForStaff(p.staffId ?? undefined)}
                           className="rounded-md border border-border px-2 py-1 text-xs font-medium text-muted-foreground hover:bg-muted transition-colors"
                         >
                           Edit
