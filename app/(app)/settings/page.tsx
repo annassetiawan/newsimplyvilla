@@ -34,6 +34,9 @@ export default async function SettingsPage() {
         villa={{
           name: user.villa?.name ?? '',
           description: user.villa?.description ?? '',
+          email: user.villa?.email ?? '',
+          phone: user.villa?.contact ?? '',
+          address: user.villa?.address ?? '',
         }}
       />
     </div>

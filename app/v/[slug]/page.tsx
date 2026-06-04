@@ -42,6 +42,7 @@ export default async function VillaPage({ params }: PageProps) {
       name: villa.name,
       address: villa.address,
       description: villa.description,
+      email: villa.email,
       contact: villa.contact,
       facilities: villa.facilities,
     },

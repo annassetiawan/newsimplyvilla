@@ -43,6 +43,9 @@ export interface ActivityLogEntry {
 interface VillaData {
   name: string
   description: string | null
+  email: string | null
+  phone: string | null
+  address: string | null
 }
 
 interface Props {
@@ -109,6 +112,9 @@ export function SettingsClient({ profile, activityLog, villa }: Props) {
   const [villaForm, setVillaForm] = useState({
     name: villa.name,
     description: villa.description ?? '',
+    email: villa.email ?? '',
+    phone: villa.phone ?? '',
+    address: villa.address ?? '',
   })
 
   // Profile form
@@ -140,11 +146,14 @@ export function SettingsClient({ profile, activityLog, villa }: Props) {
       const result = await updateVillaProfile({
         name: villaForm.name,
         description: villaForm.description || undefined,
+        email: villaForm.email || undefined,
+        phone: villaForm.phone || undefined,
+        address: villaForm.address || undefined,
       })
       if (result.success) {
-        toast.success('Villa profile saved!')
+        toast.success('Profil villa tersimpan!')
       } else {
-        toast.error(result.message ?? 'Failed to save villa profile.')
+        toast.error(result.message ?? 'Gagal menyimpan profil villa.')
       }
     })
   }
@@ -257,14 +266,37 @@ export function SettingsClient({ profile, activityLog, villa }: Props) {
               <div className="space-y-1.5">
                 <Label>Deskripsi</Label>
                 <Textarea
-                  rows={4}
+                  rows={3}
                   value={villaForm.description}
                   onChange={(e) => setVillaForm((v) => ({ ...v, description: e.target.value }))}
                   placeholder="Deskripsikan villa kamu... (akan muncul di halaman booking)"
                 />
-                <p className="text-xs text-muted-foreground">
-                  Deskripsi ini muncul di hero section halaman booking publik
-                </p>
+              </div>
+              <div className="space-y-1.5">
+                <Label>Email</Label>
+                <Input
+                  type="email"
+                  value={villaForm.email}
+                  onChange={(e) => setVillaForm((v) => ({ ...v, email: e.target.value }))}
+                  placeholder="email@villa.com"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Telepon / WA</Label>
+                <Input
+                  value={villaForm.phone}
+                  onChange={(e) => setVillaForm((v) => ({ ...v, phone: e.target.value }))}
+                  placeholder="+62..."
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Alamat</Label>
+                <Textarea
+                  rows={2}
+                  value={villaForm.address}
+                  onChange={(e) => setVillaForm((v) => ({ ...v, address: e.target.value }))}
+                  placeholder="Alamat lengkap villa..."
+                />
               </div>
               <Button onClick={handleSaveVilla} disabled={villaPending}>
                 {villaPending ? 'Menyimpan...' : 'Simpan'}

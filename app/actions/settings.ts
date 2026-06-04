@@ -29,6 +29,9 @@ export async function getActivityLog() {
 export async function updateVillaProfile(data: {
   name: string
   description?: string
+  email?: string
+  phone?: string
+  address?: string
 }) {
   const user = await getSessionUser()
   if (!user) redirect('/login')
@@ -40,6 +43,9 @@ export async function updateVillaProfile(data: {
         name: data.name,
         slug: generateSlug(data.name),
         description: data.description || null,
+        email: data.email || null,
+        contact: data.phone || null,
+        address: data.address || '',
       },
     })
 

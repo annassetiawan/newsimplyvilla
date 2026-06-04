@@ -12,6 +12,7 @@ model Villa {
   id           String         @id @default(cuid())
   name         String
   slug         String?        @unique
+  email        String?
   address      String
   description  String?
   contact      String?

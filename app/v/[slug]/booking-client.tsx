@@ -9,13 +9,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
-import { MapPin, Phone, Users, Bed, CheckCircle2, CalendarDays } from 'lucide-react'
+import { MapPin, Phone, Mail, Users, Bed, CheckCircle2, CalendarDays } from 'lucide-react'
 
 interface VillaData {
   id: string
   name: string
   address: string
   description: string | null
+  email: string | null
   contact: string | null
   facilities: string[]
 }
@@ -204,17 +205,23 @@ export function BookingClient({ data }: Props) {
               {villa.description}
             </p>
           )}
-          <div className="mt-4 flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+          <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
             {villa.address && (
               <span className="inline-flex items-center gap-1.5">
-                <MapPin className="h-4 w-4" />
+                <MapPin className="h-4 w-4 shrink-0" />
                 {villa.address}
               </span>
             )}
             {villa.contact && (
               <span className="inline-flex items-center gap-1.5">
-                <Phone className="h-4 w-4" />
+                <Phone className="h-4 w-4 shrink-0" />
                 {villa.contact}
+              </span>
+            )}
+            {villa.email && (
+              <span className="inline-flex items-center gap-1.5">
+                <Mail className="h-4 w-4 shrink-0" />
+                {villa.email}
               </span>
             )}
           </div>
