@@ -2,6 +2,7 @@
 
 import { createClient } from '@supabase/supabase-js'
 import { db } from '@/lib/db'
+import { generateSlug } from '@/lib/utils'
 
 function getSupabase() {
   return createClient(
@@ -29,9 +30,11 @@ export async function registerUser(data: {
   if (!authData.user) return { success: false, message: 'User creation failed' }
 
   try {
+    const villaName = `${data.name}'s Villa`
     const villa = await db.villa.create({
       data: {
-        name: `${data.name}'s Villa`,
+        name: villaName,
+        slug: generateSlug(villaName),
         address: '-',
         isOnboarded: false,
       },

@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@supabase/supabase-js'
 import { db } from '@/lib/db'
 import { getSessionUser } from '@/lib/getSession'
+import { generateSlug } from '@/lib/utils'
 
 async function getUser() {
   const user = await getSessionUser()
@@ -25,6 +26,7 @@ export async function saveVillaProfile(data: {
       where: { id: user.villaId },
       data: {
         name: data.name,
+        slug: generateSlug(data.name),
         address: `${data.address}, ${data.city}`,
         contact: data.phone,
         description: data.description || null,

@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { User, Settings, ScrollText, HelpCircle, FileText, LogOut } from 'lucide-react'
+import { useState, useTransition } from 'react'
+import { User, Settings, ScrollText, HelpCircle, FileText, LogOut, Building2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -22,6 +22,8 @@ import {
 } from '@/components/ui/accordion'
 import { useRouter } from 'next/navigation'
 import { ProGate } from '@/components/ProGate'
+import { updateVillaProfile } from '@/app/actions/settings'
+import { toast } from 'sonner'
 
 export interface ProfileData {
   id: string
@@ -38,12 +40,19 @@ export interface ActivityLogEntry {
   createdAt: string
 }
 
+interface VillaData {
+  name: string
+  description: string | null
+}
+
 interface Props {
   profile: ProfileData
   activityLog: ActivityLogEntry[]
+  villa: VillaData
 }
 
 const TABS = [
+  { id: 'villa', label: 'Villa', icon: Building2 },
   { id: 'profile', label: 'Profile', icon: User },
   { id: 'preferences', label: 'Preferences', icon: Settings },
   { id: 'activity', label: 'Activity Log', icon: ScrollText },
@@ -91,10 +100,18 @@ function formatTs(iso: string) {
   return d.toLocaleString('sv-SE', { timeZone: 'Asia/Jakarta' }).slice(0, 16).replace('T', ' ')
 }
 
-export function SettingsClient({ profile, activityLog }: Props) {
+export function SettingsClient({ profile, activityLog, villa }: Props) {
   const [tab, setTab] = useState<TabId>('profile')
   const router = useRouter()
 
+  // Villa form
+  const [villaPending, startVillaTransition] = useTransition()
+  const [villaForm, setVillaForm] = useState({
+    name: villa.name,
+    description: villa.description ?? '',
+  })
+
+  // Profile form
   const [profileForm, setProfileForm] = useState({
     name: profile.name,
     email: profile.email,
@@ -117,6 +134,20 @@ export function SettingsClient({ profile, activityLog }: Props) {
     message: '',
   })
   const [contactSent, setContactSent] = useState(false)
+
+  function handleSaveVilla() {
+    startVillaTransition(async () => {
+      const result = await updateVillaProfile({
+        name: villaForm.name,
+        description: villaForm.description || undefined,
+      })
+      if (result.success) {
+        toast.success('Villa profile saved!')
+      } else {
+        toast.error(result.message ?? 'Failed to save villa profile.')
+      }
+    })
+  }
 
   function handleSaveProfile() {
     setProfileSaved(true)
@@ -199,6 +230,49 @@ export function SettingsClient({ profile, activityLog }: Props) {
       </div>
 
       <div className="flex-1 min-w-0">
+        {tab === 'villa' && (
+          <div className="space-y-5">
+            <div>
+              <h2 className="text-base font-semibold">Villa</h2>
+              <p className="text-sm text-muted-foreground">
+                Nama dan deskripsi villa akan muncul di halaman landing page publik
+              </p>
+            </div>
+            <div className="space-y-4 max-w-md">
+              <div className="space-y-1.5">
+                <Label>Nama villa</Label>
+                <Input
+                  value={villaForm.name}
+                  onChange={(e) => setVillaForm((v) => ({ ...v, name: e.target.value }))}
+                  placeholder="Nama villa..."
+                />
+                <p className="text-xs text-muted-foreground">
+                  URL publik: <code className="text-primary">/v/{villaForm.name
+                    .toLowerCase()
+                    .replace(/[^a-z0-9]+/g, '-')
+                    .replace(/^-+|-+$/g, '')
+                    .replace(/-+/g, '-') || 'villa'}</code>
+                </p>
+              </div>
+              <div className="space-y-1.5">
+                <Label>Deskripsi</Label>
+                <Textarea
+                  rows={4}
+                  value={villaForm.description}
+                  onChange={(e) => setVillaForm((v) => ({ ...v, description: e.target.value }))}
+                  placeholder="Deskripsikan villa kamu... (akan muncul di halaman booking)"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Deskripsi ini muncul di hero section halaman booking publik
+                </p>
+              </div>
+              <Button onClick={handleSaveVilla} disabled={villaPending}>
+                {villaPending ? 'Menyimpan...' : 'Simpan'}
+              </Button>
+            </div>
+          </div>
+        )}
+
         {tab === 'profile' && (
           <div className="space-y-5">
             <div>

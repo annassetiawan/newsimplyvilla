@@ -42,6 +42,7 @@ export async function proxy(req: NextRequest) {
 
   const isPublicPage =
     pathname === '/' ||
+    pathname.startsWith('/v/') ||
     pathname.startsWith('/pricing') ||
     pathname.startsWith('/auth/')
 

@@ -28,7 +28,14 @@ export default async function SettingsPage() {
           Manage your profile, preferences, and account settings.
         </p>
       </div>
-      <SettingsClient profile={profile} activityLog={activityLog} />
+      <SettingsClient
+        profile={profile}
+        activityLog={activityLog}
+        villa={{
+          name: user.villa?.name ?? '',
+          description: user.villa?.description ?? '',
+        }}
+      />
     </div>
   )
 }
