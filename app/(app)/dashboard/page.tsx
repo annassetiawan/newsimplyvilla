@@ -241,7 +241,7 @@ export default async function DashboardPage({
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
           <p className="mt-0.5 text-sm text-muted-foreground">
-            An overview of {user.villa.name} — occupancy, revenue, and tasks at a glance.
+            An overview of {user.villa?.name ?? 'SimplyVilla'} — occupancy, revenue, and tasks at a glance.
           </p>
         </div>
         <div className="flex items-center gap-2">

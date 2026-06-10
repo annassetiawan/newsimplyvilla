@@ -15,7 +15,7 @@ const AttendanceSchema = z.object({
 
 export async function upsertAttendance(data: z.infer<typeof AttendanceSchema>) {
   const user = await getSessionUser()
-  if (!user) redirect('/login')
+  if (!user?.villaId) redirect('/login')
 
   const parsed = AttendanceSchema.parse(data)
   const date = new Date(parsed.date)
@@ -32,7 +32,7 @@ export async function upsertAttendance(data: z.infer<typeof AttendanceSchema>) {
       date,
       status: parsed.status,
       note: parsed.note || null,
-      villaId: user.villaId,
+      villaId: user.villaId!,
     },
     update: {
       status: parsed.status,
@@ -55,7 +55,7 @@ export async function bulkUpsertAttendance(
   date: string
 ) {
   const user = await getSessionUser()
-  if (!user) redirect('/login')
+  if (!user?.villaId) redirect('/login')
 
   const parsedDate = new Date(date)
 
@@ -70,7 +70,7 @@ export async function bulkUpsertAttendance(
           date: parsedDate,
           status: entry.status,
           note: entry.note || null,
-          villaId: user.villaId,
+          villaId: user.villaId!,
         },
         update: {
           status: entry.status,

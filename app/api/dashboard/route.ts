@@ -5,7 +5,7 @@ import { getDateRange } from '@/lib/dashboard-date'
 
 export async function GET(req: NextRequest) {
   const staff = await getSessionFromBearer(req.headers.get('authorization'))
-  if (!staff) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!staff?.villaId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { searchParams } = new URL(req.url)
   const preset = searchParams.get('preset') ?? 'this_month'

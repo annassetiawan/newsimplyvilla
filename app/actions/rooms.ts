@@ -9,8 +9,8 @@ import { getVillaPlan } from '@/lib/subscription'
 
 async function getVillaId() {
   const user = await getSessionUser()
-  if (!user) redirect('/login')
-  return user.villaId
+  if (!user?.villaId) redirect('/login')
+  return user.villaId!
 }
 
 export async function upsertRoom(data: {
@@ -24,13 +24,13 @@ export async function upsertRoom(data: {
   photos?: string[]
 }) {
   const user = await getSessionUser()
-  if (!user) redirect('/login')
+  if (!user?.villaId) redirect('/login')
   if (user.role !== 'OWNER') return { success: false, message: 'Hanya owner yang bisa mengelola kamar.' }
 
   if (!data.id) {
     const plan = await getVillaPlan()
     if (plan === 'FREE') {
-      const roomCount = await db.room.count({ where: { villaId: user.villaId } })
+      const roomCount = await db.room.count({ where: { villaId: user.villaId! } })
       if (roomCount >= 10) {
         return { success: false, message: 'Paket Free hanya mendukung maksimal 10 kamar. Upgrade ke Pro untuk menambah lebih banyak kamar.' }
       }
@@ -61,11 +61,11 @@ export async function upsertRoom(data: {
             amount: 0,
             category: 'Admin',
             paymentStatus: 'PAID',
-            villaId: user.villaId,
+            villaId: user.villaId!,
           },
         })
       }
-      await logActivity({ villaId: user.villaId, staffName: user.name, action: `Updated room: ${data.name}`, module: 'Rooms' })
+      await logActivity({ villaId: user.villaId!, staffName: user.name, action: `Updated room: ${data.name}`, module: 'Rooms' })
     } else {
       await db.room.create({
         data: {
@@ -76,10 +76,10 @@ export async function upsertRoom(data: {
           pricePerNight: data.pricePerNight,
           status: data.status,
           photos: data.photos ?? [],
-          villaId: user.villaId,
+          villaId: user.villaId!,
         },
       })
-      await logActivity({ villaId: user.villaId, staffName: user.name, action: `Added room: ${data.name}`, module: 'Rooms' })
+      await logActivity({ villaId: user.villaId!, staffName: user.name, action: `Added room: ${data.name}`, module: 'Rooms' })
     }
     revalidatePath('/rooms')
     revalidatePath('/dashboard')

@@ -16,18 +16,18 @@ export async function createSOP(data: {
   steps: { step: number; text: string }[]
 }) {
   const user = await getSessionUser()
-  if (!user) redirect('/login')
+  if (!user?.villaId) redirect('/login')
   try {
     await db.sOP.create({
       data: {
-        villaId: user.villaId,
+        villaId: user.villaId!,
         title: data.title,
         category: data.category,
         estimatedMinutes: data.estimatedMinutes,
         steps: data.steps,
       },
     })
-    await logActivity({ villaId: user.villaId, staffName: user.name, action: `Added SOP: ${data.title}`, module: 'SOP' })
+    await logActivity({ villaId: user.villaId!, staffName: user.name, action: `Added SOP: ${data.title}`, module: 'SOP' })
     revalidatePath('/sop')
     return { success: true }
   } catch (error) {
@@ -46,7 +46,7 @@ export async function updateSOP(
   }
 ) {
   const user = await getSessionUser()
-  if (!user) redirect('/login')
+  if (!user?.villaId) redirect('/login')
   try {
     await db.sOP.update({
       where: { id },
@@ -57,7 +57,7 @@ export async function updateSOP(
         steps: data.steps,
       },
     })
-    await logActivity({ villaId: user.villaId, staffName: user.name, action: `Updated SOP: ${data.title}`, module: 'SOP' })
+    await logActivity({ villaId: user.villaId!, staffName: user.name, action: `Updated SOP: ${data.title}`, module: 'SOP' })
     revalidatePath('/sop')
     return { success: true }
   } catch (error) {
@@ -68,11 +68,11 @@ export async function updateSOP(
 
 export async function deleteSOP(id: string) {
   const user = await getSessionUser()
-  if (!user) redirect('/login')
+  if (!user?.villaId) redirect('/login')
   try {
     const sop = await db.sOP.findUnique({ where: { id } })
     await db.sOP.delete({ where: { id } })
-    if (sop) await logActivity({ villaId: user.villaId, staffName: user.name, action: `Deleted SOP: ${sop.title}`, module: 'SOP' })
+    if (sop) await logActivity({ villaId: user.villaId!, staffName: user.name, action: `Deleted SOP: ${sop.title}`, module: 'SOP' })
     revalidatePath('/sop')
     return { success: true }
   } catch (error) {

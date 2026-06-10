@@ -15,7 +15,7 @@ export async function createTask(data: {
   dueDate?: Date
 }) {
   const user = await getSessionUser()
-  if (!user) redirect('/login')
+  if (!user?.villaId) redirect('/login')
   try {
     await db.task.create({
       data: {
@@ -26,10 +26,10 @@ export async function createTask(data: {
         assignedTo: data.assignedTo || null,
         dueDate: data.dueDate || null,
         status: 'PENDING',
-        villaId: user.villaId,
+        villaId: user.villaId!,
       },
     })
-    await logActivity({ villaId: user.villaId, staffName: user.name, action: `Added task: ${data.title}`, module: 'Maintenance' })
+    await logActivity({ villaId: user.villaId!, staffName: user.name, action: `Added task: ${data.title}`, module: 'Maintenance' })
     revalidatePath('/maintenance')
     revalidatePath('/dashboard')
     return { success: true }
@@ -52,7 +52,7 @@ export async function updateTask(
   }
 ) {
   const user = await getSessionUser()
-  if (!user) redirect('/login')
+  if (!user?.villaId) redirect('/login')
   try {
     await db.task.update({ where: { id }, data })
     revalidatePath('/maintenance')
@@ -66,7 +66,7 @@ export async function updateTask(
 
 export async function deleteTask(id: string) {
   const user = await getSessionUser()
-  if (!user) redirect('/login')
+  if (!user?.villaId) redirect('/login')
   try {
     await db.task.delete({ where: { id } })
     revalidatePath('/maintenance')
@@ -80,7 +80,7 @@ export async function deleteTask(id: string) {
 
 export async function advanceStatus(id: string, current: string) {
   const user = await getSessionUser()
-  if (!user) redirect('/login')
+  if (!user?.villaId) redirect('/login')
   try {
     const next = current === 'PENDING' ? 'IN_PROGRESS' : 'DONE'
     await db.task.update({ where: { id }, data: { status: next } })
@@ -95,7 +95,7 @@ export async function advanceStatus(id: string, current: string) {
 
 export async function moveTaskStatus(id: string, status: 'PENDING' | 'IN_PROGRESS' | 'DONE') {
   const user = await getSessionUser()
-  if (!user) redirect('/login')
+  if (!user?.villaId) redirect('/login')
   try {
     await db.task.update({ where: { id }, data: { status } })
     revalidatePath('/maintenance')

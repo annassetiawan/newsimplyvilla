@@ -22,12 +22,12 @@ export async function createPosTransaction(data: {
   note?: string
 }) {
   const user = await getSessionUser()
-  if (!user) redirect('/login')
+  if (!user?.villaId) redirect('/login')
   try {
     // Deduct stock for each item
     for (const item of data.items) {
       await db.businessItem.updateMany({
-        where: { id: item.itemId, villaId: user.villaId },
+        where: { id: item.itemId, villaId: user.villaId! },
         data: { stock: { decrement: item.qty } },
       })
     }
@@ -39,12 +39,12 @@ export async function createPosTransaction(data: {
         total: data.total,
         paymentMethod: data.paymentMethod,
         note: data.note,
-        villaId: user.villaId,
+        villaId: user.villaId!,
       },
     })
 
     await logActivity({
-      villaId: user.villaId,
+      villaId: user.villaId!,
       staffName: user.name,
       action: `Transaksi POS: Rp${data.total.toLocaleString('id-ID')} (${data.paymentMethod})`,
       module: 'Business',
@@ -60,9 +60,9 @@ export async function createPosTransaction(data: {
 
 export async function getPosTransactions(businessId: string) {
   const user = await getSessionUser()
-  if (!user) redirect('/login')
+  if (!user?.villaId) redirect('/login')
   return db.posTransaction.findMany({
-    where: { businessId, villaId: user.villaId },
+    where: { businessId, villaId: user.villaId! },
     orderBy: { createdAt: 'desc' },
     take: 50,
   })

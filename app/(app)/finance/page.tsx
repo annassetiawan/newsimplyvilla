@@ -22,36 +22,36 @@ export default async function FinancePage() {
   const [transactions, reservations, posTransactions, pettyCash, payrolls, staffList, budgets] =
     await Promise.all([
       db.transaction.findMany({
-        where: { villaId: user.villaId, date: { gte: last6MonthsStart } },
+        where: { villaId: user.villaId!, date: { gte: last6MonthsStart } },
         orderBy: { date: 'desc' },
       }),
       db.reservation.findMany({
         where: {
-          room: { villaId: user.villaId },
+          room: { villaId: user.villaId! },
           checkIn: { gte: last6MonthsStart },
           status: { in: ['CONFIRMED', 'CHECKEDIN', 'CHECKEDOUT'] },
         },
       }),
       db.posTransaction.findMany({
-        where: { villaId: user.villaId, createdAt: { gte: last6MonthsStart } },
+        where: { villaId: user.villaId!, createdAt: { gte: last6MonthsStart } },
         include: { business: { select: { name: true } } },
       }),
       db.pettyCash.findMany({
-        where: { villaId: user.villaId },
+        where: { villaId: user.villaId! },
         orderBy: { date: 'desc' },
         take: 200,
       }),
       db.payroll.findMany({
-        where: { villaId: user.villaId, year: now.getFullYear() },
+        where: { villaId: user.villaId!, year: now.getFullYear() },
         include: { staff: { select: { id: true, name: true, position: true } } },
         orderBy: [{ year: 'desc' }, { month: 'desc' }],
       }),
       db.staff.findMany({
-        where: { villaId: user.villaId, isActive: true },
+        where: { villaId: user.villaId!, isActive: true },
         select: { id: true, name: true, position: true },
       }),
       db.budget.findMany({
-        where: { villaId: user.villaId },
+        where: { villaId: user.villaId! },
         orderBy: [{ year: 'desc' }, { month: 'desc' }],
         take: 12,
       }),

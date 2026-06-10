@@ -14,13 +14,13 @@ export async function createBusiness(data: {
   description?: string
 }) {
   const user = await getSessionUser()
-  if (!user) redirect('/login')
+  if (!user?.villaId) redirect('/login')
   try {
     await db.business.create({
-      data: { ...data, villaId: user.villaId },
+      data: { ...data, villaId: user.villaId! },
     })
     await logActivity({
-      villaId: user.villaId,
+      villaId: user.villaId!,
       staffName: user.name,
       action: `Tambah bisnis: ${data.name}`,
       module: 'Business',
@@ -43,10 +43,10 @@ export async function updateBusiness(
   }
 ) {
   const user = await getSessionUser()
-  if (!user) redirect('/login')
+  if (!user?.villaId) redirect('/login')
   try {
     await db.business.update({
-      where: { id, villaId: user.villaId },
+      where: { id, villaId: user.villaId! },
       data,
     })
     revalidatePath('/business')
@@ -59,13 +59,13 @@ export async function updateBusiness(
 
 export async function deleteBusiness(id: string) {
   const user = await getSessionUser()
-  if (!user) redirect('/login')
+  if (!user?.villaId) redirect('/login')
   try {
-    const biz = await db.business.findUnique({ where: { id, villaId: user.villaId } })
-    await db.business.delete({ where: { id, villaId: user.villaId } })
+    const biz = await db.business.findUnique({ where: { id, villaId: user.villaId! } })
+    await db.business.delete({ where: { id, villaId: user.villaId! } })
     if (biz) {
       await logActivity({
-        villaId: user.villaId,
+        villaId: user.villaId!,
         staffName: user.name,
         action: `Hapus bisnis: ${biz.name}`,
         module: 'Business',
@@ -90,10 +90,10 @@ export async function createBusinessItem(data: {
   stock: number
 }) {
   const user = await getSessionUser()
-  if (!user) redirect('/login')
+  if (!user?.villaId) redirect('/login')
   try {
     await db.businessItem.create({
-      data: { ...data, villaId: user.villaId },
+      data: { ...data, villaId: user.villaId! },
     })
     revalidatePath('/business')
     return { success: true }
@@ -114,10 +114,10 @@ export async function updateBusinessItem(
   }
 ) {
   const user = await getSessionUser()
-  if (!user) redirect('/login')
+  if (!user?.villaId) redirect('/login')
   try {
     await db.businessItem.update({
-      where: { id, villaId: user.villaId },
+      where: { id, villaId: user.villaId! },
       data,
     })
     revalidatePath('/business')
@@ -130,9 +130,9 @@ export async function updateBusinessItem(
 
 export async function deleteBusinessItem(id: string) {
   const user = await getSessionUser()
-  if (!user) redirect('/login')
+  if (!user?.villaId) redirect('/login')
   try {
-    await db.businessItem.delete({ where: { id, villaId: user.villaId } })
+    await db.businessItem.delete({ where: { id, villaId: user.villaId! } })
     revalidatePath('/business')
     return { success: true }
   } catch (error) {

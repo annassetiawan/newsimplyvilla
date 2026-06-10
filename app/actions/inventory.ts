@@ -13,7 +13,7 @@ export async function stockIn(data: {
   note?: string
 }) {
   const user = await getSessionUser()
-  if (!user) redirect('/login')
+  if (!user?.villaId) redirect('/login')
   try {
     const item = await db.inventoryItem.findUnique({ where: { id: data.itemId } })
     await db.inventoryItem.update({
@@ -29,7 +29,7 @@ export async function stockIn(data: {
         note: data.note,
       },
     })
-    if (item) await logActivity({ villaId: user.villaId, staffName: user.name, action: `Stock In: ${item.name} ×${data.quantity}`, module: 'Inventory' })
+    if (item) await logActivity({ villaId: user.villaId!, staffName: user.name, action: `Stock In: ${item.name} ×${data.quantity}`, module: 'Inventory' })
     revalidatePath('/inventory')
     revalidatePath('/dashboard')
     return { success: true }
@@ -46,7 +46,7 @@ export async function stockOut(data: {
   note?: string
 }) {
   const user = await getSessionUser()
-  if (!user) redirect('/login')
+  if (!user?.villaId) redirect('/login')
   try {
     const item = await db.inventoryItem.findUnique({ where: { id: data.itemId } })
     if (!item) return { success: false, message: 'Item tidak ditemukan.' }
@@ -66,7 +66,7 @@ export async function stockOut(data: {
         note: data.note,
       },
     })
-    await logActivity({ villaId: user.villaId, staffName: user.name, action: `Stock Out: ${item.name} ×${data.quantity}`, module: 'Inventory' })
+    await logActivity({ villaId: user.villaId!, staffName: user.name, action: `Stock Out: ${item.name} ×${data.quantity}`, module: 'Inventory' })
     revalidatePath('/inventory')
     revalidatePath('/dashboard')
     return { success: true }
@@ -85,12 +85,12 @@ export async function createInventoryItem(data: {
   minLevel: number
 }) {
   const user = await getSessionUser()
-  if (!user) redirect('/login')
+  if (!user?.villaId) redirect('/login')
   try {
     await db.inventoryItem.create({
-      data: { ...data, villaId: user.villaId },
+      data: { ...data, villaId: user.villaId! },
     })
-    await logActivity({ villaId: user.villaId, staffName: user.name, action: `Added inventory item: ${data.name}`, module: 'Inventory' })
+    await logActivity({ villaId: user.villaId!, staffName: user.name, action: `Added inventory item: ${data.name}`, module: 'Inventory' })
     revalidatePath('/inventory')
     return { success: true }
   } catch (error) {
@@ -110,7 +110,7 @@ export async function updateInventoryItem(
   }
 ) {
   const user = await getSessionUser()
-  if (!user) redirect('/login')
+  if (!user?.villaId) redirect('/login')
   try {
     await db.inventoryItem.update({ where: { id }, data })
     revalidatePath('/inventory')

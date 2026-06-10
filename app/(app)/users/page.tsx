@@ -27,7 +27,7 @@ export default async function UsersPage() {
     permissions: s.permissions,
   }))
 
-  const plan = (user.villa.subscription?.plan ?? 'FREE') as 'FREE' | 'PRO'
+  const plan = (user.villa?.subscription?.plan ?? 'FREE') as 'FREE' | 'PRO'
   const activeStaffCount = staffRaw.filter((s) => s.isActive).length
 
   return (

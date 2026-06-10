@@ -22,28 +22,28 @@ export default async function EmployeePage() {
   const [employees, attendances, leaveRequests, leaveAllocations, staffList] =
     await Promise.all([
       db.employee.findMany({
-        where: { villaId: user.villaId },
+        where: { villaId: user.villaId! },
         include: { staff: { select: { id: true, name: true, email: true } } },
         orderBy: { name: 'asc' },
       }),
       db.attendance.findMany({
         where: {
-          villaId: user.villaId,
+          villaId: user.villaId!,
           date: { gte: monthStart, lte: monthEnd },
         },
         include: { employee: { select: { id: true, name: true } } },
       }),
       db.leaveRequest.findMany({
-        where: { villaId: user.villaId },
+        where: { villaId: user.villaId! },
         include: { employee: { select: { id: true, name: true } } },
         orderBy: { createdAt: 'desc' },
         take: 100,
       }),
       db.leaveAllocation.findMany({
-        where: { villaId: user.villaId, year: now.getFullYear() },
+        where: { villaId: user.villaId!, year: now.getFullYear() },
       }),
       db.staff.findMany({
-        where: { villaId: user.villaId, isActive: true },
+        where: { villaId: user.villaId!, isActive: true },
         select: { id: true, name: true, email: true },
       }),
     ])

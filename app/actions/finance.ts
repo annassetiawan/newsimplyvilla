@@ -19,7 +19,7 @@ const PettyCashSchema = z.object({
 
 export async function createPettyCash(data: z.infer<typeof PettyCashSchema>) {
   const user = await getSessionUser()
-  if (!user) redirect('/login')
+  if (!user?.villaId) redirect('/login')
 
   const parsed = PettyCashSchema.parse(data)
 
@@ -30,12 +30,12 @@ export async function createPettyCash(data: z.infer<typeof PettyCashSchema>) {
       amount: parsed.amount,
       note: parsed.note,
       date: new Date(parsed.date),
-      villaId: user.villaId,
+      villaId: user.villaId!,
     },
   })
 
   await logActivity({
-    villaId: user.villaId,
+    villaId: user.villaId!,
     staffName: user.name,
     action: `Tambah petty cash ${parsed.type} Rp ${parsed.amount.toLocaleString('id-ID')}`,
     module: 'Finance',
@@ -47,12 +47,12 @@ export async function createPettyCash(data: z.infer<typeof PettyCashSchema>) {
 
 export async function deletePettyCash(id: string) {
   const user = await getSessionUser()
-  if (!user) redirect('/login')
+  if (!user?.villaId) redirect('/login')
 
-  await db.pettyCash.delete({ where: { id, villaId: user.villaId } })
+  await db.pettyCash.delete({ where: { id, villaId: user.villaId! } })
 
   await logActivity({
-    villaId: user.villaId,
+    villaId: user.villaId!,
     staffName: user.name,
     action: 'Hapus petty cash',
     module: 'Finance',
@@ -74,7 +74,7 @@ const PayrollSchema = z.object({
 
 export async function upsertPayroll(data: z.infer<typeof PayrollSchema>) {
   const user = await getSessionUser()
-  if (!user) redirect('/login')
+  if (!user?.villaId) redirect('/login')
 
   const parsed = PayrollSchema.parse(data)
 
@@ -92,7 +92,7 @@ export async function upsertPayroll(data: z.infer<typeof PayrollSchema>) {
       year: parsed.year,
       amount: parsed.amount,
       note: parsed.note,
-      villaId: user.villaId,
+      villaId: user.villaId!,
     },
     update: {
       amount: parsed.amount,
@@ -101,7 +101,7 @@ export async function upsertPayroll(data: z.infer<typeof PayrollSchema>) {
   })
 
   await logActivity({
-    villaId: user.villaId,
+    villaId: user.villaId!,
     staffName: user.name,
     action: `Input payroll bulan ${parsed.month}/${parsed.year}`,
     module: 'Finance',
@@ -113,15 +113,15 @@ export async function upsertPayroll(data: z.infer<typeof PayrollSchema>) {
 
 export async function markPayrollPaid(id: string) {
   const user = await getSessionUser()
-  if (!user) redirect('/login')
+  if (!user?.villaId) redirect('/login')
 
   await db.payroll.update({
-    where: { id, villaId: user.villaId },
+    where: { id, villaId: user.villaId! },
     data: { status: 'PAID', paidAt: new Date() },
   })
 
   await logActivity({
-    villaId: user.villaId,
+    villaId: user.villaId!,
     staffName: user.name,
     action: 'Mark payroll PAID',
     module: 'Finance',
@@ -133,10 +133,10 @@ export async function markPayrollPaid(id: string) {
 
 export async function markPayrollUnpaid(id: string) {
   const user = await getSessionUser()
-  if (!user) redirect('/login')
+  if (!user?.villaId) redirect('/login')
 
   await db.payroll.update({
-    where: { id, villaId: user.villaId },
+    where: { id, villaId: user.villaId! },
     data: { status: 'UNPAID', paidAt: null },
   })
 
@@ -154,14 +154,14 @@ const BudgetSchema = z.object({
 
 export async function upsertBudget(data: z.infer<typeof BudgetSchema>) {
   const user = await getSessionUser()
-  if (!user) redirect('/login')
+  if (!user?.villaId) redirect('/login')
 
   const parsed = BudgetSchema.parse(data)
 
   await db.budget.upsert({
     where: {
       villaId_month_year: {
-        villaId: user.villaId,
+        villaId: user.villaId!,
         month: parsed.month,
         year: parsed.year,
       },
@@ -170,13 +170,13 @@ export async function upsertBudget(data: z.infer<typeof BudgetSchema>) {
       month: parsed.month,
       year: parsed.year,
       target: parsed.target,
-      villaId: user.villaId,
+      villaId: user.villaId!,
     },
     update: { target: parsed.target },
   })
 
   await logActivity({
-    villaId: user.villaId,
+    villaId: user.villaId!,
     staffName: user.name,
     action: `Set budget target ${parsed.month}/${parsed.year}`,
     module: 'Finance',

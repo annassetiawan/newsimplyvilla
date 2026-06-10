@@ -12,7 +12,7 @@ export async function upsertShift(data: {
   shiftType: 'MORNING' | 'AFTERNOON' | 'NIGHT' | 'OFF'
 }) {
   const user = await getSessionUser()
-  if (!user) redirect('/login')
+  if (!user?.villaId) redirect('/login')
   try {
     const dayStart = new Date(data.date)
     dayStart.setHours(0, 0, 0, 0)
@@ -37,7 +37,7 @@ export async function upsertShift(data: {
     const staffMember = await db.staff.findUnique({ where: { id: data.staffId } })
     if (staffMember) {
       await logActivity({
-        villaId: user.villaId,
+        villaId: user.villaId!,
         staffName: user.name,
         action: `Assigned shift: ${data.shiftType} – ${staffMember.name}`,
         module: 'Schedule',

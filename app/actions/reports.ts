@@ -14,11 +14,11 @@ export async function createExpense(data: {
   paymentStatus: 'PAID' | 'UNPAID'
 }) {
   const user = await getSessionUser()
-  if (!user) redirect('/login')
+  if (!user?.villaId) redirect('/login')
   try {
     await db.transaction.create({
       data: {
-        villaId: user.villaId,
+        villaId: user.villaId!,
         date: data.date,
         type: 'EXPENSE',
         description: data.description,
@@ -28,7 +28,7 @@ export async function createExpense(data: {
       },
     })
     await logActivity({
-      villaId: user.villaId,
+      villaId: user.villaId!,
       staffName: user.name,
       action: `Recorded expense: ${data.description} Rp ${data.amount.toLocaleString('id-ID')}`,
       module: 'Reports',

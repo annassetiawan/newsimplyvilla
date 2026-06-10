@@ -8,7 +8,7 @@ import { generateSlug } from '@/lib/utils'
 
 async function getUser() {
   const user = await getSessionUser()
-  if (!user) redirect('/login')
+  if (!user?.villaId) redirect('/login')
   return user
 }
 
@@ -23,7 +23,7 @@ export async function saveVillaProfile(data: {
   const user = await getUser()
   try {
     await db.villa.update({
-      where: { id: user.villaId },
+      where: { id: user.villaId! },
       data: {
         name: data.name,
         slug: generateSlug(data.name),
@@ -61,7 +61,7 @@ export async function saveOnboardingRooms(
         pricePerNight: r.pricePerNight,
         status: r.status,
         photos: [],
-        villaId: user.villaId,
+        villaId: user.villaId!,
       })),
     })
     return { success: true }
@@ -96,7 +96,7 @@ export async function inviteStaff(
           position: member.position,
           role: 'STAFF',
           isActive: true,
-          villaId: user.villaId,
+          villaId: user.villaId!,
           permissions: member.permissions,
         },
       })
@@ -123,7 +123,7 @@ export async function inviteStaff(
 export async function completeOnboarding() {
   const user = await getUser()
   await db.villa.update({
-    where: { id: user.villaId },
+    where: { id: user.villaId! },
     data: { isOnboarded: true },
   })
   redirect('/dashboard')

@@ -27,7 +27,7 @@ const EmployeeSchema = z.object({
 
 export async function createEmployee(data: z.infer<typeof EmployeeSchema>) {
   const user = await getSessionUser()
-  if (!user) redirect('/login')
+  if (!user?.villaId) redirect('/login')
 
   const parsed = EmployeeSchema.parse(data)
 
@@ -49,7 +49,7 @@ export async function createEmployee(data: z.infer<typeof EmployeeSchema>) {
       baseSalary: parsed.baseSalary || null,
       staffId: parsed.staffId || null,
       status: parsed.status,
-      villaId: user.villaId,
+      villaId: user.villaId!,
     },
   })
 
@@ -59,7 +59,7 @@ export async function createEmployee(data: z.infer<typeof EmployeeSchema>) {
       year: new Date().getFullYear(),
       totalDays: 12,
       usedDays: 0,
-      villaId: user.villaId,
+      villaId: user.villaId!,
     },
   })
 
@@ -69,12 +69,12 @@ export async function createEmployee(data: z.infer<typeof EmployeeSchema>) {
 
 export async function updateEmployee(id: string, data: z.infer<typeof EmployeeSchema>) {
   const user = await getSessionUser()
-  if (!user) redirect('/login')
+  if (!user?.villaId) redirect('/login')
 
   const parsed = EmployeeSchema.parse(data)
 
   await db.employee.update({
-    where: { id, villaId: user.villaId },
+    where: { id, villaId: user.villaId! },
     data: {
       name: parsed.name,
       photo: parsed.photo || null,
@@ -101,10 +101,10 @@ export async function updateEmployee(id: string, data: z.infer<typeof EmployeeSc
 
 export async function deactivateEmployee(id: string) {
   const user = await getSessionUser()
-  if (!user) redirect('/login')
+  if (!user?.villaId) redirect('/login')
 
   await db.employee.update({
-    where: { id, villaId: user.villaId },
+    where: { id, villaId: user.villaId! },
     data: { status: 'INACTIVE' },
   })
 
@@ -114,10 +114,10 @@ export async function deactivateEmployee(id: string) {
 
 export async function deleteEmployee(id: string) {
   const user = await getSessionUser()
-  if (!user) redirect('/login')
+  if (!user?.villaId) redirect('/login')
 
   await db.employee.update({
-    where: { id, villaId: user.villaId },
+    where: { id, villaId: user.villaId! },
     data: { status: 'INACTIVE' },
   })
 

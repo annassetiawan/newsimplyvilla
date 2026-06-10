@@ -26,7 +26,7 @@ const LeaveSchema = z.object({
 
 export async function createLeaveRequest(data: z.infer<typeof LeaveSchema>) {
   const user = await getSessionUser()
-  if (!user) redirect('/login')
+  if (!user?.villaId) redirect('/login')
 
   const parsed = LeaveSchema.parse(data)
   const start = new Date(parsed.startDate)
@@ -56,7 +56,7 @@ export async function createLeaveRequest(data: z.infer<typeof LeaveSchema>) {
       endDate: end,
       totalDays,
       reason: parsed.reason,
-      villaId: user.villaId,
+      villaId: user.villaId!,
     },
   })
 
@@ -66,7 +66,7 @@ export async function createLeaveRequest(data: z.infer<typeof LeaveSchema>) {
 
 export async function approveLeave(id: string) {
   const user = await getSessionUser()
-  if (!user) redirect('/login')
+  if (!user?.villaId) redirect('/login')
 
   const leave = await db.leaveRequest.findUnique({ where: { id } })
   if (!leave) return { error: 'Pengajuan tidak ditemukan' }
@@ -80,7 +80,7 @@ export async function approveLeave(id: string) {
       where: {
         employeeId: leave.employeeId,
         year: leave.startDate.getFullYear(),
-        villaId: user.villaId,
+        villaId: user.villaId!,
       },
       data: { usedDays: { increment: leave.totalDays } },
     }),
@@ -92,10 +92,10 @@ export async function approveLeave(id: string) {
 
 export async function rejectLeave(id: string, reviewNote: string) {
   const user = await getSessionUser()
-  if (!user) redirect('/login')
+  if (!user?.villaId) redirect('/login')
 
   await db.leaveRequest.update({
-    where: { id, villaId: user.villaId },
+    where: { id, villaId: user.villaId! },
     data: {
       status: 'REJECTED',
       reviewedBy: user.name,
@@ -113,11 +113,11 @@ export async function updateLeaveAllocation(
   totalDays: number
 ) {
   const user = await getSessionUser()
-  if (!user) redirect('/login')
+  if (!user?.villaId) redirect('/login')
 
   await db.leaveAllocation.upsert({
     where: { employeeId_year: { employeeId, year } },
-    create: { employeeId, year, totalDays, usedDays: 0, villaId: user.villaId },
+    create: { employeeId, year, totalDays, usedDays: 0, villaId: user.villaId! },
     update: { totalDays },
   })
 

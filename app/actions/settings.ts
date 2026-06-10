@@ -9,10 +9,10 @@ import { logActivity } from '@/lib/activity-log'
 
 export async function getActivityLog() {
   const user = await getSessionUser()
-  if (!user) redirect('/login')
+  if (!user?.villaId) redirect('/login')
 
   const logs = await db.activityLog.findMany({
-    where: { villaId: user.villaId },
+    where: { villaId: user.villaId! },
     orderBy: { createdAt: 'desc' },
     take: 50,
   })
@@ -34,11 +34,11 @@ export async function updateVillaProfile(data: {
   address?: string
 }) {
   const user = await getSessionUser()
-  if (!user) redirect('/login')
+  if (!user?.villaId) redirect('/login')
 
   try {
     await db.villa.update({
-      where: { id: user.villaId },
+      where: { id: user.villaId! },
       data: {
         name: data.name,
         slug: generateSlug(data.name),
@@ -50,7 +50,7 @@ export async function updateVillaProfile(data: {
     })
 
     await logActivity({
-      villaId: user.villaId,
+      villaId: user.villaId!,
       staffName: user.name,
       action: `Updated villa profile: ${data.name}`,
       module: 'Settings',

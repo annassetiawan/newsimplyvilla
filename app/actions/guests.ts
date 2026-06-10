@@ -7,8 +7,8 @@ import { getSessionUser } from '@/lib/getSession'
 
 async function getVillaId() {
   const user = await getSessionUser()
-  if (!user) redirect('/login')
-  return user.villaId
+  if (!user?.villaId) redirect('/login')
+  return user.villaId!
 }
 
 export async function updateGuestNotes(guestId: string, notes: string) {

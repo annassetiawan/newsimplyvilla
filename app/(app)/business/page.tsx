@@ -9,7 +9,7 @@ export default async function BusinessPage() {
   if (!user?.villaId) redirect('/login')
 
   const businesses = await db.business.findMany({
-    where: { villaId: user.villaId },
+    where: { villaId: user.villaId! },
     include: { items: true },
     orderBy: { createdAt: 'desc' },
   })
@@ -38,7 +38,7 @@ export default async function BusinessPage() {
       feature="Business"
       description="Kelola unit bisnis tambahan villa (cafe, laundry, spa, dll) dan transaksi penjualan via POS."
     >
-      <BusinessClient businesses={serialized} villaId={user.villaId} />
+      <BusinessClient businesses={serialized} villaId={user.villaId!} />
     </ProGate>
   )
 }

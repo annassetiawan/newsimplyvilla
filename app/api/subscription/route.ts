@@ -8,7 +8,7 @@ export async function GET() {
     return NextResponse.json({ plan: 'FREE', status: 'INACTIVE', startDate: null, endDate: null })
   }
 
-  const sub = user.villa.subscription
+  const sub = user.villa?.subscription
 
   if (!sub) {
     return NextResponse.json({ plan: 'FREE', status: 'INACTIVE', startDate: null, endDate: null })
