@@ -94,7 +94,7 @@ export default async function DashboardPage({
   searchParams: Promise<{ preset?: string }>
 }) {
   const user = await getSessionUser()
-  if (!user) redirect('/login')
+  if (!user?.villaId) redirect('/login')
 
   if (user.role === 'STAFF' && !user.permissions.includes('dashboard')) {
     const first = user.permissions[0]

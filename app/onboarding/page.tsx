@@ -6,7 +6,7 @@ import { OnboardingClient } from '@/components/onboarding/onboarding-client'
 
 export default async function OnboardingPage() {
   const user = await getSessionUser()
-  if (!user) redirect('/login')
+  if (!user?.villaId) redirect('/login')
   if (user.villa.isOnboarded) redirect('/dashboard')
 
   return (

@@ -1,4 +1,5 @@
 import { Suspense } from 'react'
+import { redirect } from 'next/navigation'
 import { Sidebar } from '@/components/layout/sidebar'
 import { Header } from '@/components/layout/header'
 import { SidebarOffset } from '@/components/layout/sidebar-offset'
@@ -7,6 +8,8 @@ import { getSessionUser } from '@/lib/getSession'
 
 async function SidebarServer() {
   const user = await getSessionUser()
+  if (!user) redirect('/login')
+  if (user.role === 'SUPER_ADMIN') redirect('/admin')
   const sub = user?.villa?.subscription
   const isPro = sub?.plan === 'PRO' && sub?.status === 'ACTIVE'
   return (

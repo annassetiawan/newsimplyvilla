@@ -7,7 +7,7 @@ import { getSessionUser } from '@/lib/getSession'
 
 export default async function InventoryPage() {
   const user = await getSessionUser()
-  if (!user) redirect('/login')
+  if (!user?.villaId) redirect('/login')
   const villaId = user.villaId
 
   const sevenDaysAgo = new Date()

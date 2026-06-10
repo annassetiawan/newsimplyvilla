@@ -14,7 +14,7 @@ function startOf6MonthsAgo(now: Date): Date {
 
 export default async function FinancePage() {
   const user = await getSessionUser()
-  if (!user) redirect('/login')
+  if (!user?.villaId) redirect('/login')
 
   const now = new Date()
   const last6MonthsStart = startOf6MonthsAgo(now)

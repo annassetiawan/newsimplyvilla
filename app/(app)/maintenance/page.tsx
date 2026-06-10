@@ -7,7 +7,7 @@ import { getSessionUser } from '@/lib/getSession'
 
 export default async function MaintenancePage() {
   const user = await getSessionUser()
-  if (!user) redirect('/login')
+  if (!user?.villaId) redirect('/login')
   const villaId = user.villaId
 
   const [tasksRaw, staff, rooms, areas] = await Promise.all([

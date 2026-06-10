@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
 
   const staff = await db.staff.findUnique({
     where: { supabaseUserId: data.user.id },
-    include: { villa: true },
+    include: { villa: { include: { subscription: true } } },
   })
 
   if (!staff) {
@@ -49,7 +49,8 @@ export async function POST(req: NextRequest) {
       role: staff.role,
       position: staff.position,
       villaId: staff.villaId,
-      villaName: staff.villa.name,
+      villaName: staff.villa?.name ?? null,
     },
+    redirectTo: staff.role === 'SUPER_ADMIN' ? '/admin' : '/dashboard',
   })
 }

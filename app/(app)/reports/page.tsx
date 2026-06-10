@@ -12,7 +12,7 @@ const ReportsClient = dynamic(
 
 export default async function ReportsPage() {
   const user = await getSessionUser()
-  if (!user) redirect('/login')
+  if (!user?.villaId) redirect('/login')
   if (user.role === 'STAFF' && !user.permissions.includes('reports')) redirect('/dashboard')
   const villaId = user.villaId
 

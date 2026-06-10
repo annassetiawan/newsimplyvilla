@@ -6,7 +6,7 @@ import BusinessClient from '@/components/business/business-client'
 
 export default async function BusinessPage() {
   const user = await getSessionUser()
-  if (!user) redirect('/login')
+  if (!user?.villaId) redirect('/login')
 
   const businesses = await db.business.findMany({
     where: { villaId: user.villaId },

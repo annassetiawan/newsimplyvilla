@@ -181,6 +181,7 @@ model Task {
 }
 
 enum StaffRole {
+  SUPER_ADMIN
   OWNER
   STAFF
 }
@@ -194,8 +195,8 @@ model Staff {
   email          String?   @unique
   isActive       Boolean   @default(true)
   permissions    String[]  @default([])
-  villaId        String
-  villa          Villa     @relation(fields: [villaId], references: [id])
+  villaId        String?
+  villa          Villa?    @relation(fields: [villaId], references: [id])
   shifts         Shift[]
   payrolls       Payroll[]
   employee       Employee?

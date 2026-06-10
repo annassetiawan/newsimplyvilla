@@ -13,7 +13,7 @@ function endOfMonth(d: Date) {
 
 export default async function EmployeePage() {
   const user = await getSessionUser()
-  if (!user) redirect('/login')
+  if (!user?.villaId) redirect('/login')
 
   const now = new Date()
   const monthStart = startOfMonth(now)

@@ -7,7 +7,7 @@ import { getActivityLog } from '@/app/actions/settings'
 
 export default async function SettingsPage() {
   const user = await getSessionUser()
-  if (!user) redirect('/login')
+  if (!user?.villaId) redirect('/login')
   if (user.role === 'STAFF' && !user.permissions.includes('settings')) redirect('/dashboard')
 
   const [profile, activityLog] = await Promise.all([
