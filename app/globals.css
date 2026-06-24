@@ -126,6 +126,72 @@
   }
 }
 
+/* ─── transitions.dev – 06-modal ─────────────────────────────────────────── */
+:root {
+  --modal-open-dur:   250ms;
+  --modal-close-dur:  150ms;
+  --modal-scale:      0.96;
+  --modal-scale-close: 0.96;
+  --modal-ease:       cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Overlay */
+[data-slot="dialog-overlay"] {
+  opacity: 0;
+  transition: opacity var(--modal-open-dur) var(--modal-ease);
+}
+[data-slot="dialog-overlay"][data-state="open"] {
+  opacity: 1;
+}
+[data-slot="dialog-overlay"][data-state="closed"] {
+  opacity: 0;
+  transition: opacity var(--modal-close-dur) var(--modal-ease);
+}
+
+/* Content */
+[data-slot="dialog-content"] {
+  transform-origin: center;
+  transform: scale(var(--modal-scale));
+  opacity: 0;
+  will-change: transform, opacity;
+  transition:
+    transform var(--modal-open-dur) var(--modal-ease),
+    opacity   var(--modal-open-dur) var(--modal-ease);
+}
+[data-slot="dialog-content"][data-state="open"] {
+  transform: scale(1);
+  opacity: 1;
+}
+[data-slot="dialog-content"][data-state="closed"] {
+  transform: scale(var(--modal-scale-close));
+  opacity: 0;
+  transition:
+    transform var(--modal-close-dur) var(--modal-ease),
+    opacity   var(--modal-close-dur) var(--modal-ease);
+}
+
+/* Sheet overlay shares the same fade tokens */
+[data-slot="sheet-overlay"] {
+  opacity: 0;
+  transition: opacity var(--modal-open-dur) var(--modal-ease);
+}
+[data-slot="sheet-overlay"][data-state="open"] {
+  opacity: 1;
+}
+[data-slot="sheet-overlay"][data-state="closed"] {
+  opacity: 0;
+  transition: opacity var(--modal-close-dur) var(--modal-ease);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-slot="dialog-content"],
+  [data-slot="dialog-overlay"],
+  [data-slot="sheet-overlay"] {
+    transition: none !important;
+  }
+}
+/* ──────────────────────────────────────────────────────────────────────────── */
+
 :root {
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.147 0.004 49.25);
