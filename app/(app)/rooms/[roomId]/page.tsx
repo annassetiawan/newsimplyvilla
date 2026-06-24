@@ -1,13 +1,22 @@
 import { redirect, notFound } from 'next/navigation'
 import Link from 'next/link'
-import { ChevronLeft } from 'lucide-react'
 import { db } from '@/lib/db'
 import { getSessionUser } from '@/lib/getSession'
-import { getRatePlansByRoom } from '@/app/actions/ratePlan'
+import { getRatePlansByRoom, getRoomCalendar } from '@/app/actions/ratePlan'
 import { RoomDetailClient } from '@/components/rooms/RoomDetailClient'
 
 interface Props {
   params: Promise<{ roomId: string }>
+}
+
+function toISO(date: Date) {
+  return date.toISOString().split('T')[0]
+}
+
+function addDays(date: Date, days: number) {
+  const d = new Date(date)
+  d.setDate(d.getDate() + days)
+  return d
 }
 
 export default async function RoomDetailPage({ params }: Props) {
@@ -15,11 +24,16 @@ export default async function RoomDetailPage({ params }: Props) {
   const user = await getSessionUser()
   if (!user?.villaId) redirect('/login')
 
-  const [room, ratePlans] = await Promise.all([
+  const today = new Date()
+  const startDate = toISO(today)
+  const endDate = toISO(addDays(today, 13)) // 14-day window
+
+  const [room, ratePlans, calendarRows] = await Promise.all([
     db.room.findUnique({
       where: { id: roomId, villaId: user.villaId },
     }),
     getRatePlansByRoom(roomId),
+    getRoomCalendar(roomId, startDate, endDate),
   ])
 
   if (!room) notFound()
@@ -42,9 +56,8 @@ export default async function RoomDetailPage({ params }: Props) {
       <div className="flex items-center gap-2">
         <Link
           href="/rooms"
-          className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
+          className="text-sm text-muted-foreground hover:text-foreground transition-colors"
         >
-          <ChevronLeft className="h-4 w-4" />
           Rooms
         </Link>
         <span className="text-muted-foreground/50">/</span>
@@ -63,6 +76,8 @@ export default async function RoomDetailPage({ params }: Props) {
           photos: room.photos,
         }}
         ratePlans={serializedRatePlans}
+        calendarRows={calendarRows}
+        calendarStartDate={startDate}
       />
     </div>
   )

@@ -46,13 +46,14 @@ interface Props {
   open: boolean
   onClose: () => void
   ratePlanId: string
+  ratePlanName?: string
   basePrice: number
   dates: string[]
   existing: PriceOverrideData | null
   onSaved: (updates: PriceOverrideData[]) => void
 }
 
-export function PriceOverrideModal({ open, onClose, ratePlanId, basePrice, dates, existing, onSaved }: Props) {
+export function PriceOverrideModal({ open, onClose, ratePlanId, ratePlanName, basePrice, dates, existing, onSaved }: Props) {
   const isRange = dates.length > 1
   const [isPending, startTransition] = useTransition()
 
@@ -132,9 +133,10 @@ export function PriceOverrideModal({ open, onClose, ratePlanId, basePrice, dates
     })
   }
 
+  const planLabel = ratePlanName ? ` · ${ratePlanName}` : ''
   const title = isRange
-    ? `Set Harga: ${fmtDate(dates[0])} — ${fmtDate(dates[dates.length - 1])} (${dates.length} hari)`
-    : `Set Harga: ${fmtDate(dates[0])}`
+    ? `Set Harga: ${fmtDate(dates[0])} — ${fmtDate(dates[dates.length - 1])} (${dates.length} hari)${planLabel}`
+    : `Set Harga: ${fmtDate(dates[0])}${planLabel}`
 
   return (
     <Dialog open={open} onOpenChange={onClose}>

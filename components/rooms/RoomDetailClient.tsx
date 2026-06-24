@@ -1,9 +1,10 @@
 'use client'
 
 import { useState } from 'react'
-import { BedDouble, Users, Wallet, Images, Tag } from 'lucide-react'
+import { BedDouble, Users, Wallet, Images, Tag, CalendarDays } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { RatePlanList } from './RatePlanList'
+import { RatesCalendar, type RatePlanCalendarRow } from './RatesCalendar'
 
 const STATUS_STYLE = {
   OCCUPIED: 'bg-green-500 text-white',
@@ -50,11 +51,13 @@ export interface RatePlanData {
 interface Props {
   room: RoomData
   ratePlans: RatePlanData[]
+  calendarRows: RatePlanCalendarRow[]
+  calendarStartDate: string
 }
 
-type Tab = 'detail' | 'rateplans'
+type Tab = 'detail' | 'rateplans' | 'calendar'
 
-export function RoomDetailClient({ room, ratePlans: initialRatePlans }: Props) {
+export function RoomDetailClient({ room, ratePlans: initialRatePlans, calendarRows, calendarStartDate }: Props) {
   const [tab, setTab] = useState<Tab>('detail')
   const [ratePlans, setRatePlans] = useState(initialRatePlans)
 
@@ -83,6 +86,7 @@ export function RoomDetailClient({ room, ratePlans: initialRatePlans }: Props) {
         {([
           { key: 'detail', label: 'Detail Kamar', icon: BedDouble },
           { key: 'rateplans', label: 'Rate Plans', icon: Tag },
+          { key: 'calendar', label: 'Harga & Ketersediaan', icon: CalendarDays },
         ] as { key: Tab; label: string; icon: React.ElementType }[]).map(({ key, label, icon: Icon }) => (
           <button
             key={key}
@@ -103,16 +107,10 @@ export function RoomDetailClient({ room, ratePlans: initialRatePlans }: Props) {
       {/* Tab content */}
       {tab === 'detail' && (
         <div className="rounded-xl border border-border bg-background">
-          {/* Photos */}
           {room.photos && room.photos.length > 0 ? (
             <div className="p-5 pb-0 flex gap-2 overflow-x-auto">
               {room.photos.map((url, i) => (
-                <img
-                  key={i}
-                  src={url}
-                  alt=""
-                  className="h-48 w-64 shrink-0 rounded-xl object-cover"
-                />
+                <img key={i} src={url} alt="" className="h-48 w-64 shrink-0 rounded-xl object-cover" />
               ))}
             </div>
           ) : (
@@ -121,7 +119,6 @@ export function RoomDetailClient({ room, ratePlans: initialRatePlans }: Props) {
             </div>
           )}
 
-          {/* Info grid */}
           <div className="p-5 grid grid-cols-1 gap-4 sm:grid-cols-3">
             <div className="flex items-center gap-3 rounded-lg border border-border p-4">
               <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
@@ -159,6 +156,14 @@ export function RoomDetailClient({ room, ratePlans: initialRatePlans }: Props) {
           roomId={room.id}
           ratePlans={ratePlans}
           onRatePlansChange={setRatePlans}
+        />
+      )}
+
+      {tab === 'calendar' && (
+        <RatesCalendar
+          roomId={room.id}
+          initialRows={calendarRows}
+          initialStartDate={calendarStartDate}
         />
       )}
     </div>

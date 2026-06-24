@@ -84,7 +84,46 @@ export async function toggleRatePlanActive(id: string, isActive: boolean) {
   return { success: true }
 }
 
-// ── Price Calendar ──────────────────────────────────────────────────────────
+// ── Room-level Calendar (all rate plans) ───────────────────────────────────
+
+export async function getRoomCalendar(roomId: string, startDate: string, endDate: string) {
+  const villaId = await getVillaId()
+
+  const start = new Date(startDate)
+  const end = new Date(endDate)
+
+  const ratePlans = await db.ratePlan.findMany({
+    where: { roomId, villaId },
+    orderBy: { createdAt: 'asc' },
+    include: {
+      priceOverrides: {
+        where: {
+          date: { gte: start, lte: end },
+        },
+      },
+    },
+  })
+
+  return ratePlans.map((rp) => ({
+    id: rp.id,
+    name: rp.name,
+    basePrice: Number(rp.basePrice),
+    sellMode: rp.sellMode,
+    maxPersons: rp.maxPersons,
+    isRefundable: rp.isRefundable,
+    isActive: rp.isActive,
+    roomId: rp.roomId,
+    overrides: rp.priceOverrides.map((o) => ({
+      id: o.id,
+      ratePlanId: o.ratePlanId,
+      date: o.date.toISOString().split('T')[0],
+      price: o.price !== null ? Number(o.price) : null,
+      isClosed: o.isClosed,
+    })),
+  }))
+}
+
+// ── Price Calendar (single rate plan, monthly) ──────────────────────────────
 
 export async function getPriceCalendar(ratePlanId: string, year: number, month: number) {
   const villaId = await getVillaId()

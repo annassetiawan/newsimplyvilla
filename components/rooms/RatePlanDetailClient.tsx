@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { CalendarDays, Lock } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { PriceCalendar } from './PriceCalendar'
+import { RatesCalendar } from './RatesCalendar'
 import { RestrictionForm } from './RestrictionForm'
 import type { RatePlanData } from './RoomDetailClient'
 
@@ -98,12 +98,23 @@ export function RatePlanDetailClient({
       </div>
 
       {tab === 'calendar' && (
-        <PriceCalendar
-          ratePlanId={ratePlan.id}
-          basePrice={ratePlan.basePrice}
-          initialOverrides={initialOverrides}
-          initialYear={initialYear}
-          initialMonth={initialMonth}
+        <RatesCalendar
+          roomId={ratePlan.roomId}
+          initialRows={[{
+            id: ratePlan.id,
+            name: ratePlan.name,
+            basePrice: ratePlan.basePrice,
+            sellMode: ratePlan.sellMode,
+            maxPersons: ratePlan.maxPersons,
+            isRefundable: ratePlan.isRefundable,
+            isActive: ratePlan.isActive,
+            roomId: ratePlan.roomId,
+            overrides: initialOverrides,
+          }]}
+          initialStartDate={(() => {
+            const d = new Date(initialYear, initialMonth - 1, 1)
+            return d.toISOString().split('T')[0]
+          })()}
         />
       )}
 
