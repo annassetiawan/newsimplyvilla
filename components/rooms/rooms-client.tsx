@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import Link from 'next/link'
 import {
   Eye,
   Pencil,
@@ -19,6 +20,7 @@ import {
   Users,
   Wallet,
   Wrench,
+  Settings2,
 } from 'lucide-react'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { cn } from '@/lib/utils'
@@ -419,6 +421,13 @@ function RoomCard({
             <p className="text-[11px] text-muted-foreground">per night</p>
           </div>
           <div className="flex items-center gap-1.5">
+            <Link
+              href={`/rooms/${room.id}`}
+              className="flex h-8 w-8 items-center justify-center rounded-full border border-border bg-background text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              title="Kelola Rate Plans"
+            >
+              <Settings2 className="h-3.5 w-3.5" />
+            </Link>
             <button
               onClick={onView}
               className="flex h-8 w-8 items-center justify-center rounded-full border border-border bg-background text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
@@ -691,7 +700,14 @@ function RoomDetailSheet({
       </div>
 
       {/* Sticky footer */}
-      <div className="border-t border-border px-6 py-4">
+      <div className="border-t border-border px-6 py-4 flex flex-col gap-2">
+        <Link
+          href={`/rooms/${room.id}`}
+          className="flex w-full items-center justify-center gap-2 rounded-md bg-neutral-800 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-neutral-700 dark:bg-neutral-100 dark:text-neutral-900 dark:hover:bg-neutral-200"
+        >
+          <Settings2 className="h-4 w-4" />
+          Kelola Rate Plans
+        </Link>
         <Button variant="outline" className="w-full" onClick={onEdit}>
           <Pencil className="mr-2 h-4 w-4" />
           Edit room
