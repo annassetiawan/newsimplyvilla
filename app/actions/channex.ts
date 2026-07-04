@@ -6,7 +6,7 @@ import { db } from '@/lib/db'
 import { getSessionUser } from '@/lib/getSession'
 import { ChannexClient } from '@/lib/channex/client'
 import { initialSync } from '@/lib/channex/sync'
-import { pushRatesForDays } from '@/lib/channex/ari'
+import { pushRatesForDays, pushAvailability } from '@/lib/channex/ari'
 
 async function getVillaId() {
   const user = await getSessionUser()
@@ -114,6 +114,41 @@ export async function registerWebhook(appUrl: string) {
   }
 }
 
+export async function pushAllAvailabilityNow() {
+  const villaId = await getVillaId()
+
+  const config = await db.channexConfig.findUnique({ where: { villaId } })
+  if (!config?.isActive) return { success: false, message: 'Channex belum terhubung' }
+
+  const rooms = await db.room.findMany({ where: { villaId } })
+  if (rooms.length === 0) return { success: false, message: 'Tidak ada room' }
+
+  const today = new Date().toISOString().split('T')[0]
+  const endDate = new Date()
+  endDate.setDate(endDate.getDate() + 365)
+  const dateTo = endDate.toISOString().split('T')[0]
+
+  const results: Array<{ name: string; ok: boolean; error?: string }> = []
+  for (const room of rooms) {
+    try {
+      await pushAvailability(villaId, room.id, today, dateTo)
+      results.push({ name: room.name, ok: true })
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : String(e)
+      results.push({ name: room.name, ok: false, error: msg })
+    }
+  }
+
+  const failed = results.filter((r) => !r.ok)
+  return {
+    success: failed.length === 0,
+    results,
+    message: failed.length > 0
+      ? `Gagal: ${failed.map((r) => `${r.name}: ${r.error}`).join('; ')}`
+      : `Availability ${results.length} room berhasil di-push`,
+  }
+}
+
 export async function pushAllRatesNow() {
   const villaId = await getVillaId()
 
@@ -143,6 +178,24 @@ export async function pushAllRatesNow() {
       ? `${failed.length} rate plan gagal: ${failed.map((r) => `${r.name}: ${r.error}`).join('; ')}`
       : `${results.length} rate plan berhasil di-push`,
   }
+}
+
+export async function getOtaStats() {
+  const villaId = await getVillaId()
+
+  const startOfMonth = new Date()
+  startOfMonth.setDate(1)
+  startOfMonth.setHours(0, 0, 0, 0)
+
+  const [bookingsThisMonth, syncedRooms, activeRatePlans] = await Promise.all([
+    db.reservation.count({
+      where: { room: { villaId }, channexBookingId: { not: null }, createdAt: { gte: startOfMonth } },
+    }),
+    db.channexMapping.count({ where: { villaId, kind: 'room_type' } }),
+    db.ratePlan.count({ where: { villaId, isActive: true } }),
+  ])
+
+  return { bookingsThisMonth, syncedRooms, activeRatePlans }
 }
 
 export async function deactivateChannex() {

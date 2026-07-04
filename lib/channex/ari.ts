@@ -87,7 +87,7 @@ export async function pushAvailability(
     const occupied = await db.reservation.count({
       where: {
         roomId,
-        status: { in: ['CONFIRMED', 'CHECKEDIN'] },
+        status: { in: ['CONFIRMED', 'CHECKEDIN', 'PENDING'] },
         checkIn: { lte: new Date(date) },
         checkOut: { gt: new Date(date) },
       },

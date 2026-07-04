@@ -19,6 +19,8 @@ const pageLabels: Record<string, { title: string; parent?: string }> = {
   '/sop': { title: 'SOP', parent: 'Insights' },
   '/users': { title: 'Users', parent: 'System' },
   '/settings': { title: 'Settings', parent: 'System' },
+  '/channel-manager': { title: 'Channel Manager', parent: 'Pro' },
+  '/pricing': { title: 'Pricing' },
 }
 
 export function Header() {
