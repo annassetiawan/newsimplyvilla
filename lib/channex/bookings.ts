@@ -1,6 +1,6 @@
 import { db } from '@/lib/db'
 import { ChannexClient } from './client'
-import { saveMapping } from './sync'
+import { saveMapping } from './mapping'
 import { pushAvailability } from './ari'
 
 function toISO(date: Date): string {

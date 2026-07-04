@@ -1,27 +1,8 @@
 import { db } from '@/lib/db'
 import { ChannexClient } from './client'
 import { getChannexClientRequired } from './getClient'
-
-// ── Mapping helpers ─────────────────────────────────────────────────────────
-
-async function getMapping(villaId: string, kind: string, localId: string): Promise<string | null> {
-  const m = await db.channexMapping.findUnique({
-    where: { villaId_kind_localId: { villaId, kind, localId } },
-  })
-  return m?.channexId ?? null
-}
-
-async function saveMapping(villaId: string, kind: string, localId: string, channexId: string) {
-  await db.channexMapping.upsert({
-    where: { villaId_kind_localId: { villaId, kind, localId } },
-    create: { villaId, kind, localId, channexId },
-    update: { channexId },
-  })
-}
-
-async function deleteMapping(villaId: string, kind: string, localId: string) {
-  await db.channexMapping.deleteMany({ where: { villaId, kind, localId } })
-}
+import { getMapping, saveMapping, deleteMapping } from './mapping'
+import { pushRatesForDays } from './ari'
 
 export { getMapping, saveMapping, deleteMapping }
 
@@ -143,6 +124,11 @@ export async function initialSync(villaId: string): Promise<{
   const ratePlans = await db.ratePlan.findMany({ where: { villaId } })
   for (const rp of ratePlans) {
     await syncRatePlan(villaId, rp.id, client)
+  }
+
+  // Push rates after syncing rate plan structure
+  for (const rp of ratePlans) {
+    await pushRatesForDays(villaId, rp.id, 365)
   }
 
   await db.channexConfig.update({

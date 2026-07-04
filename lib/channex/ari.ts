@@ -1,6 +1,6 @@
 import { db } from '@/lib/db'
 import { getChannexClient } from './getClient'
-import { getMapping } from './sync'
+import { getMapping } from './mapping'
 
 // IDR has no cents; Channex expects minor units (×100)
 function toMinorUnits(amount: number): number {

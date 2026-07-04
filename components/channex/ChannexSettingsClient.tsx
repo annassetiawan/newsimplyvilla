@@ -2,12 +2,12 @@
 
 import { useState, useTransition } from 'react'
 import { toast } from 'sonner'
-import { CheckCircle2, XCircle, RefreshCw, ExternalLink, Eye, EyeOff, Webhook } from 'lucide-react'
+import { CheckCircle2, XCircle, RefreshCw, ExternalLink, Eye, EyeOff, Webhook, UploadCloud } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { cn } from '@/lib/utils'
-import { saveChannexConfig, runInitialSync, registerWebhook } from '@/app/actions/channex'
+import { saveChannexConfig, runInitialSync, registerWebhook, pushAllRatesNow } from '@/app/actions/channex'
 
 type ChannexStatus = {
   connected: boolean
@@ -62,6 +62,17 @@ export function ChannexSettingsClient({ initialStatus }: Props) {
         setStatus((s) => ({ ...s, syncedRooms: res.data!.roomTypes, syncedRatePlans: res.data!.ratePlans, lastSyncAt: new Date().toISOString() }))
       } else {
         toast.error(res.message ?? 'Sync gagal')
+      }
+    })
+  }
+
+  function handlePushRates() {
+    startTransition(async () => {
+      const res = await pushAllRatesNow()
+      if (res.success) {
+        toast.success(res.message ?? 'Rate berhasil di-push ke Channex')
+      } else {
+        toast.error(res.message ?? 'Push rates gagal')
       }
     })
   }
@@ -211,10 +222,16 @@ export function ChannexSettingsClient({ initialStatus }: Props) {
             ))}
           </div>
 
-          <Button onClick={handleSync} disabled={isPending} variant="outline" className="gap-2">
-            <RefreshCw className={cn('h-4 w-4', isPending && 'animate-spin')} />
-            {isPending ? 'Sync berjalan...' : 'Jalankan Initial Sync'}
-          </Button>
+          <div className="flex items-center gap-2 flex-wrap">
+            <Button onClick={handleSync} disabled={isPending} variant="outline" className="gap-2">
+              <RefreshCw className={cn('h-4 w-4', isPending && 'animate-spin')} />
+              {isPending ? 'Sync berjalan...' : 'Jalankan Initial Sync'}
+            </Button>
+            <Button onClick={handlePushRates} disabled={isPending} variant="outline" className="gap-2">
+              <UploadCloud className={cn('h-4 w-4', isPending && 'animate-pulse')} />
+              {isPending ? 'Pushing...' : 'Push Rates ke Channex'}
+            </Button>
+          </div>
         </div>
       )}
 

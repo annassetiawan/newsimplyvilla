@@ -6,6 +6,7 @@ import { db } from '@/lib/db'
 import { getSessionUser } from '@/lib/getSession'
 import { ChannexClient } from '@/lib/channex/client'
 import { initialSync } from '@/lib/channex/sync'
+import { pushRatesForDays } from '@/lib/channex/ari'
 
 async function getVillaId() {
   const user = await getSessionUser()
@@ -110,6 +111,37 @@ export async function registerWebhook(appUrl: string) {
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : String(e)
     return { success: false, message: msg }
+  }
+}
+
+export async function pushAllRatesNow() {
+  const villaId = await getVillaId()
+
+  const config = await db.channexConfig.findUnique({ where: { villaId } })
+  if (!config?.isActive) return { success: false, message: 'Channex belum terhubung' }
+
+  const ratePlans = await db.ratePlan.findMany({ where: { villaId, isActive: true } })
+  if (ratePlans.length === 0) return { success: false, message: 'Tidak ada rate plan aktif' }
+
+  const results: Array<{ name: string; ok: boolean; error?: string }> = []
+
+  for (const rp of ratePlans) {
+    try {
+      await pushRatesForDays(villaId, rp.id, 365)
+      results.push({ name: rp.name, ok: true })
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : String(e)
+      results.push({ name: rp.name, ok: false, error: msg })
+    }
+  }
+
+  const failed = results.filter((r) => !r.ok)
+  return {
+    success: failed.length === 0,
+    results,
+    message: failed.length > 0
+      ? `${failed.length} rate plan gagal: ${failed.map((r) => `${r.name}: ${r.error}`).join('; ')}`
+      : `${results.length} rate plan berhasil di-push`,
   }
 }
 
