@@ -10,19 +10,15 @@ export async function POST(req: NextRequest) {
     // Log full payload to debug Channex webhook format
     console.log('[Channex webhook] payload:', JSON.stringify(body))
 
-    // Channex may send: { payload: { revision_id, property_id } }
-    // or: { revision_id, property_id }
-    // or: { event, payload: { booking_revision: { id, property_id } } }
+    // Channex actual format: { event, timestamp, property_id, payload: { booking_revision_id, property_id, ... } }
     const revisionId: string | undefined =
+      body?.payload?.booking_revision_id ??
       body?.payload?.revision_id ??
-      body?.payload?.booking_revision?.id ??
-      body?.revision_id ??
-      body?.id
+      body?.revision_id
 
     const channexPropertyId: string | undefined =
-      body?.payload?.property_id ??
-      body?.payload?.booking_revision?.property_id ??
-      body?.property_id
+      body?.property_id ??
+      body?.payload?.property_id
 
     if (!revisionId || !channexPropertyId) {
       // Return 200 to prevent Channex retry flood; log for debugging
