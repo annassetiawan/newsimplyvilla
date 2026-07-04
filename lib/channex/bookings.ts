@@ -132,7 +132,18 @@ export async function processRevisionById(
   villaId: string,
   client: ChannexClient
 ): Promise<void> {
-  const revision = await client.get<ChannexRevision>(`/booking_revisions/${revisionId}`)
+  const raw = await client.get<Record<string, unknown>>(`/booking_revisions/${revisionId}`)
+  console.log('[Channex] revision raw:', JSON.stringify(raw))
+
+  // Handle both flat and JSON:API (attributes-nested) response shapes
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const attrs = (raw as any)?.attributes ?? raw
+  const revision: ChannexRevision = {
+    id: String(raw.id ?? revisionId),
+    status: (attrs.status ?? attrs.kind) as ChannexRevision['status'],
+    booking: attrs.booking ?? (raw as any).booking,
+  }
+
   const result = await applyRevision(revision, villaId, client)
   if (result.applied) {
     await client.post(`/booking_revisions/${revisionId}/ack`, {})
