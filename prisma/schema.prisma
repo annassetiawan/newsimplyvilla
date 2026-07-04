@@ -109,6 +109,11 @@ model Reservation {
   channexBookingId   String?           @unique
   otaName            String?
   otaReservationCode String?
+  guestNames         String?
+  occupancy          String?
+  arrivalHour        String?
+  otaNotes           String?
+  paymentCollect     String?
   createdAt          DateTime          @default(now())
   guest              Guest             @relation(fields: [guestId], references: [id])
   room               Room              @relation(fields: [roomId], references: [id])

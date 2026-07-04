@@ -57,6 +57,11 @@ export default async function FrontDeskPage() {
     otaName: r.otaName ?? null,
     otaReservationCode: r.otaReservationCode ?? null,
     channexBookingId: r.channexBookingId ?? null,
+    guestNames: r.guestNames ?? null,
+    occupancy: r.occupancy ?? null,
+    arrivalHour: r.arrivalHour ?? null,
+    otaNotes: r.otaNotes ?? null,
+    paymentCollect: r.paymentCollect ?? null,
     guest: {
       id: r.guest.id,
       name: r.guest.name,

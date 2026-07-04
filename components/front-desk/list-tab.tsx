@@ -38,6 +38,11 @@ export interface ListReservation {
   otaName: string | null
   otaReservationCode: string | null
   channexBookingId: string | null
+  guestNames: string | null
+  occupancy: string | null
+  arrivalHour: string | null
+  otaNotes: string | null
+  paymentCollect: string | null
   guest: { id: string; name: string; phone: string | null; email: string | null; idNumber: string | null }
   room: { id: string; code: string; name: string }
 }

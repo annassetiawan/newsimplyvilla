@@ -19,9 +19,15 @@ interface ChannexRevisionRaw {
     ota_name: string
     ota_reservation_code?: string
     arrival_date: string
+    arrival_hour?: string
     departure_date: string
     amount: string
     currency: string
+    notes?: string
+    payment_collect?: string
+    payment_type?: string
+    ota_commission?: string
+    occupancy?: { adults?: number; children?: number; infants?: number; ages?: number[] }
     customer: {
       name: string
       surname: string
@@ -106,6 +112,23 @@ async function applyRevision(
       dbGuest = await db.guest.create({ data: { name: guestName, phone, email } })
     }
 
+    // All room guests (e.g. "asd, efg, hij")
+    const roomGuests = room.guests ?? []
+    const guestNames = roomGuests
+      .map((g) => [g.name, g.surname].filter(Boolean).join(' '))
+      .filter(Boolean)
+      .join(', ') || null
+
+    // Occupancy summary (e.g. "Adults: 2, Children: 1, Infants: 2")
+    const occ = attrs.occupancy
+    const occupancy = occ
+      ? [
+          occ.adults ? `Adults: ${occ.adults}` : '',
+          occ.children ? `Children: ${occ.children}` : '',
+          occ.infants ? `Infants: ${occ.infants}` : '',
+        ].filter(Boolean).join(', ')
+      : null
+
     const reservation = await db.reservation.create({
       data: {
         guestId: dbGuest.id,
@@ -119,6 +142,11 @@ async function applyRevision(
         channexBookingId: bookingId,
         otaName: attrs.ota_name,
         otaReservationCode: attrs.ota_reservation_code ?? null,
+        guestNames,
+        occupancy,
+        arrivalHour: attrs.arrival_hour ?? null,
+        otaNotes: attrs.notes ?? null,
+        paymentCollect: attrs.payment_collect ?? null,
       },
     })
 

@@ -13,6 +13,10 @@ import {
   Pencil,
   Globe,
   Hash,
+  Users,
+  Clock,
+  StickyNote,
+  Wallet,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
@@ -170,6 +174,23 @@ export function ReservationDetailSheet({
                             <span className="font-mono text-xs">{selected.otaReservationCode}</span>
                           </div>
                         )}
+                        {selected.paymentCollect && (
+                          <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                            <Wallet className="h-3.5 w-3.5 shrink-0" />
+                            <span className="capitalize">{selected.paymentCollect === 'ota' ? 'Dibayar ke OTA' : 'Dibayar ke Villa'}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Notes */}
+                  {selected.otaNotes && (
+                    <div>
+                      <p className="mb-2 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Catatan Tamu</p>
+                      <div className="flex items-start gap-1.5 text-sm text-muted-foreground">
+                        <StickyNote className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                        <span className="text-xs">{selected.otaNotes}</span>
                       </div>
                     </div>
                   )}
@@ -194,6 +215,22 @@ export function ReservationDetailSheet({
                       <Row icon={Moon} label="Malam">
                         {nightCount(selected.checkIn, selected.checkOut)}
                       </Row>
+                      {selected.arrivalHour && (
+                        <Row icon={Clock} label="Tiba">
+                          {selected.arrivalHour}
+                        </Row>
+                      )}
+                      {selected.occupancy && (
+                        <Row icon={Users} label="Tamu">
+                          {selected.occupancy}
+                        </Row>
+                      )}
+                      {selected.guestNames && (
+                        <div className="pt-1">
+                          <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-1.5">Nama Tamu</p>
+                          <p className="text-xs text-muted-foreground">{selected.guestNames}</p>
+                        </div>
+                      )}
                     </div>
                   </div>
 
