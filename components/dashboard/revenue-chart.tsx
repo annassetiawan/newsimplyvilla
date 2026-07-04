@@ -59,6 +59,8 @@ interface RevenueChartProps {
   avgOccupancy?: number
 }
 
+const TABS: TabKey[] = ['Revenue', 'Bookings', 'Occupancy']
+
 export function RevenueChart({
   data,
   currentMonthStart = 8,
@@ -69,8 +71,6 @@ export function RevenueChart({
   const [activeTab, setActiveTab] = useState<TabKey>('Revenue')
   const { resolvedTheme } = useTheme()
   const cursorFill = resolvedTheme === 'dark' ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)'
-  const tabs: TabKey[] = ['Revenue', 'Bookings', 'Occupancy']
-
   const dataKey = activeTab === 'Revenue' ? 'revenue' : activeTab === 'Bookings' ? 'bookings' : 'occupancy'
 
   const subtitle =
@@ -97,9 +97,10 @@ export function RevenueChart({
           <p className="mt-1.5 text-xs text-muted-foreground">{subtitle}</p>
         </div>
         <div className="flex shrink-0 rounded-lg border border-border bg-muted/50 p-0.5">
-          {tabs.map((tab) => (
+          {TABS.map((tab) => (
             <button
               key={tab}
+              type="button"
               onClick={() => setActiveTab(tab)}
               className={cn(
                 'rounded-md px-3 py-1 text-xs font-medium transition-all',
@@ -133,8 +134,8 @@ export function RevenueChart({
             cursor={{ fill: cursorFill, radius: 4 }}
           />
           <Bar dataKey={dataKey} radius={[4, 4, 0, 0]} maxBarSize={28}>
-            {data.map((_, index) => (
-              <Cell key={index} fill={index >= currentMonthStart ? '#E1A62F' : '#e5e7eb'} />
+            {data.map((entry, index) => (
+              <Cell key={entry.month} fill={index >= currentMonthStart ? '#E1A62F' : '#e5e7eb'} />
             ))}
           </Bar>
         </BarChart>

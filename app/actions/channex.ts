@@ -8,7 +8,7 @@ import { ChannexClient } from '@/lib/channex/client'
 import { initialSync } from '@/lib/channex/sync'
 import { pushRatesForDays, pushAvailability } from '@/lib/channex/ari'
 
-async function getVillaId() {
+async function getSessionVillaId() {
   const user = await getSessionUser()
   if (!user?.villaId) redirect('/login')
   return user.villaId!
@@ -18,7 +18,7 @@ export async function saveChannexConfig(input: {
   apiKey: string
   environment: 'staging' | 'production'
 }) {
-  const villaId = await getVillaId()
+  const villaId = await getSessionVillaId()
 
   // Test the connection before saving
   const client = new ChannexClient(input.apiKey, input.environment)
@@ -49,7 +49,7 @@ export async function saveChannexConfig(input: {
 }
 
 export async function runInitialSync() {
-  const villaId = await getVillaId()
+  const villaId = await getSessionVillaId()
 
   try {
     const result = await initialSync(villaId)
@@ -62,7 +62,7 @@ export async function runInitialSync() {
 }
 
 export async function getChannexStatus() {
-  const villaId = await getVillaId()
+  const villaId = await getSessionVillaId()
 
   const config = await db.channexConfig.findUnique({ where: { villaId } })
   if (!config) return { connected: false }
@@ -85,7 +85,7 @@ export async function getChannexStatus() {
 }
 
 export async function registerWebhook(appUrl: string) {
-  const villaId = await getVillaId()
+  const villaId = await getSessionVillaId()
 
   const config = await db.channexConfig.findUnique({ where: { villaId } })
   if (!config?.isActive) return { success: false, message: 'Channex belum terhubung' }
@@ -115,7 +115,7 @@ export async function registerWebhook(appUrl: string) {
 }
 
 export async function pushAllAvailabilityNow() {
-  const villaId = await getVillaId()
+  const villaId = await getSessionVillaId()
 
   const config = await db.channexConfig.findUnique({ where: { villaId } })
   if (!config?.isActive) return { success: false, message: 'Channex belum terhubung' }
@@ -150,7 +150,7 @@ export async function pushAllAvailabilityNow() {
 }
 
 export async function pushAllRatesNow() {
-  const villaId = await getVillaId()
+  const villaId = await getSessionVillaId()
 
   const config = await db.channexConfig.findUnique({ where: { villaId } })
   if (!config?.isActive) return { success: false, message: 'Channex belum terhubung' }
@@ -181,7 +181,7 @@ export async function pushAllRatesNow() {
 }
 
 export async function getOtaStats() {
-  const villaId = await getVillaId()
+  const villaId = await getSessionVillaId()
 
   const startOfMonth = new Date()
   startOfMonth.setDate(1)
@@ -199,7 +199,7 @@ export async function getOtaStats() {
 }
 
 export async function deactivateChannex() {
-  const villaId = await getVillaId()
+  const villaId = await getSessionVillaId()
   await db.channexConfig.update({ where: { villaId }, data: { isActive: false } })
   revalidatePath('/channel-manager')
   return { success: true }

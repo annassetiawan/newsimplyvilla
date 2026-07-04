@@ -1,36 +1,19 @@
 'use client'
 
 import { useState } from 'react'
-import Link from 'next/link'
 import { useRouter, usePathname } from 'next/navigation'
 import {
-  LayoutDashboard,
-  ConciergeBell,
-  BedDouble,
-  Package,
-  Wrench,
-  Calendar,
-  BarChart3,
-  BookOpen,
-  Users,
-  Settings,
   ChevronLeft,
   ChevronRight,
   Building2,
   LogOut,
-  Lock,
-  Wallet,
-  UserCheck,
-  Globe,
-  TrendingUp,
-  Crown,
   MoreHorizontal,
   X,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useSidebar } from '@/store/sidebar-store'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { TooltipProvider } from '@/components/ui/tooltip'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -40,44 +23,8 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { UpgradeModal } from '@/components/UpgradeModal'
 import { createClient } from '@/lib/supabase/client'
-
-const navGroups = [
-  {
-    label: 'OVERVIEW',
-    items: [{ label: 'Dashboard', href: '/dashboard', key: 'dashboard', icon: LayoutDashboard }],
-  },
-  {
-    label: 'OPERATIONS',
-    items: [
-      { label: 'Front Desk', href: '/front-desk', key: 'front-desk', icon: ConciergeBell },
-      { label: 'Rooms & Areas', href: '/rooms', key: 'rooms', icon: BedDouble },
-      { label: 'Inventory', href: '/inventory', key: 'inventory', icon: Package },
-      { label: 'Maintenance', href: '/maintenance', key: 'maintenance', icon: Wrench },
-      { label: 'Schedule', href: '/schedule', key: 'schedule', icon: Calendar },
-    ],
-  },
-  {
-    label: 'INSIGHTS',
-    items: [
-      { label: 'Reports', href: '/reports', key: 'reports', icon: BarChart3 },
-      { label: 'SOP', href: '/sop', key: 'sop', icon: BookOpen },
-    ],
-  },
-  {
-    label: 'SYSTEM',
-    items: [
-      { label: 'Users', href: '/users', key: 'users', icon: Users },
-      { label: 'Settings', href: '/settings', key: 'settings', icon: Settings },
-    ],
-  },
-]
-
-const proFeatures = [
-  { label: 'Business', href: '/business', key: 'business', icon: TrendingUp },
-  { label: 'Finance & Account', href: '/finance', key: 'finance', icon: Wallet },
-  { label: 'Employee Management', href: '/employee', key: 'employee', icon: UserCheck },
-  { label: 'Channel Manager', href: '/channel-manager', key: 'channel-manager', icon: Globe },
-]
+import { SidebarNav } from './sidebar-nav'
+import { SidebarProSection, SidebarUpgradeBanner } from './sidebar-pro-section'
 
 function getInitials(name: string) {
   return name
@@ -131,8 +78,9 @@ export function Sidebar({
 
   return (
     <TooltipProvider delayDuration={0}>
-      {/* Mobile overlay */}
+      {/* Mobile overlay — hidden from AT; keyboard users dismiss via the close button */}
       <div
+        aria-hidden="true"
         className={cn(
           'fixed inset-0 z-40 bg-black/40 transition-opacity duration-300 lg:hidden',
           mobileOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
@@ -151,6 +99,7 @@ export function Sidebar({
       >
         {/* Mobile close button */}
         <button
+          type="button"
           onClick={closeMobile}
           className="absolute right-3 top-3.5 flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground lg:hidden"
           aria-label="Close sidebar"
@@ -160,6 +109,7 @@ export function Sidebar({
 
         {/* Collapse toggle — desktop only */}
         <button
+          type="button"
           onClick={toggle}
           className="absolute -right-3 top-5 z-50 hidden h-6 w-6 items-center justify-center rounded-full border border-border bg-background text-muted-foreground shadow-sm transition-colors hover:bg-muted hover:text-foreground lg:flex"
           aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
@@ -188,195 +138,32 @@ export function Sidebar({
 
         {/* Navigation */}
         <nav className="flex-1 overflow-y-auto py-3">
-          {navGroups.map((group, groupIdx) => {
-            const visibleItems = group.items.filter((item) => canAccess(item.key))
-            if (visibleItems.length === 0) return null
-            return (
-              <div key={group.label} className={cn(groupIdx > 0 && 'mt-4')}>
-                {!collapsed && (
-                  <p className="mb-1 px-4 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">
-                    {group.label}
-                  </p>
-                )}
-                {collapsed && groupIdx > 0 && (
-                  <div className="mx-3 mb-3 mt-1 h-px bg-border" />
-                )}
-                <div className="space-y-0.5 px-2">
-                  {visibleItems.map((item) => {
-                    const isActive =
-                      pathname === item.href || pathname.startsWith(item.href + '/')
-                    const Icon = item.icon
+          <SidebarNav
+            pathname={pathname}
+            collapsed={collapsed}
+            canAccess={canAccess}
+            onNavigate={closeMobile}
+          />
 
-                    return (
-                      <Tooltip key={item.href}>
-                        <TooltipTrigger asChild>
-                          <Link
-                            href={item.href}
-                            onClick={closeMobile}
-                            className={cn(
-                              'flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-medium transition-colors',
-                              isActive
-                                ? 'bg-muted text-foreground'
-                                : 'text-muted-foreground hover:bg-muted hover:text-foreground',
-                              collapsed && 'justify-center px-2'
-                            )}
-                          >
-                            <Icon className="h-4 w-4 shrink-0" />
-                            {!collapsed && <span className="truncate">{item.label}</span>}
-                          </Link>
-                        </TooltipTrigger>
-                        {collapsed && (
-                          <TooltipContent side="right" className="font-medium">
-                            {item.label}
-                          </TooltipContent>
-                        )}
-                      </Tooltip>
-                    )
-                  })}
-                </div>
-              </div>
-            )
-          })}
-
-          {/* PRO FEATURES — only show section if owner or staff has any pro permission */}
-          {(() => {
-            const visiblePro = proFeatures.filter((f) => canAccess(f.key))
-            if (visiblePro.length === 0) return null
-            return (
-              <div className="mt-4">
-                {!collapsed && (
-                  <div className="mb-1 flex items-center gap-2 px-4">
-                    <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">
-                      Pro Features
-                    </p>
-                  </div>
-                )}
-                {collapsed && <div className="mx-3 mb-3 mt-1 h-px bg-border" />}
-                <div className="space-y-0.5 px-2">
-                  {visiblePro.map((item) => {
-                    const Icon = item.icon
-                    const isActive =
-                      isPro && (pathname === item.href || pathname.startsWith(item.href + '/'))
-
-                    if (isPro) {
-                      return (
-                        <Tooltip key={item.label}>
-                          <TooltipTrigger asChild>
-                            <Link
-                              href={item.href}
-                              className={cn(
-                                'flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-medium transition-colors',
-                                isActive
-                                  ? 'bg-muted text-foreground'
-                                  : 'text-muted-foreground hover:bg-muted hover:text-foreground',
-                                collapsed && 'justify-center px-2'
-                              )}
-                            >
-                              <Icon className="h-4 w-4 shrink-0" />
-                              {!collapsed && <span className="truncate">{item.label}</span>}
-                            </Link>
-                          </TooltipTrigger>
-                          {collapsed && (
-                            <TooltipContent side="right" className="font-medium">
-                              {item.label}
-                            </TooltipContent>
-                          )}
-                        </Tooltip>
-                      )
-                    }
-
-                    return (
-                      <Tooltip key={item.label}>
-                        <TooltipTrigger asChild>
-                          <button
-                            onClick={() => openUpgrade(item.label)}
-                            className={cn(
-                              'flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-medium transition-colors',
-                              'cursor-pointer text-muted-foreground/60 hover:bg-muted hover:text-muted-foreground',
-                              collapsed && 'justify-center px-2'
-                            )}
-                          >
-                            <Lock className="h-4 w-4 shrink-0 text-muted-foreground/40" />
-                            {!collapsed && (
-                              <>
-                                <span className="flex-1 truncate text-left">{item.label}</span>
-                                <span
-                                  className="shrink-0 rounded px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide"
-                                  style={{ background: '#E1A62F22', color: '#E1A62F' }}
-                                >
-                                  PRO
-                                </span>
-                              </>
-                            )}
-                          </button>
-                        </TooltipTrigger>
-                        {collapsed && (
-                          <TooltipContent side="right" className="font-medium">
-                            {item.label}{' '}
-                            <span className="ml-1 text-[10px] font-bold text-[#E1A62F]">PRO</span>
-                          </TooltipContent>
-                        )}
-                      </Tooltip>
-                    )
-                  })}
-                </div>
-                {!collapsed && !isPro && userRole === 'OWNER' && (
-                  <div className="px-2 pt-2">
-                    <Link
-                      href="/pricing"
-                      className="flex w-full items-center justify-center rounded-lg border border-border bg-muted py-1.5 text-[11px] font-semibold text-muted-foreground transition-colors hover:bg-muted/80 hover:text-foreground"
-                    >
-                      Pelajari lebih lanjut
-                    </Link>
-                  </div>
-                )}
-              </div>
-            )
-          })()}
+          <SidebarProSection
+            pathname={pathname}
+            collapsed={collapsed}
+            isPro={isPro}
+            isOwner={userRole === 'OWNER'}
+            canAccess={canAccess}
+            onUpgrade={openUpgrade}
+          />
         </nav>
 
         {/* Upgrade banner — only for owner */}
-        {!isPro && userRole === 'OWNER' && (
-          <div className="shrink-0 px-2 pb-2">
-            {collapsed ? (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Link
-                    href="/pricing"
-                    className="flex h-9 w-full items-center justify-center rounded-lg border border-[#E1A62F33] bg-[#E1A62F0D] text-[#E1A62F] transition-colors hover:bg-[#E1A62F1A]"
-                  >
-                    <Crown className="h-4 w-4 shrink-0" />
-                  </Link>
-                </TooltipTrigger>
-                <TooltipContent side="right" className="font-medium">
-                  Upgrade ke Pro
-                </TooltipContent>
-              </Tooltip>
-            ) : (
-              <div className="flex items-center gap-2.5 rounded-lg bg-[#E1A62F0D] px-3 py-2.5">
-                <Crown className="h-4 w-4 shrink-0 text-[#E1A62F]" />
-                <div className="min-w-0 flex-1">
-                  <p className="text-[13px] font-semibold leading-tight text-foreground">
-                    Upgrade ke Pro
-                  </p>
-                  <p className="text-[11px] text-muted-foreground">Unlock 6 fitur eksklusif</p>
-                </div>
-                <Link
-                  href="/pricing"
-                  className="shrink-0 rounded-md border border-[#E1A62F] px-2.5 py-1 text-[11px] font-semibold text-[#E1A62F] transition-colors hover:bg-[#E1A62F] hover:text-white"
-                >
-                  Upgrade
-                </Link>
-              </div>
-            )}
-          </div>
-        )}
+        {!isPro && userRole === 'OWNER' && <SidebarUpgradeBanner collapsed={collapsed} />}
 
         {/* User area */}
         <div className="shrink-0 border-t border-border p-2">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button
+                type="button"
                 className={cn(
                   'flex w-full items-center gap-2.5 rounded-lg px-2 py-2 text-left transition-colors hover:bg-muted',
                   collapsed && 'justify-center px-2'

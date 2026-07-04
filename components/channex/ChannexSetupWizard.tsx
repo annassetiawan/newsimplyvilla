@@ -22,6 +22,13 @@ interface Props {
   onConnected: () => void
 }
 
+const SYNC_ITEMS: Array<{ key: keyof SyncProgress; label: string }> = [
+  { key: 'property', label: 'Data properti tersinkron' },
+  { key: 'rooms', label: 'Tipe kamar tersinkron' },
+  { key: 'ratePlans', label: 'Rate plan tersinkron' },
+  { key: 'webhook', label: 'Notifikasi booking aktif' },
+]
+
 export function ChannexSetupWizard({ onConnected }: Props) {
   const [step, setStep] = useState<Step>('connect')
   const [apiKey, setApiKey] = useState('')
@@ -74,13 +81,6 @@ export function ChannexSetupWizard({ onConnected }: Props) {
       setIsLoading(false)
     }
   }
-
-  const syncItems: Array<{ key: keyof SyncProgress; label: string }> = [
-    { key: 'property', label: 'Data properti tersinkron' },
-    { key: 'rooms', label: 'Tipe kamar tersinkron' },
-    { key: 'ratePlans', label: 'Rate plan tersinkron' },
-    { key: 'webhook', label: 'Notifikasi booking aktif' },
-  ]
 
   return (
     <div className="max-w-lg mx-auto">
@@ -194,7 +194,7 @@ export function ChannexSetupWizard({ onConnected }: Props) {
             <p className="text-sm text-muted-foreground">Harap tunggu, ini hanya berlangsung beberapa detik.</p>
           </div>
           <div className="space-y-3">
-            {syncItems.map(({ key, label }) => (
+            {SYNC_ITEMS.map(({ key, label }) => (
               <div key={key} className="flex items-center gap-3">
                 {progress[key] ? (
                   <CheckCircle2 className="h-5 w-5 text-green-600 shrink-0" />
@@ -225,7 +225,7 @@ export function ChannexSetupWizard({ onConnected }: Props) {
             </p>
           </div>
           <div className="space-y-3 pt-1">
-            {syncItems.map(({ key, label }) => (
+            {SYNC_ITEMS.map(({ key, label }) => (
               <div key={key} className="flex items-center justify-center gap-2">
                 {progress[key]
                   ? <CheckCircle2 className="h-4 w-4 text-green-600" />

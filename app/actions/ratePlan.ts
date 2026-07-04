@@ -14,7 +14,7 @@ import { syncRatePlan, deleteMapping } from '@/lib/channex/sync'
 import { pushRatesAndRestrictions, pushRatesForDays } from '@/lib/channex/ari'
 import { getChannexClient } from '@/lib/channex/getClient'
 
-async function getVillaId() {
+async function getSessionVillaId() {
   const user = await getSessionUser()
   if (!user?.villaId) redirect('/login')
   return user.villaId!
@@ -23,7 +23,7 @@ async function getVillaId() {
 // ── Rate Plans ─────────────────────────────────────────────────────────────
 
 export async function getRatePlansByRoom(roomId: string) {
-  const villaId = await getVillaId()
+  const villaId = await getSessionVillaId()
   return db.ratePlan.findMany({
     where: { roomId, villaId },
     orderBy: { createdAt: 'asc' },
@@ -32,7 +32,7 @@ export async function getRatePlansByRoom(roomId: string) {
 }
 
 export async function getRatePlanById(id: string) {
-  const villaId = await getVillaId()
+  const villaId = await getSessionVillaId()
   return db.ratePlan.findUnique({
     where: { id, villaId },
     include: { restriction: true, room: true },
@@ -40,7 +40,7 @@ export async function getRatePlanById(id: string) {
 }
 
 export async function createRatePlan(data: unknown) {
-  const villaId = await getVillaId()
+  const villaId = await getSessionVillaId()
   const validated = ratePlanSchema.parse(data)
 
   const result = await db.ratePlan.create({
@@ -61,7 +61,7 @@ export async function createRatePlan(data: unknown) {
 }
 
 export async function updateRatePlan(id: string, data: unknown) {
-  const villaId = await getVillaId()
+  const villaId = await getSessionVillaId()
   const validated = ratePlanSchema.parse(data)
 
   await db.ratePlan.update({
@@ -78,7 +78,7 @@ export async function updateRatePlan(id: string, data: unknown) {
 }
 
 export async function deleteRatePlan(id: string) {
-  const villaId = await getVillaId()
+  const villaId = await getSessionVillaId()
 
   await db.ratePlan.delete({
     where: { id, villaId },
@@ -92,7 +92,7 @@ export async function deleteRatePlan(id: string) {
 }
 
 export async function toggleRatePlanActive(id: string, isActive: boolean) {
-  const villaId = await getVillaId()
+  const villaId = await getSessionVillaId()
 
   await db.ratePlan.update({
     where: { id, villaId },
@@ -106,7 +106,7 @@ export async function toggleRatePlanActive(id: string, isActive: boolean) {
 // ── Room-level Calendar (all rate plans) ───────────────────────────────────
 
 export async function getRoomCalendar(roomId: string, startDate: string, endDate: string) {
-  const villaId = await getVillaId()
+  const villaId = await getSessionVillaId()
 
   const start = new Date(startDate)
   const end = new Date(endDate)
@@ -145,7 +145,7 @@ export async function getRoomCalendar(roomId: string, startDate: string, endDate
 // ── Price Calendar (single rate plan, monthly) ──────────────────────────────
 
 export async function getPriceCalendar(ratePlanId: string, year: number, month: number) {
-  const villaId = await getVillaId()
+  const villaId = await getSessionVillaId()
 
   const startDate = new Date(year, month - 1, 1)
   const endDate = new Date(year, month, 0)
@@ -160,7 +160,7 @@ export async function getPriceCalendar(ratePlanId: string, year: number, month: 
 }
 
 export async function setPriceOverride(data: unknown) {
-  const villaId = await getVillaId()
+  const villaId = await getSessionVillaId()
   const validated = priceOverrideSchema.parse(data)
 
   const date = new Date(validated.date)
@@ -180,7 +180,7 @@ export async function setPriceOverride(data: unknown) {
 }
 
 export async function setPriceOverrideRange(data: unknown) {
-  const villaId = await getVillaId()
+  const villaId = await getSessionVillaId()
   const validated = priceOverrideRangeSchema.parse(data)
 
   const start = new Date(validated.startDate)
@@ -218,7 +218,7 @@ export async function setPriceOverrideRange(data: unknown) {
 }
 
 export async function deletePriceOverride(ratePlanId: string, date: string) {
-  const villaId = await getVillaId()
+  const villaId = await getSessionVillaId()
 
   await db.priceOverride.delete({
     where: {
@@ -238,14 +238,14 @@ export async function deletePriceOverride(ratePlanId: string, date: string) {
 // ── Restrictions ────────────────────────────────────────────────────────────
 
 export async function getRestriction(ratePlanId: string) {
-  await getVillaId()
+  await getSessionVillaId()
   return db.ratePlanRestriction.findUnique({
     where: { ratePlanId },
   })
 }
 
 export async function upsertRestriction(data: unknown) {
-  const villaId = await getVillaId()
+  const villaId = await getSessionVillaId()
   const validated = restrictionSchema.parse(data)
 
   await db.ratePlanRestriction.upsert({

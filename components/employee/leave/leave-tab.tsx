@@ -32,6 +32,13 @@ function fmtDateShort(iso: string) {
   return `${d.getDate()} ${MONTHS[d.getMonth()]}`
 }
 
+const FILTER_BUTTONS: { key: Filter; label: string }[] = [
+  { key: 'ALL', label: 'Semua' },
+  { key: 'PENDING', label: 'Pending' },
+  { key: 'APPROVED', label: 'Disetujui' },
+  { key: 'REJECTED', label: 'Ditolak' },
+]
+
 export function LeaveTab({ employees, leaveRequests, leaveAllocations, currentYear }: Props) {
   const [filter, setFilter] = useState<Filter>('ALL')
   const [leaveModalOpen, setLeaveModalOpen] = useState(false)
@@ -68,21 +75,15 @@ export function LeaveTab({ employees, leaveRequests, leaveAllocations, currentYe
     })
   }
 
-  const filterButtons: { key: Filter; label: string }[] = [
-    { key: 'ALL', label: 'Semua' },
-    { key: 'PENDING', label: 'Pending' },
-    { key: 'APPROVED', label: 'Disetujui' },
-    { key: 'REJECTED', label: 'Ditolak' },
-  ]
-
   return (
     <div className="space-y-5">
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div className="flex gap-2">
-          {filterButtons.map((f) => (
+          {FILTER_BUTTONS.map((f) => (
             <button
               key={f.key}
+              type="button"
               onClick={() => setFilter(f.key)}
               className={cn(
                 'px-3 py-1.5 rounded-md text-sm font-medium transition-colors',
@@ -165,7 +166,9 @@ export function LeaveTab({ employees, leaveRequests, leaveAllocations, currentYe
                 <th className="text-left px-4 py-3 font-medium text-muted-foreground hidden md:table-cell">Durasi</th>
                 <th className="text-left px-4 py-3 font-medium text-muted-foreground hidden lg:table-cell">Alasan</th>
                 <th className="text-left px-4 py-3 font-medium text-muted-foreground">Status</th>
-                <th className="px-4 py-3" />
+                <th className="px-4 py-3">
+                  <span className="sr-only">Aksi</span>
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -209,6 +212,7 @@ export function LeaveTab({ employees, leaveRequests, leaveAllocations, currentYe
                         {rejectId === leave.id ? (
                           <div className="flex items-center gap-2">
                             <input
+                              aria-label="Alasan penolakan"
                               className="h-7 text-xs rounded-md border border-input px-2 bg-background w-32"
                               placeholder="Alasan penolakan"
                               value={rejectNote}
@@ -216,6 +220,7 @@ export function LeaveTab({ employees, leaveRequests, leaveAllocations, currentYe
                               autoFocus
                             />
                             <button
+                              type="button"
                               onClick={() => handleReject(leave.id)}
                               disabled={isPending}
                               className="text-xs px-2 py-1 rounded-md bg-red-600 text-white hover:bg-red-700 transition-colors"
@@ -223,6 +228,7 @@ export function LeaveTab({ employees, leaveRequests, leaveAllocations, currentYe
                               Tolak
                             </button>
                             <button
+                              type="button"
                               onClick={() => { setRejectId(null); setRejectNote('') }}
                               className="text-xs px-2 py-1 rounded-md border border-border text-muted-foreground hover:bg-muted"
                             >
@@ -232,6 +238,7 @@ export function LeaveTab({ employees, leaveRequests, leaveAllocations, currentYe
                         ) : (
                           <>
                             <button
+                              type="button"
                               onClick={() => handleApprove(leave.id)}
                               disabled={isPending}
                               className="text-xs px-2.5 py-1 rounded-md bg-emerald-600 text-white hover:bg-emerald-700 transition-colors"
@@ -239,6 +246,7 @@ export function LeaveTab({ employees, leaveRequests, leaveAllocations, currentYe
                               Setujui
                             </button>
                             <button
+                              type="button"
                               onClick={() => setRejectId(leave.id)}
                               className="text-xs px-2.5 py-1 rounded-md border border-border text-muted-foreground hover:bg-muted transition-colors"
                             >

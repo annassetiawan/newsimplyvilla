@@ -3,6 +3,13 @@ import { db } from '@/lib/db'
 import { getSessionFromBearer } from '@/lib/getSessionFromBearer'
 import { getDateRange } from '@/lib/dashboard-date'
 
+const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+
+function calcPct(current: number, previous: number): number | null {
+  if (previous === 0) return null
+  return Math.round(((current - previous) / previous) * 100)
+}
+
 export async function GET(req: NextRequest) {
   const staff = await getSessionFromBearer(req.headers.get('authorization'))
   if (!staff?.villaId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -74,13 +81,7 @@ export async function GET(req: NextRequest) {
     .filter((tx) => tx.date >= prevFrom && tx.date <= prevTo)
     .reduce((s, t) => s + t.amount, 0)
 
-  function calcPct(current: number, previous: number): number | null {
-    if (previous === 0) return null
-    return Math.round(((current - previous) / previous) * 100)
-  }
-
   // Chart data (12 months)
-  const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
   const revenueMap = new Map<string, number>()
   for (const tx of monthlyIncome) {
     const key = `${tx.date.getFullYear()}-${tx.date.getMonth()}`

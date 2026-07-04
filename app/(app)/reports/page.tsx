@@ -10,6 +10,10 @@ const ReportsClient = dynamic(
   { loading: () => <div className="space-y-4"><div className="h-24 animate-pulse rounded-xl bg-muted" /><div className="h-64 animate-pulse rounded-xl bg-muted" /></div> }
 )
 
+const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+
+const BASE_EXPENSE_CATEGORIES = ['Staff salary', 'Utilities', 'Maintenance', 'F&B supplies', 'Amenities']
+
 export default async function ReportsPage() {
   const user = await getSessionUser()
   if (!user?.villaId) redirect('/login')
@@ -69,7 +73,6 @@ export default async function ReportsPage() {
   ).length
   const avgOccupancy = rooms.length ? Math.round((occupiedRooms / rooms.length) * 100) : 0
 
-  const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
   const monthMap = new Map<string, { revenue: number; expenses: number }>()
   for (const tx of txMonthly) {
     const key = `${tx.date.getFullYear()}-${tx.date.getMonth()}`
@@ -94,8 +97,7 @@ export default async function ReportsPage() {
   for (const tx of txCurrent.filter((t) => t.type === 'EXPENSE')) {
     expCategoryMap.set(tx.category, (expCategoryMap.get(tx.category) ?? 0) + tx.amount)
   }
-  const baseCategories = ['Staff salary', 'Utilities', 'Maintenance', 'F&B supplies', 'Amenities']
-  const expenseByCategory = baseCategories
+  const expenseByCategory = BASE_EXPENSE_CATEGORIES
     .map((cat) => ({ category: cat, amount: expCategoryMap.get(cat) ?? 0 }))
     .sort((a, b) => b.amount - a.amount)
 

@@ -9,36 +9,17 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
-import { MapPin, Phone, Mail, Users, Bed, CheckCircle2, CalendarDays } from 'lucide-react'
-
-interface VillaData {
-  id: string
-  name: string
-  address: string
-  description: string | null
-  email: string | null
-  contact: string | null
-  facilities: string[]
-}
-
-interface RoomData {
-  id: string
-  code: string
-  name: string
-  type: string
-  capacity: number
-  pricePerNight: number
-  status: string
-  photos: string[]
-}
-
-interface ReservationData {
-  id: string
-  roomId: string
-  checkIn: string
-  checkOut: string
-  status: string
-}
+import { CalendarDays } from 'lucide-react'
+import {
+  formatRp,
+  isConflicting,
+  type ReservationData,
+  type RoomData,
+  type VillaData,
+} from './booking-shared'
+import { VillaHero } from './villa-hero'
+import { RoomGrid } from './room-grid'
+import { BookingSuccess } from './booking-success'
 
 interface Props {
   data: {
@@ -46,27 +27,6 @@ interface Props {
     rooms: RoomData[]
     reservations: ReservationData[]
   }
-}
-
-function formatRp(n: number) {
-  return `Rp ${n.toLocaleString('id-ID')}`
-}
-
-function isConflicting(
-  roomId: string,
-  checkIn: string,
-  checkOut: string,
-  reservations: ReservationData[]
-): boolean {
-  if (!checkIn || !checkOut) return false
-  const ci = new Date(checkIn).getTime()
-  const co = new Date(checkOut).getTime()
-  return reservations.some(
-    (r) =>
-      r.roomId === roomId &&
-      new Date(r.checkIn).getTime() < co &&
-      new Date(r.checkOut).getTime() > ci
-  )
 }
 
 export function BookingClient({ data }: Props) {
@@ -106,6 +66,17 @@ export function BookingClient({ data }: Props) {
     if (roomId && isConflicting(roomId, checkIn, val, reservations)) {
       setRoomId('')
     }
+  }
+
+  function handleReset() {
+    setSubmitted(false)
+    setGuestName('')
+    setGuestEmail('')
+    setGuestPhone('')
+    setCheckIn('')
+    setCheckOut('')
+    setRoomId('')
+    setNotes('')
   }
 
   function handleSubmit(e: React.FormEvent) {
@@ -153,181 +124,34 @@ export function BookingClient({ data }: Props) {
 
   if (submitted) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-muted/20 p-4">
-        <Card className="w-full max-w-md text-center">
-          <CardContent className="space-y-4 pt-8">
-            <CheckCircle2 className="mx-auto h-14 w-14 text-green-500" />
-            <h2 className="text-xl font-semibold">Booking Terkirim!</h2>
-            <p className="text-muted-foreground">
-              Terima kasih <strong>{guestName}</strong>! Booking Anda untuk{' '}
-              <strong>{selectedRoom?.name}</strong> telah kami terima.
-              {guestPhone && (
-                <>
-                  {' '}Kami akan menghubungi Anda di{' '}
-                  <strong>{guestPhone}</strong>.
-                </>
-              )}
-            </p>
-            <p className="text-sm text-muted-foreground">
-              {nights} malam · {formatRp(totalAmount)}
-            </p>
-            <Button
-              variant="outline"
-              onClick={() => {
-                setSubmitted(false)
-                setGuestName('')
-                setGuestEmail('')
-                setGuestPhone('')
-                setCheckIn('')
-                setCheckOut('')
-                setRoomId('')
-                setNotes('')
-              }}
-            >
-              Booking lagi
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
+      <BookingSuccess
+        guestName={guestName}
+        guestPhone={guestPhone}
+        roomName={selectedRoom?.name}
+        nights={nights}
+        totalAmount={totalAmount}
+        onReset={handleReset}
+      />
     )
   }
 
   return (
     <div className="min-h-screen bg-muted/20">
-      {/* Hero */}
-      <section className="bg-background border-b">
-        <div className="mx-auto max-w-5xl px-4 py-12 lg:py-16">
-          <h1 className="text-3xl font-bold tracking-tight lg:text-4xl">
-            {villa.name}
-          </h1>
-          {villa.description && (
-            <p className="mt-3 max-w-2xl text-muted-foreground leading-relaxed">
-              {villa.description}
-            </p>
-          )}
-          <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
-            {villa.address && (
-              <span className="inline-flex items-center gap-1.5">
-                <MapPin className="h-4 w-4 shrink-0" />
-                {villa.address}
-              </span>
-            )}
-            {villa.contact && (
-              <span className="inline-flex items-center gap-1.5">
-                <Phone className="h-4 w-4 shrink-0" />
-                {villa.contact}
-              </span>
-            )}
-            {villa.email && (
-              <span className="inline-flex items-center gap-1.5">
-                <Mail className="h-4 w-4 shrink-0" />
-                {villa.email}
-              </span>
-            )}
-          </div>
-          {villa.facilities.length > 0 && (
-            <div className="mt-4 flex flex-wrap gap-2">
-              {villa.facilities.map((f, i) => (
-                <span
-                  key={i}
-                  className="rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary"
-                >
-                  {f}
-                </span>
-              ))}
-            </div>
-          )}
-        </div>
-      </section>
+      <VillaHero villa={villa} />
 
       <div className="mx-auto max-w-5xl px-4 py-8">
         <div className="grid gap-8 lg:grid-cols-5">
-          {/* Main content: Rooms + Form */}
+          {/* Main content: Rooms */}
           <div className="lg:col-span-3 space-y-8">
-            {/* Room cards */}
-            {rooms.length === 0 ? (
-              <Card>
-                <CardContent className="py-8 text-center text-muted-foreground">
-                  Belum ada kamar tersedia.
-                </CardContent>
-              </Card>
-            ) : (
-              <>
-                <h2 className="text-xl font-semibold">Kamar Tersedia</h2>
-                <div className="grid gap-4 sm:grid-cols-2">
-                  {rooms.map((room) => {
-                    const busy = isConflicting(room.id, checkIn, checkOut, reservations)
-                    return (
-                      <Card
-                        key={room.id}
-                        className={cn(
-                          'transition-colors',
-                          room.status === 'OCCUPIED' && 'opacity-60',
-                          roomId === room.id && 'ring-2 ring-primary'
-                        )}
-                      >
-                        {room.photos.length > 0 && (
-                          <div className="aspect-video w-full overflow-hidden rounded-t-xl">
-                            <img
-                              src={room.photos[0]}
-                              alt={room.name}
-                              className="h-full w-full object-cover"
-                            />
-                          </div>
-                        )}
-                        <CardContent className="space-y-2 pt-4">
-                          <div className="flex items-start justify-between">
-                            <div>
-                              <h3 className="font-semibold">{room.name}</h3>
-                              <p className="text-xs text-muted-foreground">
-                                {room.code} · {room.type}
-                              </p>
-                            </div>
-                            <span
-                              className={cn(
-                                'rounded-full px-2 py-0.5 text-[10px] font-medium',
-                                room.status === 'AVAILABLE'
-                                  ? 'bg-green-100 text-green-700'
-                                  : room.status === 'OCCUPIED'
-                                    ? 'bg-red-100 text-red-700'
-                                    : 'bg-yellow-100 text-yellow-700'
-                              )}
-                            >
-                              {room.status === 'AVAILABLE'
-                                ? 'Tersedia'
-                                : room.status === 'OCCUPIED'
-                                  ? 'Terisi'
-                                  : room.status}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                            <span className="inline-flex items-center gap-1">
-                              <Users className="h-3.5 w-3.5" />
-                              {room.capacity} orang
-                            </span>
-                            <span className="inline-flex items-center gap-1">
-                              <Bed className="h-3.5 w-3.5" />
-                              {room.type}
-                            </span>
-                          </div>
-                          <div className="flex items-center justify-between pt-1">
-                            <span className="text-lg font-bold text-primary">
-                              {formatRp(room.pricePerNight)}
-                            </span>
-                            <span className="text-xs text-muted-foreground">/ malam</span>
-                          </div>
-                          {datesSelected && nights > 0 && busy && (
-                            <p className="text-xs text-destructive">
-                              Tidak tersedia untuk tanggal dipilih
-                            </p>
-                          )}
-                        </CardContent>
-                      </Card>
-                    )
-                  })}
-                </div>
-              </>
-            )}
+            <RoomGrid
+              rooms={rooms}
+              reservations={reservations}
+              checkIn={checkIn}
+              checkOut={checkOut}
+              selectedRoomId={roomId}
+              datesSelected={datesSelected}
+              nights={nights}
+            />
           </div>
 
           {/* Sidebar: Booking Form */}

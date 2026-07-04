@@ -11,7 +11,8 @@
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
     "db:seed": "npx prisma db seed",
-    "db:studio": "prisma studio"
+    "db:studio": "prisma studio",
+    "doctor": "npx react-doctor@latest"
   },
   "prisma": {
     "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts"
@@ -65,6 +66,7 @@
     "postcss": "^8.5.14",
     "prisma": "^5.22.0",
     "react": "^19.2.5",
+    "react-doctor": "^0.7.1",
     "react-dom": "^19.2.5",
     "shadcn": "^4.7.0",
     "tailwindcss": "^4.2.4",

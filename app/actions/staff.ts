@@ -17,7 +17,7 @@ async function findSupabaseUserIdByEmail(
   return data?.users?.find((u: { id: string; email?: string }) => u.email === email)?.id ?? null
 }
 
-async function getVillaId() {
+async function getSessionVillaId() {
   const user = await getSessionUser()
   if (!user?.villaId) redirect('/login')
   return user.villaId!
@@ -30,7 +30,7 @@ export async function createStaff(data: {
   role: 'OWNER' | 'STAFF'
   permissions: string[]
 }) {
-  const villaId = await getVillaId()
+  const villaId = await getSessionVillaId()
 
   const plan = await getVillaPlan()
   if (plan === 'FREE') {
@@ -87,7 +87,7 @@ export async function updateStaff(
     permissions: string[]
   }
 ) {
-  await getVillaId()
+  await getSessionVillaId()
   try {
     await db.staff.update({
       where: { id },
@@ -109,7 +109,7 @@ export async function updateStaff(
 }
 
 export async function toggleStaffActive(id: string, isActive: boolean) {
-  await getVillaId()
+  await getSessionVillaId()
   try {
     await db.staff.update({ where: { id }, data: { isActive } })
     revalidatePath('/users')
@@ -121,7 +121,7 @@ export async function toggleStaffActive(id: string, isActive: boolean) {
 }
 
 export async function resendInvite(id: string) {
-  await getVillaId()
+  await getSessionVillaId()
   try {
     const staff = await db.staff.findUnique({ where: { id } })
     if (!staff?.email) return { success: false, message: 'Email staf tidak ditemukan.' }
@@ -162,7 +162,7 @@ export async function resendInvite(id: string) {
 }
 
 export async function deleteStaff(id: string) {
-  await getVillaId()
+  await getSessionVillaId()
   try {
     const staff = await db.staff.findUnique({ where: { id } })
 
@@ -186,7 +186,7 @@ export async function deleteStaff(id: string) {
 }
 
 export async function resetStaffPassword(email: string) {
-  await getVillaId()
+  await getSessionVillaId()
   try {
     const adminClient = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,

@@ -7,7 +7,7 @@ import { getSessionUser } from '@/lib/getSession'
 import { logActivity } from '@/lib/activity-log'
 import { getVillaPlan } from '@/lib/subscription'
 
-async function getVillaId() {
+async function getSessionVillaId() {
   const user = await getSessionUser()
   if (!user?.villaId) redirect('/login')
   return user.villaId!
@@ -91,7 +91,7 @@ export async function upsertRoom(data: {
 }
 
 export async function createArea(data: { name: string; description?: string }) {
-  const villaId = await getVillaId()
+  const villaId = await getSessionVillaId()
   try {
     await db.area.create({
       data: {
