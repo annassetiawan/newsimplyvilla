@@ -4,6 +4,7 @@ import {
   X,
   User,
   Phone,
+  Mail,
   CreditCard,
   BedDouble,
   CalendarCheck,
@@ -11,6 +12,8 @@ import {
   Moon,
   BadgeCheck,
   Pencil,
+  Globe,
+  Hash,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet'
@@ -125,11 +128,49 @@ export function ReservationDetailSheet({
                         <span>{selected.guest.phone}</span>
                       </div>
                     )}
+                    {selected.guest.email && (
+                      <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                        <Mail className="h-3.5 w-3.5 shrink-0" />
+                        <span className="truncate">{selected.guest.email}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
 
               <div className="mx-6 border-t border-border" />
+
+              {/* OTA Source (only for channel manager bookings) */}
+              {selected.otaName && (
+                <>
+                  <div className="mx-6 border-t border-border" />
+                  <div className="px-6 py-5">
+                    <p className="mb-3 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+                      Sumber Booking
+                    </p>
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <Globe className="h-4 w-4" />
+                          <span>OTA</span>
+                        </div>
+                        <span className="rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-semibold text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
+                          {selected.otaName}
+                        </span>
+                      </div>
+                      {selected.otaReservationCode && (
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <Hash className="h-4 w-4" />
+                            <span>Kode OTA</span>
+                          </div>
+                          <span className="font-mono text-sm font-medium">{selected.otaReservationCode}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </>
+              )}
 
               {/* Reservation */}
               <div className="px-6 py-5">
@@ -181,6 +222,12 @@ export function ReservationDetailSheet({
                   Payment
                 </p>
                 <div className="space-y-3">
+                  {selected.pricePerNight > 0 && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">Per malam</span>
+                      <span className="text-sm font-medium">{fmtRp(selected.pricePerNight)}</span>
+                    </div>
+                  )}
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-muted-foreground">Total amount</span>
                     <span className="text-lg font-bold">{fmtRp(selected.totalAmount)}</span>

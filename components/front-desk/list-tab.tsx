@@ -33,8 +33,12 @@ export interface ListReservation {
   status: 'CONFIRMED' | 'PENDING' | 'CHECKEDIN' | 'CHECKEDOUT' | 'CANCELLED'
   paymentStatus: 'PAID' | 'UNPAID'
   totalAmount: number
+  pricePerNight: number
   createdAt: string
-  guest: { id: string; name: string; phone: string | null; idNumber: string | null }
+  otaName: string | null
+  otaReservationCode: string | null
+  channexBookingId: string | null
+  guest: { id: string; name: string; phone: string | null; email: string | null; idNumber: string | null }
   room: { id: string; code: string; name: string }
 }
 
