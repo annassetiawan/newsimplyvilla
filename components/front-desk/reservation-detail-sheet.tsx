@@ -1,7 +1,6 @@
 'use client'
 
 import {
-  X,
   User,
   Phone,
   Mail,
@@ -16,7 +15,12 @@ import {
   Hash,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import type { ListReservation } from './list-tab'
 
@@ -66,6 +70,18 @@ interface Props {
   onEdit: (res: ListReservation) => void
 }
 
+function Row({ icon: Icon, label, children }: { icon: React.ElementType; label: string; children: React.ReactNode }) {
+  return (
+    <div className="flex items-center justify-between gap-4">
+      <div className="flex items-center gap-2 text-sm text-muted-foreground shrink-0">
+        <Icon className="h-4 w-4" />
+        <span>{label}</span>
+      </div>
+      <div className="text-sm font-medium text-right">{children}</div>
+    </div>
+  )
+}
+
 export function ReservationDetailSheet({
   selected,
   onClose,
@@ -80,228 +96,172 @@ export function ReservationDetailSheet({
     selected.status !== 'CHECKEDOUT'
 
   return (
-    <Sheet open={!!selected} onOpenChange={onClose}>
-      <SheetContent
-        side="right"
-        showCloseButton={false}
-        className="flex w-full flex-col gap-0 p-0 sm:max-w-[420px]"
-      >
+    <Dialog open={!!selected} onOpenChange={onClose}>
+      <DialogContent className="max-w-lg p-0 gap-0 overflow-hidden">
         {selected && (
           <>
-            <SheetTitle className="sr-only">Reservation detail</SheetTitle>
-
-            {/* Header */}
-            <div className="flex items-center justify-between border-b border-border px-6 py-4">
-              <p className="text-base font-semibold">Reservation detail</p>
-              <button
-                onClick={onClose}
-                className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-
-            {/* Scrollable body */}
-            <div className="flex-1 overflow-y-auto">
-              {/* Guest */}
-              <div className="px-6 py-5">
-                <p className="mb-3 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-                  Guest
-                </p>
-                <div className="flex items-start gap-4">
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-sm font-bold text-primary">
-                    {getInitials(selected.guest.name)}
-                  </div>
-                  <div className="min-w-0 space-y-1">
-                    <p className="text-base font-semibold leading-tight">
-                      {selected.guest.name}
-                    </p>
-                    {selected.guest.idNumber && (
-                      <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                        <User className="h-3.5 w-3.5 shrink-0" />
-                        <span className="font-id">{selected.guest.idNumber}</span>
-                      </div>
-                    )}
-                    {selected.guest.phone && (
-                      <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                        <Phone className="h-3.5 w-3.5 shrink-0" />
-                        <span>{selected.guest.phone}</span>
-                      </div>
-                    )}
-                    {selected.guest.email && (
-                      <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                        <Mail className="h-3.5 w-3.5 shrink-0" />
-                        <span className="truncate">{selected.guest.email}</span>
-                      </div>
-                    )}
-                  </div>
+            <DialogHeader className="px-6 py-4 border-b border-border">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-sm font-bold text-primary">
+                  {getInitials(selected.guest.name)}
                 </div>
-              </div>
-
-              <div className="mx-6 border-t border-border" />
-
-              {/* OTA Source (only for channel manager bookings) */}
-              {selected.otaName && (
-                <>
-                  <div className="mx-6 border-t border-border" />
-                  <div className="px-6 py-5">
-                    <p className="mb-3 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-                      Sumber Booking
-                    </p>
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Globe className="h-4 w-4" />
-                          <span>OTA</span>
-                        </div>
-                        <span className="rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-semibold text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
-                          {selected.otaName}
-                        </span>
-                      </div>
-                      {selected.otaReservationCode && (
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <Hash className="h-4 w-4" />
-                            <span>Kode OTA</span>
-                          </div>
-                          <span className="font-mono text-sm font-medium">{selected.otaReservationCode}</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </>
-              )}
-
-              {/* Reservation */}
-              <div className="px-6 py-5">
-                <p className="mb-3 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-                  Reservation
-                </p>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <BedDouble className="h-4 w-4" />
-                      <span>Room</span>
-                    </div>
-                    <span className="text-sm font-medium">
-                      <span className="font-id">{selected.room.code}</span>
-                      {' — '}{selected.room.name}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <CalendarCheck className="h-4 w-4" />
-                      <span>Check-in</span>
-                    </div>
-                    <span className="text-sm font-medium">{fmtDate(selected.checkIn)}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <CalendarX className="h-4 w-4" />
-                      <span>Check-out</span>
-                    </div>
-                    <span className="text-sm font-medium">{fmtDate(selected.checkOut)}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Moon className="h-4 w-4" />
-                      <span>Nights</span>
-                    </div>
-                    <span className="text-sm font-medium">
-                      {nightCount(selected.checkIn, selected.checkOut)}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="mx-6 border-t border-border" />
-
-              {/* Payment */}
-              <div className="px-6 py-5">
-                <p className="mb-3 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-                  Payment
-                </p>
-                <div className="space-y-3">
-                  {selected.pricePerNight > 0 && (
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Per malam</span>
-                      <span className="text-sm font-medium">{fmtRp(selected.pricePerNight)}</span>
-                    </div>
-                  )}
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">Total amount</span>
-                    <span className="text-lg font-bold">{fmtRp(selected.totalAmount)}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <CreditCard className="h-4 w-4" />
-                      <span>Payment</span>
-                    </div>
-                    <span
-                      className={cn(
-                        'rounded-full px-2.5 py-0.5 text-xs font-semibold',
-                        selected.paymentStatus === 'PAID'
-                          ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                          : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
-                      )}
-                    >
-                      {selected.paymentStatus === 'PAID' ? 'Paid' : 'Unpaid'}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <BadgeCheck className="h-4 w-4" />
-                      <span>Status</span>
-                    </div>
-                    <span
-                      className={cn(
-                        'rounded-full px-2.5 py-0.5 text-xs font-semibold',
-                        STATUS_STYLE[selected.status]
-                      )}
-                    >
+                <div>
+                  <DialogTitle className="text-base font-semibold leading-tight">
+                    {selected.guest.name}
+                  </DialogTitle>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <span className={cn('rounded-full px-2 py-0.5 text-[11px] font-semibold', STATUS_STYLE[selected.status])}>
                       {STATUS_LABEL[selected.status]}
                     </span>
+                    {selected.otaName && (
+                      <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[11px] font-semibold text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
+                        {selected.otaName}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </DialogHeader>
+
+            <div className="overflow-y-auto max-h-[60vh]">
+              <div className="grid grid-cols-2 divide-x divide-border">
+                {/* Left column */}
+                <div className="px-5 py-5 space-y-5">
+                  {/* Guest info */}
+                  <div>
+                    <p className="mb-3 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Tamu</p>
+                    <div className="space-y-2">
+                      {selected.guest.idNumber && (
+                        <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                          <User className="h-3.5 w-3.5 shrink-0" />
+                          <span className="font-mono text-xs">{selected.guest.idNumber}</span>
+                        </div>
+                      )}
+                      {selected.guest.phone && (
+                        <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                          <Phone className="h-3.5 w-3.5 shrink-0" />
+                          <span>{selected.guest.phone}</span>
+                        </div>
+                      )}
+                      {selected.guest.email && (
+                        <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                          <Mail className="h-3.5 w-3.5 shrink-0" />
+                          <span className="truncate text-xs">{selected.guest.email}</span>
+                        </div>
+                      )}
+                      {!selected.guest.idNumber && !selected.guest.phone && !selected.guest.email && (
+                        <p className="text-xs text-muted-foreground">Tidak ada kontak</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* OTA info */}
+                  {selected.otaName && (
+                    <div>
+                      <p className="mb-3 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Sumber Booking</p>
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                          <Globe className="h-3.5 w-3.5 shrink-0" />
+                          <span>{selected.otaName}</span>
+                        </div>
+                        {selected.otaReservationCode && (
+                          <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                            <Hash className="h-3.5 w-3.5 shrink-0" />
+                            <span className="font-mono text-xs">{selected.otaReservationCode}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Right column */}
+                <div className="px-5 py-5 space-y-5">
+                  {/* Reservation */}
+                  <div>
+                    <p className="mb-3 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Reservasi</p>
+                    <div className="space-y-2.5">
+                      <Row icon={BedDouble} label="Room">
+                        <span className="font-mono text-xs">{selected.room.code}</span>
+                        {' '}{selected.room.name}
+                      </Row>
+                      <Row icon={CalendarCheck} label="Check-in">
+                        {fmtDate(selected.checkIn)}
+                      </Row>
+                      <Row icon={CalendarX} label="Check-out">
+                        {fmtDate(selected.checkOut)}
+                      </Row>
+                      <Row icon={Moon} label="Malam">
+                        {nightCount(selected.checkIn, selected.checkOut)}
+                      </Row>
+                    </div>
+                  </div>
+
+                  {/* Payment */}
+                  <div>
+                    <p className="mb-3 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Pembayaran</p>
+                    <div className="space-y-2.5">
+                      {selected.pricePerNight > 0 && (
+                        <Row icon={CreditCard} label="Per malam">
+                          {fmtRp(selected.pricePerNight)}
+                        </Row>
+                      )}
+                      <div className="flex items-center justify-between gap-4">
+                        <span className="text-sm text-muted-foreground shrink-0">Total</span>
+                        <span className="text-base font-bold">{fmtRp(selected.totalAmount)}</span>
+                      </div>
+                      <Row icon={BadgeCheck} label="Bayar">
+                        <span className={cn('rounded-full px-2 py-0.5 text-[11px] font-semibold',
+                          selected.paymentStatus === 'PAID'
+                            ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                            : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                        )}>
+                          {selected.paymentStatus === 'PAID' ? 'Lunas' : 'Belum Lunas'}
+                        </span>
+                      </Row>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Sticky footer */}
-            <div className="space-y-2 border-t border-border px-6 py-4">
-              {isActionable && (
+            {/* Footer actions */}
+            {isActionable && (
+              <div className="flex items-center gap-2 border-t border-border px-6 py-4">
                 <Button
                   variant="outline"
-                  className="w-full"
+                  size="sm"
                   disabled={pending}
                   onClick={() => onEdit(selected)}
+                  className="gap-1.5"
                 >
-                  <Pencil className="mr-2 h-4 w-4" />
-                  Edit reservation
+                  <Pencil className="h-3.5 w-3.5" />
+                  Edit
                 </Button>
-              )}
-              {isActionable && selected.paymentStatus === 'UNPAID' && (
-                <Button
-                  className="w-full bg-green-600 text-white hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-600"
-                  disabled={pending}
-                  onClick={() => onMarkPaid(selected.id)}
-                >
-                  {pending ? 'Processing…' : 'Mark as Paid'}
-                </Button>
-              )}
-              {isActionable && (
+                {selected.paymentStatus === 'UNPAID' && (
+                  <Button
+                    size="sm"
+                    disabled={pending}
+                    onClick={() => onMarkPaid(selected.id)}
+                    className="bg-green-600 text-white hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-600"
+                  >
+                    {pending ? 'Processing…' : 'Mark as Paid'}
+                  </Button>
+                )}
                 <Button
                   variant="outline"
-                  className="w-full border-destructive/40 text-destructive hover:bg-destructive/5 hover:text-destructive"
+                  size="sm"
                   disabled={pending}
                   onClick={() => onCancel(selected.id)}
+                  className="ml-auto border-destructive/40 text-destructive hover:bg-destructive/5 hover:text-destructive"
                 >
-                  {pending ? 'Cancelling…' : 'Cancel reservation'}
+                  {pending ? 'Cancelling…' : 'Cancel'}
                 </Button>
-              )}
-            </div>
+              </div>
+            )}
           </>
         )}
-      </SheetContent>
-    </Sheet>
+      </DialogContent>
+    </Dialog>
   )
 }
