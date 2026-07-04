@@ -37,6 +37,8 @@ model Villa {
   ratePlans    RatePlan[]
   priceOverrides PriceOverride[]
   ratePlanRestrictions RatePlanRestriction[]
+  channexConfig        ChannexConfig?
+  channexMappings      ChannexMapping[]
 }
 
 enum RoomStatus {
@@ -103,10 +105,13 @@ model Reservation {
   paymentStatus PaymentStatus     @default(UNPAID)
   pricePerNight Float             @default(0)
   totalAmount   Float
-  createdAt     DateTime          @default(now())
-  guest         Guest             @relation(fields: [guestId], references: [id])
-  room          Room              @relation(fields: [roomId], references: [id])
-  transactions  Transaction[]
+  channexBookingId   String?           @unique
+  otaName            String?
+  otaReservationCode String?
+  createdAt          DateTime          @default(now())
+  guest              Guest             @relation(fields: [guestId], references: [id])
+  room               Room              @relation(fields: [roomId], references: [id])
+  transactions       Transaction[]
 
   @@index([roomId, status])
   @@index([checkOut, status])
@@ -531,6 +536,35 @@ model LeaveAllocation {
   villaId    String
 
   @@unique([employeeId, year])
+}
+
+// --- Channex Integration ---
+
+model ChannexConfig {
+  id                String    @id @default(cuid())
+  villaId           String    @unique
+  villa             Villa     @relation(fields: [villaId], references: [id], onDelete: Cascade)
+  apiKey            String
+  environment       String    @default("staging")
+  channexPropertyId String?
+  isActive          Boolean   @default(false)
+  webhookId         String?
+  lastSyncAt        DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+}
+
+model ChannexMapping {
+  id         String   @id @default(cuid())
+  villaId    String
+  villa      Villa    @relation(fields: [villaId], references: [id], onDelete: Cascade)
+  kind       String
+  localId    String
+  channexId  String
+  createdAt  DateTime @default(now())
+
+  @@unique([villaId, kind, localId])
+  @@index([villaId, kind, channexId])
 }
 
 // --- Channel Manager Prep ---

@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation'
 import { db } from '@/lib/db'
 import { getSessionUser } from '@/lib/getSession'
 import { logActivity } from '@/lib/activity-log'
+import { pushAvailability } from '@/lib/channex/ari'
 
 async function getVillaId() {
   const user = await getSessionUser()
@@ -74,6 +75,14 @@ export async function createReservation(data: {
 
     revalidatePath('/front-desk')
     revalidatePath('/dashboard')
+
+    // Push availability update to Channex (fire-and-forget)
+    const dateFrom = data.checkIn.toISOString().split('T')[0]
+    const dateToDate = new Date(data.checkOut)
+    dateToDate.setDate(dateToDate.getDate() - 1)
+    const dateTo = dateToDate.toISOString().split('T')[0]
+    void pushAvailability(villaId!, data.roomId, dateFrom, dateTo).catch(console.error)
+
     return { success: true, data: reservation }
   } catch (error) {
     console.error('createReservation error:', error)
@@ -209,6 +218,14 @@ export async function cancelReservation(reservationId: string) {
 
     revalidatePath('/front-desk')
     revalidatePath('/dashboard')
+
+    // Free up availability in Channex (fire-and-forget)
+    const dateFrom = reservation.checkIn.toISOString().split('T')[0]
+    const dateToDate = new Date(reservation.checkOut)
+    dateToDate.setDate(dateToDate.getDate() - 1)
+    const dateTo = dateToDate.toISOString().split('T')[0]
+    void pushAvailability(user.villaId!, reservation.roomId, dateFrom, dateTo).catch(console.error)
+
     return { success: true }
   } catch (error) {
     console.error('cancelReservation error:', error)

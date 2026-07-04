@@ -10,6 +10,9 @@ import {
   priceOverrideRangeSchema,
   restrictionSchema,
 } from '@/lib/validations/ratePlan'
+import { syncRatePlan, deleteMapping } from '@/lib/channex/sync'
+import { pushRatesAndRestrictions, pushRatesForDays } from '@/lib/channex/ari'
+import { getChannexClient } from '@/lib/channex/getClient'
 
 async function getVillaId() {
   const user = await getSessionUser()
@@ -45,6 +48,15 @@ export async function createRatePlan(data: unknown) {
   })
 
   revalidatePath('/rooms')
+
+  // Sync to Channex and push initial ARI (fire-and-forget)
+  void (async () => {
+    const client = await getChannexClient(villaId)
+    if (!client) return
+    await syncRatePlan(villaId, result.id, client)
+    await pushRatesForDays(villaId, result.id, 365)
+  })().catch(console.error)
+
   return { success: true, id: result.id }
 }
 
@@ -58,6 +70,10 @@ export async function updateRatePlan(id: string, data: unknown) {
   })
 
   revalidatePath('/rooms')
+
+  // Push updated rates for next year (fire-and-forget)
+  void pushRatesForDays(villaId, id, 365).catch(console.error)
+
   return { success: true }
 }
 
@@ -67,6 +83,9 @@ export async function deleteRatePlan(id: string) {
   await db.ratePlan.delete({
     where: { id, villaId },
   })
+
+  // Remove mapping so future pushes skip this plan
+  void deleteMapping(villaId, 'rate_plan', id).catch(console.error)
 
   revalidatePath('/rooms')
   return { success: true }
@@ -153,6 +172,10 @@ export async function setPriceOverride(data: unknown) {
   })
 
   revalidatePath('/rooms')
+
+  // Push updated rate for this specific date (fire-and-forget)
+  void pushRatesAndRestrictions(villaId, validated.ratePlanId, [validated.date]).catch(console.error)
+
   return { success: true }
 }
 
@@ -162,14 +185,16 @@ export async function setPriceOverrideRange(data: unknown) {
 
   const start = new Date(validated.startDate)
   const end = new Date(validated.endDate)
-  const dates: Date[] = []
+  const dateDates: Date[] = []
+  const dateStrings: string[] = []
 
   for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-    dates.push(new Date(d))
+    dateDates.push(new Date(d))
+    dateStrings.push(d.toISOString().split('T')[0])
   }
 
   await db.$transaction(
-    dates.map((date) =>
+    dateDates.map((date) =>
       db.priceOverride.upsert({
         where: { ratePlanId_date: { ratePlanId: validated.ratePlanId, date } },
         create: {
@@ -185,6 +210,10 @@ export async function setPriceOverrideRange(data: unknown) {
   )
 
   revalidatePath('/rooms')
+
+  // Push updated rates for the range (fire-and-forget)
+  void pushRatesAndRestrictions(villaId, validated.ratePlanId, dateStrings).catch(console.error)
+
   return { success: true }
 }
 
@@ -199,6 +228,10 @@ export async function deletePriceOverride(ratePlanId: string, date: string) {
   })
 
   revalidatePath('/rooms')
+
+  // Push reset (will send basePrice) for this date (fire-and-forget)
+  void pushRatesAndRestrictions(villaId, ratePlanId, [date]).catch(console.error)
+
   return { success: true }
 }
 
@@ -227,5 +260,9 @@ export async function upsertRestriction(data: unknown) {
   })
 
   revalidatePath('/rooms')
+
+  // Push restrictions for next year (fire-and-forget)
+  void pushRatesForDays(villaId, validated.ratePlanId, 365).catch(console.error)
+
   return { success: true }
 }
