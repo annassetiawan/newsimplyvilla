@@ -124,6 +124,18 @@ async function applyRevision(
 
     await saveMapping(villaId, 'booking', reservation.id, bookingId)
 
+    // Notify staff of new OTA booking
+    void db.notification.create({
+      data: {
+        id: `notif_${Date.now()}`,
+        villaId,
+        type: 'booking_new',
+        title: `Booking baru dari ${attrs.ota_name}`,
+        body: `${guestName} · ${room.checkin_date} → ${room.checkout_date} · ${attrs.ota_reservation_code ?? bookingId}`,
+        link: '/front-desk',
+      },
+    }).catch(console.error)
+
     void pushAvailability(
       villaId,
       mapping.localId,
@@ -139,6 +151,17 @@ async function applyRevision(
     if (!reservation) return { applied: false, reason: 'reservation not found for cancellation' }
 
     await db.reservation.update({ where: { id: reservation.id }, data: { status: 'CANCELLED' } })
+
+    void db.notification.create({
+      data: {
+        id: `notif_${Date.now()}`,
+        villaId,
+        type: 'booking_cancelled',
+        title: 'Booking dibatalkan',
+        body: `Reservasi ${bookingId.slice(0, 8)}… telah dibatalkan oleh OTA`,
+        link: '/front-desk',
+      },
+    }).catch(console.error)
 
     const dateFrom = toISO(reservation.checkIn)
     const dateTo = toISO(new Date(reservation.checkOut.getTime() - 86400000))

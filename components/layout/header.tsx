@@ -1,11 +1,12 @@
 'use client'
 
 import { usePathname } from 'next/navigation'
-import { Bell, Moon, Sun, Menu } from 'lucide-react'
+import { Moon, Sun, Menu } from 'lucide-react'
 import { useTheme } from 'next-themes'
 import { cn } from '@/lib/utils'
 import { useSidebar } from '@/store/sidebar-store'
 import { Button } from '@/components/ui/button'
+import { NotificationBell } from './notification-bell'
 
 const pageLabels: Record<string, { title: string; parent?: string }> = {
   '/dashboard': { title: 'Dashboard' },
@@ -19,8 +20,6 @@ const pageLabels: Record<string, { title: string; parent?: string }> = {
   '/users': { title: 'Users', parent: 'System' },
   '/settings': { title: 'Settings', parent: 'System' },
 }
-
-const NOTIFICATION_COUNT = 3
 
 export function Header() {
   const pathname = usePathname()
@@ -69,15 +68,7 @@ export function Header() {
 
       {/* Actions */}
       <div className="flex items-center gap-1">
-        {/* Notifications */}
-        <Button variant="ghost" size="icon" className="relative h-8 w-8">
-          <Bell className="h-4 w-4" />
-          {NOTIFICATION_COUNT > 0 && (
-            <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[9px] font-bold text-white ring-2 ring-background">
-              {NOTIFICATION_COUNT}
-            </span>
-          )}
-        </Button>
+        <NotificationBell />
 
         {/* Theme toggle */}
         <Button

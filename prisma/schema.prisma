@@ -39,6 +39,7 @@ model Villa {
   ratePlanRestrictions RatePlanRestriction[]
   channexConfig        ChannexConfig?
   channexMappings      ChannexMapping[]
+  notifications        Notification[]
 }
 
 enum RoomStatus {
@@ -565,6 +566,20 @@ model ChannexMapping {
 
   @@unique([villaId, kind, localId])
   @@index([villaId, kind, channexId])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  villaId   String
+  villa     Villa    @relation(fields: [villaId], references: [id], onDelete: Cascade)
+  type      String
+  title     String
+  body      String
+  isRead    Boolean  @default(false)
+  link      String?
+  createdAt DateTime @default(now())
+
+  @@index([villaId, isRead, createdAt])
 }
 
 // --- Channel Manager Prep ---

@@ -97,7 +97,7 @@ export function ReservationDetailSheet({
 
   return (
     <Dialog open={!!selected} onOpenChange={onClose}>
-      <DialogContent className="max-w-lg p-0 gap-0 overflow-hidden">
+      <DialogContent className="sm:max-w-3xl w-full p-0 gap-0 overflow-hidden">
         {selected && (
           <>
             <DialogHeader className="px-6 py-4 border-b border-border">
@@ -123,10 +123,10 @@ export function ReservationDetailSheet({
               </div>
             </DialogHeader>
 
-            <div className="overflow-y-auto max-h-[60vh]">
+            <div className="overflow-y-auto max-h-[70vh]">
               <div className="grid grid-cols-2 divide-x divide-border">
                 {/* Left column */}
-                <div className="px-5 py-5 space-y-5">
+                <div className="px-6 py-6 space-y-6">
                   {/* Guest info */}
                   <div>
                     <p className="mb-3 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Tamu</p>
@@ -176,7 +176,7 @@ export function ReservationDetailSheet({
                 </div>
 
                 {/* Right column */}
-                <div className="px-5 py-5 space-y-5">
+                <div className="px-6 py-6 space-y-6">
                   {/* Reservation */}
                   <div>
                     <p className="mb-3 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Reservasi</p>
