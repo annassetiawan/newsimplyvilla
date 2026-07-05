@@ -543,10 +543,12 @@ function GalleryModal({
             <X className="h-4 w-4" />
           </button>
           <div className="flex flex-col items-center gap-3" onClick={(e) => e.stopPropagation()}>
-            <img
+            <Image
               src={lightbox.url}
               alt=""
-              className="max-h-[80vh] max-w-[90vw] rounded-xl object-contain shadow-2xl"
+              width={1600}
+              height={1200}
+              className="h-auto w-auto max-h-[80vh] max-w-[90vw] rounded-xl object-contain shadow-2xl"
             />
             <p className="text-sm text-white/70">{lightbox.room}</p>
           </div>

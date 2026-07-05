@@ -52,7 +52,8 @@ function fmtDate(iso: string | null | undefined) {
 export function ChannexDashboard({ status, stats, userRole, onDisconnected }: Props) {
   const [showAdvanced, setShowAdvanced] = useState(false)
   const [isPending, startTransition] = useTransition()
-  const [currentStats, setCurrentStats] = useState(stats)
+  const [statsOverride, setStatsOverride] = useState<Partial<OtaStats> | null>(null)
+  const currentStats = statsOverride ? { ...stats, ...statsOverride } : stats
   const isOwner = userRole === 'OWNER' || userRole === 'SUPER_ADMIN'
 
   const channexUrl = status.environment === 'staging'
@@ -80,7 +81,7 @@ export function ChannexDashboard({ status, stats, userRole, onDisconnected }: Pr
       const res = await runInitialSync()
       if (res.success && res.data) {
         toast.success(`Sinkronisasi selesai`)
-        setCurrentStats((s) => ({ ...s, syncedRooms: res.data!.roomTypes, activeRatePlans: res.data!.ratePlans }))
+        setStatsOverride({ syncedRooms: res.data!.roomTypes, activeRatePlans: res.data!.ratePlans })
       } else {
         toast.error(res.message ?? 'Sinkronisasi gagal')
       }

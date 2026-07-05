@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
@@ -22,11 +22,6 @@ type FormValues = z.infer<typeof schema>
 export default function LoginPage() {
   const router = useRouter()
   const [showPassword, setShowPassword] = useState(false)
-  const [currentYear, setCurrentYear] = useState<number | null>(null)
-
-  useEffect(() => {
-    setCurrentYear(new Date().getFullYear())
-  }, [])
 
   const {
     register,
@@ -133,8 +128,8 @@ export default function LoginPage() {
           </p>
         </div>
 
-        <p className="mt-5 text-center text-xs text-muted-foreground">
-          © {currentYear ?? ''} SimplyVilla. All rights reserved.
+        <p className="mt-5 text-center text-xs text-muted-foreground" suppressHydrationWarning>
+          © {new Date().getFullYear()} SimplyVilla. All rights reserved.
         </p>
       </div>
     </div>

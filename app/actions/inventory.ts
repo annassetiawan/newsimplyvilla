@@ -15,20 +15,22 @@ export async function stockIn(data: {
   const user = await getSessionUser()
   if (!user?.villaId) redirect('/login')
   try {
-    const item = await db.inventoryItem.findUnique({ where: { id: data.itemId } })
-    await db.inventoryItem.update({
-      where: { id: data.itemId },
-      data: { onHand: { increment: data.quantity } },
-    })
-    await db.stockMovement.create({
-      data: {
-        itemId: data.itemId,
-        type: 'IN',
-        quantity: data.quantity,
-        date: data.date,
-        note: data.note,
-      },
-    })
+    const [item] = await Promise.all([
+      db.inventoryItem.findUnique({ where: { id: data.itemId } }),
+      db.inventoryItem.update({
+        where: { id: data.itemId },
+        data: { onHand: { increment: data.quantity } },
+      }),
+      db.stockMovement.create({
+        data: {
+          itemId: data.itemId,
+          type: 'IN',
+          quantity: data.quantity,
+          date: data.date,
+          note: data.note,
+        },
+      }),
+    ])
     if (item) await logActivity({ villaId: user.villaId!, staffName: user.name, action: `Stock In: ${item.name} ×${data.quantity}`, module: 'Inventory' })
     revalidatePath('/inventory')
     revalidatePath('/dashboard')
@@ -53,20 +55,22 @@ export async function stockOut(data: {
     if (data.quantity > item.onHand)
       return { success: false, message: `Stok tidak cukup — hanya tersisa ${item.onHand}.` }
 
-    await db.inventoryItem.update({
-      where: { id: data.itemId },
-      data: { onHand: { decrement: data.quantity } },
-    })
-    await db.stockMovement.create({
-      data: {
-        itemId: data.itemId,
-        type: 'OUT',
-        quantity: data.quantity,
-        date: data.date,
-        note: data.note,
-      },
-    })
-    await logActivity({ villaId: user.villaId!, staffName: user.name, action: `Stock Out: ${item.name} ×${data.quantity}`, module: 'Inventory' })
+    await Promise.all([
+      db.inventoryItem.update({
+        where: { id: data.itemId },
+        data: { onHand: { decrement: data.quantity } },
+      }),
+      db.stockMovement.create({
+        data: {
+          itemId: data.itemId,
+          type: 'OUT',
+          quantity: data.quantity,
+          date: data.date,
+          note: data.note,
+        },
+      }),
+      logActivity({ villaId: user.villaId!, staffName: user.name, action: `Stock Out: ${item.name} ×${data.quantity}`, module: 'Inventory' }),
+    ])
     revalidatePath('/inventory')
     revalidatePath('/dashboard')
     return { success: true }

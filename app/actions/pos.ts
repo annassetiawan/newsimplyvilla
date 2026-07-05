@@ -24,13 +24,15 @@ export async function createPosTransaction(data: {
   const user = await getSessionUser()
   if (!user?.villaId) redirect('/login')
   try {
-    // Deduct stock for each item
-    for (const item of data.items) {
-      await db.businessItem.updateMany({
-        where: { id: item.itemId, villaId: user.villaId! },
-        data: { stock: { decrement: item.qty } },
-      })
-    }
+    // Deduct stock for each item (independent rows, safe to run concurrently)
+    await Promise.all(
+      data.items.map((item) =>
+        db.businessItem.updateMany({
+          where: { id: item.itemId, villaId: user.villaId! },
+          data: { stock: { decrement: item.qty } },
+        })
+      )
+    )
 
     await db.posTransaction.create({
       data: {

@@ -64,8 +64,10 @@ export async function pushAvailability(
   const client = await getChannexClient(villaId)
   if (!client) return
 
-  const channexPropertyId = await getMapping(villaId, 'property', villaId)
-  const channexRoomTypeId = await getMapping(villaId, 'room_type', roomId)
+  const [channexPropertyId, channexRoomTypeId] = await Promise.all([
+    getMapping(villaId, 'property', villaId),
+    getMapping(villaId, 'room_type', roomId),
+  ])
   if (!channexPropertyId || !channexRoomTypeId) return
 
   const today = toISO(new Date())
@@ -82,18 +84,22 @@ export async function pushAvailability(
   if (dates.length === 0) return
 
   // For each date: count_of_rooms(1) minus active reservations that overlap
-  const entries: Array<{ date: string; availability: number }> = []
-  for (const date of dates) {
-    const occupied = await db.reservation.count({
-      where: {
-        roomId,
-        status: { in: ['CONFIRMED', 'CHECKEDIN', 'PENDING'] },
-        checkIn: { lte: new Date(date) },
-        checkOut: { gt: new Date(date) },
-      },
-    })
-    entries.push({ date, availability: Math.max(0, 1 - occupied) })
-  }
+  const occupiedCounts = await Promise.all(
+    dates.map((date) =>
+      db.reservation.count({
+        where: {
+          roomId,
+          status: { in: ['CONFIRMED', 'CHECKEDIN', 'PENDING'] },
+          checkIn: { lte: new Date(date) },
+          checkOut: { gt: new Date(date) },
+        },
+      })
+    )
+  )
+  const entries: Array<{ date: string; availability: number }> = dates.map((date, i) => ({
+    date,
+    availability: Math.max(0, 1 - occupiedCounts[i]),
+  }))
 
   const compressed = compressRanges(entries)
   const values = compressed.map((e) => ({
@@ -117,8 +123,10 @@ export async function pushRatesAndRestrictions(
   const client = await getChannexClient(villaId)
   if (!client) return
 
-  const channexPropertyId = await getMapping(villaId, 'property', villaId)
-  const channexRatePlanId = await getMapping(villaId, 'rate_plan', ratePlanId)
+  const [channexPropertyId, channexRatePlanId] = await Promise.all([
+    getMapping(villaId, 'property', villaId),
+    getMapping(villaId, 'rate_plan', ratePlanId),
+  ])
   if (!channexPropertyId || !channexRatePlanId) return
 
   const today = toISO(new Date())

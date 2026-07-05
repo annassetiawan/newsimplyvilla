@@ -212,9 +212,11 @@ export async function cancelReservation(reservationId: string) {
     })
     if (!reservation) return { success: false, message: 'Reservasi tidak ditemukan.' }
 
-    await db.reservation.update({ where: { id: reservationId }, data: { status: 'CANCELLED' } })
-    await db.room.update({ where: { id: reservation.roomId }, data: { status: 'AVAILABLE' } })
-    await logActivity({ villaId: user.villaId!, staffName: user.name, action: `Cancelled reservation: ${reservation.guest.name} → ${reservation.room.name}`, module: 'Front Desk' })
+    await Promise.all([
+      db.reservation.update({ where: { id: reservationId }, data: { status: 'CANCELLED' } }),
+      db.room.update({ where: { id: reservation.roomId }, data: { status: 'AVAILABLE' } }),
+      logActivity({ villaId: user.villaId!, staffName: user.name, action: `Cancelled reservation: ${reservation.guest.name} → ${reservation.room.name}`, module: 'Front Desk' }),
+    ])
 
     revalidatePath('/front-desk')
     revalidatePath('/dashboard')

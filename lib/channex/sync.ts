@@ -9,8 +9,10 @@ export { deleteMapping }
 // ── Property sync ────────────────────────────────────────────────────────────
 
 async function syncProperty(villaId: string, client: ChannexClient): Promise<string> {
-  const villa = await db.villa.findUniqueOrThrow({ where: { id: villaId } })
-  const existing = await getMapping(villaId, 'property', villaId)
+  const [villa, existing] = await Promise.all([
+    db.villa.findUniqueOrThrow({ where: { id: villaId } }),
+    getMapping(villaId, 'property', villaId),
+  ])
 
   type PropertyRes = { id: string }
 
@@ -42,11 +44,12 @@ async function syncProperty(villaId: string, client: ChannexClient): Promise<str
 // ── Room type sync ───────────────────────────────────────────────────────────
 
 async function syncRoomType(villaId: string, roomId: string, client: ChannexClient): Promise<string> {
-  const room = await db.room.findUniqueOrThrow({ where: { id: roomId } })
-  const channexPropertyId = await getMapping(villaId, 'property', villaId)
+  const [room, channexPropertyId, existing] = await Promise.all([
+    db.room.findUniqueOrThrow({ where: { id: roomId } }),
+    getMapping(villaId, 'property', villaId),
+    getMapping(villaId, 'room_type', roomId),
+  ])
   if (!channexPropertyId) throw new Error('Property not synced yet')
-
-  const existing = await getMapping(villaId, 'room_type', roomId)
 
   type RoomTypeRes = { id: string }
 
@@ -76,8 +79,10 @@ async function syncRoomType(villaId: string, roomId: string, client: ChannexClie
 
 export async function syncRatePlan(villaId: string, ratePlanId: string, client: ChannexClient): Promise<string> {
   const rp = await db.ratePlan.findUniqueOrThrow({ where: { id: ratePlanId } })
-  const channexPropertyId = await getMapping(villaId, 'property', villaId)
-  const channexRoomTypeId = await getMapping(villaId, 'room_type', rp.roomId)
+  const [channexPropertyId, channexRoomTypeId] = await Promise.all([
+    getMapping(villaId, 'property', villaId),
+    getMapping(villaId, 'room_type', rp.roomId),
+  ])
   if (!channexPropertyId || !channexRoomTypeId) throw new Error('Property or room type not synced yet')
 
   const existing = await getMapping(villaId, 'rate_plan', ratePlanId)
@@ -114,9 +119,13 @@ export async function initialSync(villaId: string): Promise<{
 }> {
   const client = await getChannexClientRequired(villaId)
 
-  const channexPropertyId = await syncProperty(villaId, client)
+  const [channexPropertyId, rooms] = await Promise.all([
+    syncProperty(villaId, client),
+    db.room.findMany({ where: { villaId } }),
+  ])
 
-  const rooms = await db.room.findMany({ where: { villaId } })
+  // Sequential on purpose: Channex's API rate-limits property/room-type/rate-plan
+  // writes, so these loops fan out one request at a time rather than Promise.all.
   for (const room of rooms) {
     await syncRoomType(villaId, room.id, client)
   }

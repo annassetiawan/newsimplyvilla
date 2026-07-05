@@ -26,7 +26,8 @@ interface PlanToggleProps {
 export function PlanToggle({ villa }: PlanToggleProps) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
-  const [plan, setPlan] = useState(villa.plan)
+  const [pendingPlan, setPendingPlan] = useState<string | null>(null)
+  const plan = pendingPlan && pendingPlan !== villa.plan ? pendingPlan : villa.plan
 
   async function togglePlan() {
     const newPlan = plan === 'PRO' ? 'FREE' : 'PRO'
@@ -57,7 +58,7 @@ export function PlanToggle({ villa }: PlanToggleProps) {
       return
     }
 
-    setPlan(newPlan)
+    setPendingPlan(newPlan)
     setLoading(false)
     toast.success(`${villa.name} is now ${newPlan}`)
     router.refresh()
