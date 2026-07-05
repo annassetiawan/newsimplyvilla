@@ -1,4 +1,4 @@
-export class ChannexError extends Error {
+class ChannexError extends Error {
   constructor(
     public code: string,
     public title: string,

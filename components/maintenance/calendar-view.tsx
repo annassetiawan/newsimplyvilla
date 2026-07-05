@@ -110,7 +110,7 @@ export function CalendarView({ tasks, onEdit }: Props) {
               </div>
               <div className="space-y-1">
                 {dayTasks.map((task) => (
-                  <button
+                  <button type="button"
                     key={task.id}
                     className={cn(
                       'w-full rounded-md border p-1.5 text-left text-[11px] font-medium transition-opacity hover:opacity-80',
@@ -139,7 +139,7 @@ export function CalendarView({ tasks, onEdit }: Props) {
           </p>
           <div className="flex flex-wrap gap-2">
             {unscheduled.map((task) => (
-              <button
+              <button type="button"
                 key={task.id}
                 className={cn(
                   'rounded-md border px-2 py-1 text-[11px] font-medium hover:opacity-80',

@@ -6,44 +6,6 @@ import { z } from 'zod'
 import { db } from '@/lib/db'
 import { getSessionUser } from '@/lib/getSession'
 
-const AttendanceSchema = z.object({
-  employeeId: z.string(),
-  date: z.string(),
-  status: z.enum(['PRESENT', 'ABSENT', 'SICK', 'LEAVE', 'OFF']),
-  note: z.string().optional(),
-})
-
-export async function upsertAttendance(data: z.infer<typeof AttendanceSchema>) {
-  const user = await getSessionUser()
-  if (!user?.villaId) redirect('/login')
-
-  const parsed = AttendanceSchema.parse(data)
-  const date = new Date(parsed.date)
-
-  await db.attendance.upsert({
-    where: {
-      employeeId_date: {
-        employeeId: parsed.employeeId,
-        date,
-      },
-    },
-    create: {
-      employeeId: parsed.employeeId,
-      date,
-      status: parsed.status,
-      note: parsed.note || null,
-      villaId: user.villaId!,
-    },
-    update: {
-      status: parsed.status,
-      note: parsed.note || null,
-    },
-  })
-
-  revalidatePath('/employee')
-  return { success: true }
-}
-
 const BulkEntrySchema = z.object({
   employeeId: z.string(),
   status: z.enum(['PRESENT', 'ABSENT', 'SICK', 'LEAVE', 'OFF']),

@@ -38,7 +38,7 @@ export function DashboardDateFilter() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button className="flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-1.5 text-sm font-medium text-foreground shadow-sm transition-colors hover:bg-muted">
+        <button type="button" className="flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-1.5 text-sm font-medium text-foreground shadow-sm transition-colors hover:bg-muted">
           <CalendarDays className="h-3.5 w-3.5 text-muted-foreground" />
           <span className="hidden sm:inline">{fmtRange(from, to)}</span>
           <span className="sm:hidden">{currentLabel}</span>

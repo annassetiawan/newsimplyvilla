@@ -24,7 +24,7 @@ interface Props {
 }
 
 const schema = z.object({
-  email: z.string().email('Format email tidak valid'),
+  email: z.email('Format email tidak valid'),
   billing: z.enum(['bulanan', 'tahunan']),
 })
 type Values = z.infer<typeof schema>

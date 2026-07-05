@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useTransition } from 'react'
+import { useTransition } from 'react'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -63,30 +63,15 @@ export function TaskModal({ open, onClose, initial, locationOptions, staffOption
   const form = useForm<TaskValues>({
     resolver: zodResolver(taskSchema),
     defaultValues: {
-      title: '',
-      type: 'MAINTENANCE',
-      location: '',
-      priority: 'MED',
-      assignedTo: '',
-      dueDate: '',
+      title: initial?.title ?? '',
+      type: initial?.type ?? 'MAINTENANCE',
+      location: initial?.location ?? '',
+      priority: initial?.priority ?? 'MED',
+      assignedTo: initial?.assignedTo ?? '',
+      dueDate: initial?.dueDate ? initial.dueDate.slice(0, 16) : '',
       notes: '',
     },
   })
-
-  useEffect(() => {
-    if (open) {
-      form.reset({
-        title: initial?.title ?? '',
-        type: initial?.type ?? 'MAINTENANCE',
-        location: initial?.location ?? '',
-        priority: initial?.priority ?? 'MED',
-        assignedTo: initial?.assignedTo ?? '',
-        dueDate: initial?.dueDate ? initial.dueDate.slice(0, 16) : '',
-        notes: '',
-      })
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open])
 
   function onSubmit(data: TaskValues) {
     startTransition(async () => {
@@ -163,15 +148,19 @@ export function TaskModal({ open, onClose, initial, locationOptions, staffOption
           </div>
 
           <div className="space-y-1.5">
-            <Label>Location</Label>
+            <Label htmlFor="task-location">Location</Label>
             <Input
+              id="task-location"
+              aria-label="Location"
               list="location-options"
               placeholder="Select or type location..."
               {...form.register('location')}
             />
-            <datalist id="location-options">
+            <datalist id="location-options" aria-label="Location options">
               {locationOptions.map((l) => (
-                <option key={l} value={l} />
+                <option key={l} value={l}>
+                  {l}
+                </option>
               ))}
             </datalist>
             {form.formState.errors.location && (
@@ -181,21 +170,30 @@ export function TaskModal({ open, onClose, initial, locationOptions, staffOption
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label>Assigned to</Label>
+              <Label htmlFor="task-assigned-to">Assigned to</Label>
               <Input
+                id="task-assigned-to"
+                aria-label="Assigned to"
                 list="staff-options"
                 placeholder="Staff name..."
                 {...form.register('assignedTo')}
               />
-              <datalist id="staff-options">
+              <datalist id="staff-options" aria-label="Staff options">
                 {staffOptions.map((s) => (
-                  <option key={s.id} value={s.name} />
+                  <option key={s.id} value={s.name}>
+                    {s.name}
+                  </option>
                 ))}
               </datalist>
             </div>
             <div className="space-y-1.5">
-              <Label>Due date &amp; time</Label>
-              <Input type="datetime-local" {...form.register('dueDate')} />
+              <Label htmlFor="task-due-at">Due date &amp; time</Label>
+              <Input
+                id="task-due-at"
+                aria-label="Due date and time"
+                type="datetime-local"
+                {...form.register('dueDate')}
+              />
             </div>
           </div>
 

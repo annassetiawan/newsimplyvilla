@@ -94,7 +94,7 @@ export function BudgetTab({ transactions, reservations, posTransactions, budgets
         ) : (
           <div className="py-6 text-center text-sm text-muted-foreground">
             Belum ada target bulan ini.{' '}
-            <button onClick={() => setModalOpen(true)} className="underline font-medium text-foreground">
+            <button type="button" onClick={() => setModalOpen(true)} className="underline font-medium text-foreground">
               Set sekarang
             </button>
           </div>

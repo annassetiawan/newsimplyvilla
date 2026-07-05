@@ -109,7 +109,7 @@ export function NotificationBell() {
           <div className="flex items-center justify-between px-4 py-3 border-b border-border">
             <p className="text-sm font-semibold">Notifikasi</p>
             {unread > 0 && (
-              <button
+              <button type="button"
                 onClick={markAll}
                 disabled={isPending}
                 className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
@@ -129,7 +129,7 @@ export function NotificationBell() {
               </div>
             ) : (
               notifs.map((n) => (
-                <button
+                <button type="button"
                   key={n.id}
                   onClick={() => handleClick(n)}
                   className={cn(

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Image from 'next/image'
 import { Plus, UserSquare2, Pencil, UserX } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -99,23 +100,26 @@ export function EmployeeList({ employees, staffList }: Props) {
                 <th className="text-left px-4 py-3 font-medium text-muted-foreground hidden lg:table-cell">Tipe</th>
                 <th className="text-left px-4 py-3 font-medium text-muted-foreground hidden lg:table-cell">Tgl Mulai</th>
                 <th className="text-left px-4 py-3 font-medium text-muted-foreground">Status</th>
-                <th className="px-4 py-3" />
+                <th className="px-4 py-3" aria-label="Aksi" />
               </tr>
             </thead>
             <tbody>
               {employees.map((emp, i) => (
                 <tr
                   key={emp.id}
-                  onClick={() => setDetailTarget(emp)}
                   className={cn(
-                    'cursor-pointer transition-colors hover:bg-muted/50',
+                    'transition-colors hover:bg-muted/50',
                     i < employees.length - 1 && 'border-b border-border'
                   )}
                 >
                   <td className="px-4 py-3">
-                    <div className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setDetailTarget(emp)}
+                      className="flex items-center gap-3 text-left"
+                    >
                       {emp.photo ? (
-                        <img src={emp.photo} alt={emp.name} className="w-8 h-8 rounded-full object-cover shrink-0" />
+                        <Image src={emp.photo} alt={emp.name} width={32} height={32} className="w-8 h-8 rounded-full object-cover shrink-0" />
                       ) : (
                         <div className="w-8 h-8 rounded-full bg-neutral-800 dark:bg-neutral-200 flex items-center justify-center shrink-0">
                           <span className="text-[11px] font-bold text-white dark:text-neutral-900">
@@ -124,7 +128,7 @@ export function EmployeeList({ employees, staffList }: Props) {
                         </div>
                       )}
                       <span className="font-medium">{emp.name}</span>
-                    </div>
+                    </button>
                   </td>
                   <td className="px-4 py-3 text-muted-foreground">{emp.position}</td>
                   <td className="px-4 py-3 text-muted-foreground hidden md:table-cell">{emp.department || '—'}</td>
@@ -146,7 +150,8 @@ export function EmployeeList({ employees, staffList }: Props) {
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-1 justify-end">
-                      <button
+                      <button type="button"
+                        aria-label={`Edit ${emp.name}`}
                         onClick={(ev) => openEdit(emp, ev)}
                         className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
                         title="Edit"
@@ -154,7 +159,8 @@ export function EmployeeList({ employees, staffList }: Props) {
                         <Pencil className="w-4 h-4" />
                       </button>
                       {emp.status === 'ACTIVE' && (
-                        <button
+                        <button type="button"
+                          aria-label={`Nonaktifkan ${emp.name}`}
                           onClick={(ev) => handleDeactivate(emp, ev)}
                           disabled={deactivating === emp.id}
                           className="p-1.5 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
@@ -173,11 +179,12 @@ export function EmployeeList({ employees, staffList }: Props) {
       )}
 
       <EmployeeModal
+        key={modalOpen ? (editTarget?.id ?? 'new') : 'closed'}
         open={modalOpen}
         onClose={() => setModalOpen(false)}
         employee={editTarget}
         staffList={staffList}
-        linkedStaffIds={employees.filter((e) => e.staffId && e.id !== editTarget?.id).map((e) => e.staffId!)}
+        linkedStaffIds={employees.flatMap((e) => (e.staffId && e.id !== editTarget?.id ? [e.staffId] : []))}
       />
 
       {detailTarget && (

@@ -4,11 +4,11 @@ import { getChannexClientRequired } from './getClient'
 import { getMapping, saveMapping, deleteMapping } from './mapping'
 import { pushRatesForDays } from './ari'
 
-export { getMapping, saveMapping, deleteMapping }
+export { deleteMapping }
 
 // ── Property sync ────────────────────────────────────────────────────────────
 
-export async function syncProperty(villaId: string, client: ChannexClient): Promise<string> {
+async function syncProperty(villaId: string, client: ChannexClient): Promise<string> {
   const villa = await db.villa.findUniqueOrThrow({ where: { id: villaId } })
   const existing = await getMapping(villaId, 'property', villaId)
 
@@ -41,7 +41,7 @@ export async function syncProperty(villaId: string, client: ChannexClient): Prom
 
 // ── Room type sync ───────────────────────────────────────────────────────────
 
-export async function syncRoomType(villaId: string, roomId: string, client: ChannexClient): Promise<string> {
+async function syncRoomType(villaId: string, roomId: string, client: ChannexClient): Promise<string> {
   const room = await db.room.findUniqueOrThrow({ where: { id: roomId } })
   const channexPropertyId = await getMapping(villaId, 'property', villaId)
   if (!channexPropertyId) throw new Error('Property not synced yet')

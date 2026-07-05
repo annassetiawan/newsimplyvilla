@@ -34,8 +34,14 @@ interface Props {
 
 type Tab = 'calendar' | 'restrictions'
 
+const RP_FORMATTER = new Intl.NumberFormat('id-ID', {
+  style: 'currency',
+  currency: 'IDR',
+  maximumFractionDigits: 0,
+})
+
 function fmtRp(n: number) {
-  return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(n)
+  return RP_FORMATTER.format(n)
 }
 
 export function RatePlanDetailClient({
@@ -81,7 +87,7 @@ export function RatePlanDetailClient({
           { key: 'calendar', label: 'Harga & Kalender', icon: CalendarDays },
           { key: 'restrictions', label: 'Restrictions', icon: Lock },
         ] as { key: Tab; label: string; icon: React.ElementType }[]).map(({ key, label, icon: Icon }) => (
-          <button
+          <button type="button"
             key={key}
             onClick={() => setTab(key)}
             className={cn(

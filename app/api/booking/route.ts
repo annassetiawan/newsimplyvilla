@@ -5,7 +5,7 @@ import { z } from 'zod'
 const bookingSchema = z.object({
   villaId: z.string().min(1),
   guestName: z.string().min(1, 'Nama wajib diisi'),
-  guestEmail: z.string().email('Email tidak valid').optional().or(z.literal('')),
+  guestEmail: z.email('Email tidak valid').optional().or(z.literal('')),
   guestPhone: z.string().optional().or(z.literal('')),
   roomId: z.string().min(1, 'Kamar wajib dipilih'),
   checkIn: z.string().min(1, 'Tanggal check-in wajib diisi'),

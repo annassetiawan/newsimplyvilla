@@ -12,10 +12,9 @@ import {
   GuestIdentityCard,
   GuestStaysList,
   StayHistoryCard,
-  memberSince,
-  ordinalStay,
   type GuestDetail,
 } from './guest-detail-cards'
+import { memberSince, ordinalStay } from './guest-format'
 
 interface Props {
   guest: GuestDetail

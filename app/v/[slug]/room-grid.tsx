@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import { Users, Bed } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
@@ -48,11 +49,13 @@ export function RoomGrid({
               )}
             >
               {room.photos.length > 0 && (
-                <div className="aspect-video w-full overflow-hidden rounded-t-xl">
-                  <img
+                <div className="relative aspect-video w-full overflow-hidden rounded-t-xl">
+                  <Image
                     src={room.photos[0]}
                     alt={room.name}
-                    className="h-full w-full object-cover"
+                    fill
+                    sizes="(min-width: 640px) 50vw, 100vw"
+                    className="object-cover"
                   />
                 </div>
               )}

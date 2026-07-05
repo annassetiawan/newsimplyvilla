@@ -12,9 +12,9 @@ import {
   SOPDetailDialog,
   SOPFeaturedCard,
   SOPGridCard,
-  formatSOPDate,
   type SOPData,
 } from './sop-cards'
+import { formatSOPDate } from './sop-format'
 
 export type { SOPData }
 
@@ -180,7 +180,12 @@ export function SOPClient({ sops }: Props) {
         }}
       />
 
-      <SOPModal open={modalOpen} onClose={handleModalClose} initial={editSOP} />
+      <SOPModal
+        key={modalOpen ? (editSOP?.id ?? 'new') : 'closed'}
+        open={modalOpen}
+        onClose={handleModalClose}
+        initial={editSOP}
+      />
     </div>
   )
 }

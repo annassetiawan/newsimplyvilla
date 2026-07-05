@@ -16,6 +16,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { formatSOPDate } from './sop-format'
 
 export interface SOPData {
   id: string
@@ -26,7 +27,7 @@ export interface SOPData {
   updatedAt: string
 }
 
-export const CATEGORIES = [
+const CATEGORIES = [
   { key: 'ALL', label: 'All SOPs' },
   { key: 'FRONT_DESK', label: 'Front Desk' },
   { key: 'HOUSEKEEPING', label: 'Housekeeping' },
@@ -49,14 +50,6 @@ const CAT_COLOR: Record<string, string> = {
   MAINTENANCE: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
   INVENTORY: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
   SAFETY: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
-}
-
-export function formatSOPDate(iso: string, year = false) {
-  return new Date(iso).toLocaleDateString('en-GB', {
-    day: 'numeric',
-    month: 'short',
-    ...(year ? { year: 'numeric' } : {}),
-  })
 }
 
 // ─── Category filter (mobile pills + desktop list) ────────────────────────────
@@ -119,12 +112,10 @@ export function SOPCategoryFilter({ activeCategory, onSelect, countFor }: SOPCat
 
 export function SOPFeaturedCard({ sop, onOpen }: { sop: SOPData; onOpen: () => void }) {
   return (
-    <div
-      className="rounded-xl border border-border bg-background p-4 cursor-pointer hover:shadow-sm transition-shadow lg:p-6"
-      role="button"
-      tabIndex={0}
+    <button
+      type="button"
+      className="w-full text-left rounded-xl border border-border bg-background p-4 cursor-pointer hover:shadow-sm transition-shadow lg:p-6"
       onClick={onOpen}
-      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onOpen() }}
     >
       <div className="flex flex-col gap-4 lg:flex-row lg:gap-8">
         {/* Left */}
@@ -180,7 +171,7 @@ export function SOPFeaturedCard({ sop, onOpen }: { sop: SOPData; onOpen: () => v
           </ol>
         </div>
       </div>
-    </div>
+    </button>
   )
 }
 

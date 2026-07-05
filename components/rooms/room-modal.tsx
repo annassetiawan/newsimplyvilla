@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition, useEffect, useRef, useCallback } from 'react'
+import { useState, useTransition, useRef, useCallback } from 'react'
 import {
   Dialog,
   DialogContent,
@@ -38,38 +38,17 @@ type PhotoItem = { id: string; file?: File; preview: string }
 
 export function RoomModal({ open, onClose, initial }: Props) {
   const [pending, startTransition] = useTransition()
-  const [code, setCode] = useState('')
-  const [name, setName] = useState('')
-  const [type, setType] = useState('')
-  const [capacity, setCapacity] = useState('2')
-  const [price, setPrice] = useState('')
-  const [status, setStatus] = useState<RoomFormData['status']>('AVAILABLE')
-  const [photos, setPhotos] = useState<PhotoItem[]>([])
+  const [code, setCode] = useState(initial?.code ?? '')
+  const [name, setName] = useState(initial?.name ?? '')
+  const [type, setType] = useState(initial?.type ?? '')
+  const [capacity, setCapacity] = useState(String(initial?.capacity ?? 2))
+  const [price, setPrice] = useState(initial ? String(initial.pricePerNight) : '')
+  const [status, setStatus] = useState<RoomFormData['status']>(initial?.status ?? 'AVAILABLE')
+  const [photos, setPhotos] = useState<PhotoItem[]>(
+    () => (initial?.photos ?? []).map((url) => ({ id: url, preview: url }))
+  )
   const [error, setError] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
-
-  useEffect(() => {
-    if (initial) {
-      setCode(initial.code)
-      setName(initial.name)
-      setType(initial.type)
-      setCapacity(String(initial.capacity))
-      setPrice(String(initial.pricePerNight))
-      setStatus(initial.status)
-      setPhotos(
-        (initial.photos ?? []).map((url) => ({ id: url, preview: url }))
-      )
-    } else {
-      setCode('')
-      setName('')
-      setType('')
-      setCapacity('2')
-      setPrice('')
-      setStatus('AVAILABLE')
-      setPhotos([])
-    }
-    setError('')
-  }, [initial, open])
 
   const removePhoto = useCallback((id: string) => {
     setPhotos((prev) => {
@@ -93,10 +72,10 @@ export function RoomModal({ open, onClose, initial }: Props) {
 
   async function uploadPhotos(): Promise<string[]> {
     const supabase = createClient()
-    const urls: string[] = []
 
-    for (const photo of photos) {
-      if (photo.file) {
+    return Promise.all(
+      photos.map(async (photo) => {
+        if (!photo.file) return photo.preview
         const ext = photo.file.name.split('.').pop() ?? 'jpg'
         const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
         const { error: uploadError } = await supabase.storage
@@ -104,13 +83,9 @@ export function RoomModal({ open, onClose, initial }: Props) {
           .upload(path, photo.file, { upsert: false })
         if (uploadError) throw new Error(uploadError.message)
         const { data } = supabase.storage.from('room-photos').getPublicUrl(path)
-        urls.push(data.publicUrl)
-      } else {
-        urls.push(photo.preview)
-      }
-    }
-
-    return urls
+        return data.publicUrl
+      })
+    )
   }
 
   function handleSubmit(e: React.FormEvent) {

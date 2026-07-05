@@ -24,15 +24,21 @@ export function useSubscription(): UseSubscriptionResult {
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
+    let ignore = false
     fetch('/api/subscription')
       .then((res) => res.json())
       .then((json: SubscriptionData) => {
-        setData(json)
+        if (!ignore) setData(json)
       })
       .catch(() => {
-        setData({ plan: 'FREE', status: 'INACTIVE', startDate: null, endDate: null })
+        if (!ignore) setData({ plan: 'FREE', status: 'INACTIVE', startDate: null, endDate: null })
       })
-      .finally(() => setIsLoading(false))
+      .finally(() => {
+        if (!ignore) setIsLoading(false)
+      })
+    return () => {
+      ignore = true
+    }
   }, [])
 
   const plan = data?.plan ?? 'FREE'

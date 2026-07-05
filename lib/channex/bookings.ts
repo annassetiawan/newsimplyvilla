@@ -115,8 +115,10 @@ async function applyRevision(
     // All room guests (e.g. "asd, efg, hij")
     const roomGuests = room.guests ?? []
     const guestNames = roomGuests
-      .map((g) => [g.name, g.surname].filter(Boolean).join(' '))
-      .filter(Boolean)
+      .flatMap((g) => {
+        const full = [g.name, g.surname].filter(Boolean).join(' ')
+        return full ? [full] : []
+      })
       .join(', ') || null
 
     // Occupancy summary (e.g. "Adults: 2, Children: 1, Infants: 2")

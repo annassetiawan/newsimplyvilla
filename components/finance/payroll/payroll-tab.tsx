@@ -168,7 +168,7 @@ export function PayrollTab({ payrolls, staffList, currentMonth, currentYear }: P
                     <td className="px-4 py-3 text-center">
                       <div className="flex items-center justify-center gap-1.5">
                         {p.status === 'UNPAID' ? (
-                          <button
+                          <button type="button"
                             onClick={() => handleMarkPaid(p.id)}
                             disabled={isPending}
                             className="rounded-md border border-emerald-500 px-2 py-1 text-xs font-medium text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950 transition-colors disabled:opacity-50"
@@ -176,7 +176,7 @@ export function PayrollTab({ payrolls, staffList, currentMonth, currentYear }: P
                             Mark Paid
                           </button>
                         ) : (
-                          <button
+                          <button type="button"
                             onClick={() => handleMarkUnpaid(p.id)}
                             disabled={isPending}
                             className="rounded-md border border-border px-2 py-1 text-xs font-medium text-muted-foreground hover:bg-muted transition-colors disabled:opacity-50"
@@ -184,7 +184,7 @@ export function PayrollTab({ payrolls, staffList, currentMonth, currentYear }: P
                             Revert
                           </button>
                         )}
-                        <button
+                        <button type="button"
                           onClick={() => openInputForStaff(p.staffId ?? undefined)}
                           className="rounded-md border border-border px-2 py-1 text-xs font-medium text-muted-foreground hover:bg-muted transition-colors"
                         >
@@ -206,7 +206,7 @@ export function PayrollTab({ payrolls, staffList, currentMonth, currentYear }: P
                     </td>
                     <td className="px-4 py-3 text-muted-foreground">—</td>
                     <td className="px-4 py-3 text-center">
-                      <button
+                      <button type="button"
                         onClick={() => openInputForStaff(s.id)}
                         className="rounded-md border border-border px-2 py-1 text-xs font-medium text-muted-foreground hover:bg-muted transition-colors"
                       >

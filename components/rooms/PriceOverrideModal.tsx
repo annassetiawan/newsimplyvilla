@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useTransition } from 'react'
+import { useState, useTransition } from 'react'
 import { toast } from 'sonner'
 import {
   Dialog,
@@ -16,10 +16,21 @@ import { cn } from '@/lib/utils'
 import { setPriceOverride, setPriceOverrideRange, deletePriceOverride } from '@/app/actions/ratePlan'
 import type { PriceOverrideData } from './RatePlanDetailClient'
 
-function Toggle({ checked, onChange, disabled }: { checked: boolean; onChange: (v: boolean) => void; disabled?: boolean }) {
+function Toggle({
+  checked,
+  onChange,
+  disabled,
+  ariaLabel,
+}: {
+  checked: boolean
+  onChange: (v: boolean) => void
+  disabled?: boolean
+  ariaLabel: string
+}) {
   return (
     <button
       type="button"
+      aria-label={ariaLabel}
       onClick={() => onChange(!checked)}
       disabled={disabled}
       className={cn(
@@ -57,15 +68,10 @@ export function PriceOverrideModal({ open, onClose, ratePlanId, ratePlanName, ba
   const isRange = dates.length > 1
   const [isPending, startTransition] = useTransition()
 
-  const [price, setPrice] = useState('')
-  const [isClosed, setIsClosed] = useState(false)
-
-  useEffect(() => {
-    if (open) {
-      setPrice(existing?.price !== null && existing?.price !== undefined ? String(existing.price) : '')
-      setIsClosed(existing?.isClosed ?? false)
-    }
-  }, [open, existing])
+  const [price, setPrice] = useState(
+    existing?.price !== null && existing?.price !== undefined ? String(existing.price) : ''
+  )
+  const [isClosed, setIsClosed] = useState(existing?.isClosed ?? false)
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -152,7 +158,12 @@ export function PriceOverrideModal({ open, onClose, ratePlanId, ratePlanName, ba
               <p className="text-sm font-medium">Tutup Tanggal Ini</p>
               <p className="text-xs text-muted-foreground">Tidak menerima pemesanan</p>
             </div>
-            <Toggle checked={isClosed} onChange={setIsClosed} disabled={isPending} />
+            <Toggle
+              checked={isClosed}
+              onChange={setIsClosed}
+              disabled={isPending}
+              ariaLabel="Tandai tanggal ditutup"
+            />
           </div>
 
           {/* Price input */}

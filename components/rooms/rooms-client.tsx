@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState, useTransition, useEffect } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import {
   Eye,
   Pencil,
@@ -175,7 +176,7 @@ export function RoomsClient({ rooms, areas, plan, roomCount }: Props) {
           )}
         </div>
         <div className="flex items-center gap-2">
-          <button
+          <button type="button"
             onClick={() => setGalleryOpen(true)}
             className="flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-1.5 text-sm font-medium text-foreground shadow-sm transition-colors hover:bg-muted"
           >
@@ -193,7 +194,7 @@ export function RoomsClient({ rooms, areas, plan, roomCount }: Props) {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="scrollbar-hide flex overflow-x-auto rounded-lg border border-border bg-background p-1 text-muted-foreground">
           {FILTER_TABS.map((t) => (
-            <button
+            <button type="button"
               key={t}
               onClick={() => setTab(t)}
               className={cn(
@@ -322,6 +323,7 @@ export function RoomsClient({ rooms, areas, plan, roomCount }: Props) {
 
       {/* Room add/edit modal */}
       <RoomModal
+        key={roomModalOpen ? (editRoom?.id ?? 'new') : 'closed'}
         open={roomModalOpen}
         onClose={() => setRoomModalOpen(false)}
         initial={editRoom}
@@ -387,10 +389,12 @@ function RoomCard({
       {/* Image */}
       <div className="relative h-44 bg-muted/40 flex items-center justify-center overflow-hidden">
         {room.photos && room.photos.length > 0 ? (
-          <img
+          <Image
             src={room.photos[0]}
             alt={room.name}
-            className="h-full w-full object-cover"
+            fill
+            sizes="(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 100vw"
+            className="object-cover"
           />
         ) : (
           <p className="text-xs font-semibold tracking-widest text-muted-foreground/60 uppercase select-none">
@@ -428,13 +432,15 @@ function RoomCard({
             >
               <Settings2 className="h-3.5 w-3.5" />
             </Link>
-            <button
+            <button type="button"
+              aria-label={`Lihat ${room.name}`}
               onClick={onView}
               className="flex h-8 w-8 items-center justify-center rounded-full border border-border bg-background text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             >
               <Eye className="h-3.5 w-3.5" />
             </button>
-            <button
+            <button type="button"
+              aria-label={`Edit ${room.name}`}
               onClick={onEdit}
               className="flex h-8 w-8 items-center justify-center rounded-full border border-border bg-background text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             >
@@ -457,6 +463,15 @@ function GalleryModal({
   rooms: RoomWithReservation[]
 }) {
   const [lightbox, setLightbox] = useState<{ url: string; room: string } | null>(null)
+
+  useEffect(() => {
+    if (!lightbox) return
+    function handleEscape(e: KeyboardEvent) {
+      if (e.key === 'Escape') setLightbox(null)
+    }
+    window.addEventListener('keydown', handleEscape)
+    return () => window.removeEventListener('keydown', handleEscape)
+  }, [lightbox])
 
   const roomsWithPhotos = rooms.filter((r) => r.photos && r.photos.length > 0)
   const totalPhotos = roomsWithPhotos.reduce((s, r) => s + (r.photos?.length ?? 0), 0)
@@ -487,16 +502,19 @@ function GalleryModal({
                       <span className="font-id">{room.code}</span> — {room.name}
                     </p>
                     <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
-                      {room.photos!.map((url, i) => (
-                        <button
-                          key={i}
+                      {room.photos!.map((url) => (
+                        <button type="button"
+                          aria-label={`Buka foto ${room.name}`}
+                          key={url}
                           onClick={() => setLightbox({ url, room: `${room.code} — ${room.name}` })}
                           className="group relative aspect-square overflow-hidden rounded-lg bg-muted/40"
                         >
-                          <img
+                          <Image
                             src={url}
                             alt=""
-                            className="h-full w-full object-cover transition-transform group-hover:scale-105"
+                            fill
+                            sizes="(min-width: 640px) 33vw, 50vw"
+                            className="object-cover transition-transform group-hover:scale-105"
                           />
                         </button>
                       ))}
@@ -510,12 +528,15 @@ function GalleryModal({
       </Dialog>
 
       {/* Lightbox */}
+      {/* Backdrop click-to-close is a convenience gesture; the visible close
+          button and the Escape handler above already give keyboard users a
+          reachable way to dismiss, so this div doesn't need its own role. */}
       {lightbox && (
         <div
           className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 p-4"
           onClick={() => setLightbox(null)}
         >
-          <button
+          <button type="button"
             className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20"
             onClick={() => setLightbox(null)}
           >
@@ -568,7 +589,7 @@ function RoomDetailSheet({
             {STATUS_LABEL[room.status]}
           </span>
         </div>
-        <button
+        <button type="button"
           onClick={onClose}
           className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
         >
@@ -581,11 +602,13 @@ function RoomDetailSheet({
         {/* Photos */}
         {room.photos && room.photos.length > 0 ? (
           <div className="mx-6 mt-5 flex gap-2 overflow-x-auto pb-0.5">
-            {room.photos.map((url, i) => (
-              <img
-                key={i}
+            {room.photos.map((url) => (
+              <Image
+                key={url}
                 src={url}
                 alt=""
+                width={192}
+                height={144}
                 className="h-36 w-48 shrink-0 rounded-xl object-cover"
               />
             ))}

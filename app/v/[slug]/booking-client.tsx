@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState, useEffect, useTransition } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -42,6 +42,10 @@ export function BookingClient({ data }: Props) {
   const [checkOut, setCheckOut] = useState('')
   const [roomId, setRoomId] = useState('')
   const [notes, setNotes] = useState('')
+  // Computed client-side only — the server and client can render this a
+  // moment apart, and a server-rendered "today" would mismatch on hydration.
+  const [today, setToday] = useState<string | null>(null)
+  useEffect(() => setToday(new Date().toISOString().split('T')[0]), [])
   const [error, setError] = useState('')
   const [submitted, setSubmitted] = useState(false)
 
@@ -204,7 +208,7 @@ export function BookingClient({ data }: Props) {
                           type="date"
                           value={checkIn}
                           onChange={(e) => handleCheckInChange(e.target.value)}
-                          min={new Date().toISOString().split('T')[0]}
+                          min={today ?? undefined}
                         />
                       </div>
                       <div className="space-y-1.5">
@@ -213,7 +217,7 @@ export function BookingClient({ data }: Props) {
                           type="date"
                           value={checkOut}
                           onChange={(e) => handleCheckOutChange(e.target.value)}
-                          min={checkIn || new Date().toISOString().split('T')[0]}
+                          min={checkIn || (today ?? undefined)}
                         />
                       </div>
                     </div>

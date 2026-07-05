@@ -31,6 +31,9 @@ function daysInMonth(month: number, year: number) {
 
 export function AttendanceTab({ employees, attendances, currentMonth, currentYear }: Props) {
   const [modalOpen, setModalOpen] = useState(false)
+  // Computed only when the modal opens (a user action), not during render,
+  // so server and client never disagree on "today" during hydration.
+  const [modalDefaultDate, setModalDefaultDate] = useState('')
   const [selectedMonth, setSelectedMonth] = useState(currentMonth)
   const [selectedYear, setSelectedYear] = useState(currentYear)
 
@@ -75,7 +78,12 @@ export function AttendanceTab({ employees, attendances, currentMonth, currentYea
         </select>
 
         <Button
-          onClick={() => setModalOpen(true)}
+          onClick={() => {
+            setModalDefaultDate(
+              `${selectedYear}-${String(selectedMonth).padStart(2, '0')}-${String(new Date().getDate()).padStart(2, '0')}`
+            )
+            setModalOpen(true)
+          }}
           className="bg-neutral-800 text-white hover:bg-neutral-700 dark:bg-neutral-200 dark:text-neutral-900 dark:hover:bg-neutral-300 gap-2"
         >
           <CalendarCheck className="w-4 h-4" /> Input Absensi
@@ -169,7 +177,7 @@ export function AttendanceTab({ employees, attendances, currentMonth, currentYea
         open={modalOpen}
         onClose={() => setModalOpen(false)}
         employees={activeEmployees}
-        defaultDate={`${selectedYear}-${String(selectedMonth).padStart(2, '0')}-${String(new Date().getDate()).padStart(2, '0')}`}
+        defaultDate={modalDefaultDate}
       />
     </div>
   )

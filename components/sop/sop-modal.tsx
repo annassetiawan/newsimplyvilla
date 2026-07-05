@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useTransition } from 'react'
+import { useTransition } from 'react'
 import { useForm, Controller, useFieldArray } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -52,36 +52,22 @@ export function SOPModal({ open, onClose, initial }: Props) {
   const [pending, startTransition] = useTransition()
   const form = useForm<Values>({
     resolver: zodResolver(schema),
-    defaultValues: {
-      title: '',
-      category: 'FRONT_DESK',
-      estimatedMinutes: 15,
-      steps: [{ text: '' }],
-    },
-  })
-
-  const { fields, append, remove } = useFieldArray({ control: form.control, name: 'steps' })
-
-  useEffect(() => {
-    if (open) {
-      if (initial) {
-        form.reset({
+    defaultValues: initial
+      ? {
           title: initial.title,
           category: initial.category as Values['category'],
           estimatedMinutes: initial.estimatedMinutes,
           steps: initial.steps.map((s) => ({ text: s.text })),
-        })
-      } else {
-        form.reset({
+        }
+      : {
           title: '',
           category: 'FRONT_DESK',
           estimatedMinutes: 15,
           steps: [{ text: '' }],
-        })
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open])
+        },
+  })
+
+  const { fields, append, remove } = useFieldArray({ control: form.control, name: 'steps' })
 
   function onSubmit(data: Values) {
     startTransition(async () => {

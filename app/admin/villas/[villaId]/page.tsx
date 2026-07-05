@@ -13,9 +13,7 @@ interface Props {
 }
 
 export default async function AdminVillaDetailPage({ params }: Props) {
-  const { villaId } = await params
-
-  const user = await getSessionUser()
+  const [{ villaId }, user] = await Promise.all([params, getSessionUser()])
   if (!user) redirect('/login')
   if (user.role !== 'SUPER_ADMIN') redirect('/dashboard')
 

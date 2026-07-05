@@ -74,9 +74,9 @@ export function AttendanceInputModal({ open, onClose, employees, defaultDate }: 
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    const toSave = Object.entries(entries)
-      .filter(([, v]) => v.status)
-      .map(([employeeId, v]) => ({ employeeId, status: v.status, note: v.note || undefined }))
+    const toSave = Object.entries(entries).flatMap(([employeeId, v]) =>
+      v.status ? [{ employeeId, status: v.status, note: v.note || undefined }] : []
+    )
 
     if (toSave.length === 0) {
       toast.error('Belum ada absensi yang diisi')

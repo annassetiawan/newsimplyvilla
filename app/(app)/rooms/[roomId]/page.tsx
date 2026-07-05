@@ -20,8 +20,7 @@ function addDays(date: Date, days: number) {
 }
 
 export default async function RoomDetailPage({ params }: Props) {
-  const { roomId } = await params
-  const user = await getSessionUser()
+  const [{ roomId }, user] = await Promise.all([params, getSessionUser()])
   if (!user?.villaId) redirect('/login')
 
   const today = new Date()

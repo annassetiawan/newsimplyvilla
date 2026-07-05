@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useTransition } from 'react'
+import { useTransition } from 'react'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -67,22 +67,11 @@ export function ShiftModal({ open, onClose, onSave, initial, staffOptions }: Pro
   const form = useForm<ShiftValues>({
     resolver: zodResolver(shiftSchema),
     defaultValues: {
-      staffId: '',
-      date: '',
-      shiftType: 'MORNING',
+      staffId: initial?.staffId ?? '',
+      date: initial?.date ?? '',
+      shiftType: initial?.shiftType ?? 'MORNING',
     },
   })
-
-  useEffect(() => {
-    if (open) {
-      form.reset({
-        staffId: initial?.staffId ?? '',
-        date: initial?.date ?? '',
-        shiftType: initial?.shiftType ?? 'MORNING',
-      })
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open])
 
   function onSubmit(data: ShiftValues) {
     startTransition(async () => {

@@ -159,7 +159,7 @@ export function InventoryClient({ items, recentStats }: Props) {
       <div className="flex flex-wrap items-center gap-3">
         <div className="inline-flex h-9 items-center justify-center rounded-lg bg-muted p-1 text-muted-foreground">
           {FILTER_TABS.map((t) => (
-            <button
+            <button type="button"
               key={t}
               onClick={() => setTab(t)}
               className={cn(
@@ -274,7 +274,7 @@ export function InventoryClient({ items, recentStats }: Props) {
                 <TableCell colSpan={6} className="py-10 text-center">
                   <div className="flex flex-col items-center gap-2">
                     <p className="text-sm font-medium text-neutral-700 dark:text-neutral-300">Tidak ada item di kategori ini</p>
-                    <button
+                    <button type="button"
                       onClick={() => setNewItemOpen(true)}
                       className="mt-1 rounded-lg bg-neutral-800 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-neutral-700"
                     >
@@ -338,18 +338,20 @@ export function InventoryClient({ items, recentStats }: Props) {
 
       {/* Modals */}
       <StockInModal
+        key={stockInOpen ? (defaultItemId ?? 'new') : 'closed'}
         open={stockInOpen}
         onClose={() => setStockInOpen(false)}
         items={items}
         defaultItemId={defaultItemId}
       />
       <StockOutModal
+        key={stockOutOpen ? (defaultItemId ?? 'new') : 'closed'}
         open={stockOutOpen}
         onClose={() => setStockOutOpen(false)}
         items={items}
         defaultItemId={defaultItemId}
       />
-      <NewItemModal open={newItemOpen} onClose={() => setNewItemOpen(false)} />
+      <NewItemModal key={newItemOpen ? 'open' : 'closed'} open={newItemOpen} onClose={() => setNewItemOpen(false)} />
       <StockHistorySheet
         open={!!historyItem}
         onClose={() => setHistoryItem(null)}

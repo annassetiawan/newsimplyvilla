@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect } from 'react'
-import { Button } from '@/components/ui/button'
 import { AlertTriangle } from 'lucide-react'
 
 export default function GlobalError({
@@ -16,7 +15,7 @@ export default function GlobalError({
   }, [error])
 
   return (
-    <html>
+    <html lang="id">
       <body>
         <div className="flex flex-col items-center justify-center min-h-screen gap-4 p-6">
           <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center">
@@ -30,12 +29,14 @@ export default function GlobalError({
           </div>
           <div className="flex gap-3">
             <button
+              type="button"
               onClick={() => (window.location.href = '/dashboard')}
               className="px-4 py-2 text-sm border border-neutral-200 rounded-lg text-neutral-700 hover:bg-neutral-50"
             >
               Kembali ke dashboard
             </button>
             <button
+              type="button"
               onClick={() => reset()}
               className="px-4 py-2 text-sm bg-neutral-800 text-white rounded-lg hover:bg-neutral-700"
             >

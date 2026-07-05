@@ -1,7 +1,8 @@
 'use client'
 
 import { cn } from '@/lib/utils'
-import { STATUS_STYLE, STATUS_LABEL, fmtDate, fmtRp } from './reservation-detail-sheet'
+import { STATUS_STYLE, STATUS_LABEL, fmtDate, fmtRp } from './reservation-format'
+import { memberSince, ordinalStay } from './guest-format'
 
 export interface GuestReservation {
   id: string
@@ -28,19 +29,8 @@ function getInitials(name: string) {
   return name.split(' ').slice(0, 2).map((w) => w[0]).join('').toUpperCase()
 }
 
-export function nightCount(ci: string, co: string) {
+function nightCount(ci: string, co: string) {
   return Math.ceil((new Date(co).getTime() - new Date(ci).getTime()) / 86400000)
-}
-
-export function memberSince(iso: string) {
-  return new Date(iso).toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })
-}
-
-export function ordinalStay(n: number) {
-  if (n === 1) return '1st stay'
-  if (n === 2) return '2nd stay'
-  if (n === 3) return '3rd stay'
-  return `${n}th stay`
 }
 
 export function GuestIdentityCard({ guest, stayCount }: { guest: GuestDetail; stayCount: number }) {

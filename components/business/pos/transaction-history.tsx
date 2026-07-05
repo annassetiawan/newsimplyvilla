@@ -63,7 +63,7 @@ export function TransactionHistory({ businessId, refreshKey }: Props) {
     <div className="space-y-2">
       {transactions.map((tx) => (
         <div key={tx.id} className="overflow-hidden rounded-lg border border-border">
-          <button
+          <button type="button"
             className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-muted/40 transition-colors"
             onClick={() => setExpanded((prev) => (prev === tx.id ? null : tx.id))}
           >
@@ -98,8 +98,8 @@ export function TransactionHistory({ businessId, refreshKey }: Props) {
 
           {expanded === tx.id && (
             <div className="border-t border-border bg-muted/20 px-4 py-3 space-y-2">
-              {tx.items.map((item, idx) => (
-                <div key={idx} className="flex items-center justify-between text-sm">
+              {tx.items.map((item) => (
+                <div key={`${item.name}-${item.qty}-${item.subtotal}`} className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">
                     {item.name} × {item.qty}
                   </span>

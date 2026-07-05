@@ -104,7 +104,7 @@ export function AdminSidebar({ userName, userEmail }: AdminSidebarProps) {
       <div className="shrink-0 border-t border-border p-2">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="flex w-full items-center gap-2.5 rounded-lg px-2 py-2 text-left transition-colors hover:bg-muted">
+            <button type="button" className="flex w-full items-center gap-2.5 rounded-lg px-2 py-2 text-left transition-colors hover:bg-muted">
               <Avatar className="h-7 w-7 shrink-0">
                 <AvatarFallback className="bg-primary text-[11px] font-semibold text-primary-foreground">
                   {initials}

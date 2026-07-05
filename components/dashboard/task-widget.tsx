@@ -70,7 +70,8 @@ export function DashboardTaskWidget({ initialTasks }: { initialTasks: Task[] }) 
           <div className="space-y-3">
             {tasks.map((task) => (
               <div key={task.id} className="flex items-start gap-3">
-                <button
+                <button type="button"
+                  aria-label={`Tandai ${task.title} selesai`}
                   onClick={() => handleComplete(task.id)}
                   title="Mark as done"
                   className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2 border-border transition-colors hover:border-neutral-500 hover:bg-neutral-100 dark:hover:bg-neutral-800"

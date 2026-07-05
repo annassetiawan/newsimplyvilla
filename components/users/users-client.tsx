@@ -186,7 +186,7 @@ export function UsersClient({ staff, plan, activeStaffCount }: Props) {
                     <UserPlus className="h-10 w-10 text-neutral-300 dark:text-neutral-600" strokeWidth={1.5} />
                     <p className="mt-1 text-[15px] font-medium text-neutral-700 dark:text-neutral-300">Belum ada anggota tim</p>
                     <p className="text-[13px] text-neutral-400 dark:text-neutral-500">Undang staf untuk membantu mengelola villa kamu.</p>
-                    <button
+                    <button type="button"
                       onClick={openNew}
                       className="mt-3 rounded-lg bg-neutral-800 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-neutral-700"
                     >
@@ -307,6 +307,7 @@ export function UsersClient({ staff, plan, activeStaffCount }: Props) {
       </div>
 
       <StaffModal
+        key={modalOpen ? (editStaff?.id ?? 'new') : 'closed'}
         open={modalOpen}
         onClose={() => { setModalOpen(false); setEditStaff(null) }}
         initial={editStaff}

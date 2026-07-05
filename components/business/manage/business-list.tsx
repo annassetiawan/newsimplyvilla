@@ -172,6 +172,7 @@ export default function BusinessManage({ initialBusinesses }: Props) {
       )}
 
       <BusinessModal
+        key={modalOpen ? (editing?.id ?? 'new') : 'closed'}
         open={modalOpen}
         onClose={() => setModalOpen(false)}
         editing={editing}

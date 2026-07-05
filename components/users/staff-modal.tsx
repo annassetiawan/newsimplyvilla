@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useTransition } from 'react'
+import { useState, useTransition } from 'react'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -41,7 +41,7 @@ const DEFAULT_PERMISSIONS = ['dashboard', 'front-desk', 'rooms', 'maintenance', 
 
 const schema = z.object({
   name: z.string().min(1, 'Required'),
-  email: z.string().email('Invalid email'),
+  email: z.email('Invalid email'),
   position: z.string().min(1, 'Required'),
   role: z.enum(['OWNER', 'STAFF']),
   isActive: z.boolean(),
@@ -61,32 +61,17 @@ export function StaffModal({ open, onClose, initial }: Props) {
   const form = useForm<Values>({
     resolver: zodResolver(schema),
     defaultValues: {
-      name: '',
-      email: '',
-      position: '',
-      role: 'STAFF',
-      isActive: true,
-      permissions: DEFAULT_PERMISSIONS,
+      name: initial?.name ?? '',
+      email: initial?.email ?? '',
+      position: initial?.position ?? '',
+      role: (initial?.role as Values['role']) ?? 'STAFF',
+      isActive: initial?.isActive ?? true,
+      permissions: initial?.permissions?.length ? initial.permissions : DEFAULT_PERMISSIONS,
     },
   })
 
   const watchedRole = form.watch('role')
   const watchedPermissions = form.watch('permissions')
-
-  useEffect(() => {
-    if (open) {
-      setError('')
-      form.reset({
-        name: initial?.name ?? '',
-        email: initial?.email ?? '',
-        position: initial?.position ?? '',
-        role: (initial?.role as Values['role']) ?? 'STAFF',
-        isActive: initial?.isActive ?? true,
-        permissions: initial?.permissions?.length ? initial.permissions : DEFAULT_PERMISSIONS,
-      })
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open])
 
   function togglePermission(key: string) {
     const current = form.getValues('permissions')

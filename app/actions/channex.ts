@@ -2,6 +2,7 @@
 
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
+import { randomBytes } from 'crypto'
 import { db } from '@/lib/db'
 import { getSessionUser } from '@/lib/getSession'
 import { ChannexClient } from '@/lib/channex/client'
@@ -92,6 +93,7 @@ export async function registerWebhook(appUrl: string) {
 
   const client = new ChannexClient(config.apiKey, config.environment as 'staging' | 'production')
   const callbackUrl = `${appUrl}/api/channex/webhook`
+  const webhookSecret = randomBytes(32).toString('hex')
 
   try {
     type WebhookRes = { id: string }
@@ -102,10 +104,11 @@ export async function registerWebhook(appUrl: string) {
         property_id: config.channexPropertyId ?? null,
         is_active: true,
         send_data: true,
+        headers: { 'X-Channex-Webhook-Secret': webhookSecret },
       },
     })
     const webhookId = (data as unknown as { id: string }).id
-    await db.channexConfig.update({ where: { villaId }, data: { webhookId } })
+    await db.channexConfig.update({ where: { villaId }, data: { webhookId, webhookSecret } })
     revalidatePath('/channel-manager')
     return { success: true, webhookId }
   } catch (e: unknown) {

@@ -49,6 +49,19 @@ function buildDateWindow(startISO: string): string[] {
   return Array.from({ length: WINDOW }, (_, i) => toISO(addDays(start, i)))
 }
 
+function getDatesInDrag(d: DragState): string[] {
+  const a = d.startDate < d.endDate ? d.startDate : d.endDate
+  const b = d.startDate < d.endDate ? d.endDate : d.startDate
+  const result: string[] = []
+  const cur = fromISO(a)
+  const end = fromISO(b)
+  while (cur <= end) {
+    result.push(toISO(cur))
+    cur.setDate(cur.getDate() + 1)
+  }
+  return result
+}
+
 export interface RatePlanCalendarRow {
   id: string
   name: string
@@ -110,19 +123,6 @@ export function RatesCalendar({ roomId, initialRows, initialStartDate }: Props) 
   }
 
   // ── Drag selection ──────────────────────────────────────────────────────────
-
-  function getDatesInDrag(d: DragState): string[] {
-    const a = d.startDate < d.endDate ? d.startDate : d.endDate
-    const b = d.startDate < d.endDate ? d.endDate : d.startDate
-    const result: string[] = []
-    const cur = fromISO(a)
-    const end = fromISO(b)
-    while (cur <= end) {
-      result.push(toISO(cur))
-      cur.setDate(cur.getDate() + 1)
-    }
-    return result
-  }
 
   const handleMouseDown = useCallback((ratePlanId: string, date: string) => {
     isDragging.current = true
@@ -196,7 +196,7 @@ export function RatesCalendar({ roomId, initialRows, initialStartDate }: Props) 
     >
       {/* Navigation */}
       <div className="flex items-center gap-3">
-        <button
+        <button type="button"
           onClick={() => navigate(-1)}
           disabled={isLoading}
           className="flex h-8 w-8 items-center justify-center rounded-md border border-border bg-background text-muted-foreground hover:bg-muted transition-colors disabled:opacity-50"
@@ -204,7 +204,7 @@ export function RatesCalendar({ roomId, initialRows, initialStartDate }: Props) 
           <ChevronLeft className="h-4 w-4" />
         </button>
         <span className="text-sm font-semibold min-w-[200px] text-center">{headerLabel}</span>
-        <button
+        <button type="button"
           onClick={() => navigate(1)}
           disabled={isLoading}
           className="flex h-8 w-8 items-center justify-center rounded-md border border-border bg-background text-muted-foreground hover:bg-muted transition-colors disabled:opacity-50"
@@ -359,6 +359,7 @@ export function RatesCalendar({ roomId, initialRows, initialStartDate }: Props) 
 
       {modal && (
         <PriceOverrideModal
+          key={`${modal.ratePlanId}-${modal.dates[0]}`}
           open
           onClose={() => setModal(null)}
           ratePlanId={modal.ratePlanId}

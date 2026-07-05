@@ -47,7 +47,7 @@ export function EmptyState({
         </Link>
       )}
       {actionLabel && onAction && (
-        <button
+        <button type="button"
           onClick={onAction}
           className="mt-5 rounded-lg bg-neutral-800 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-neutral-700 dark:bg-neutral-700 dark:hover:bg-neutral-600"
         >

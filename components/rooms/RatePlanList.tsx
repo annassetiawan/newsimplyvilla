@@ -11,8 +11,14 @@ import { deleteRatePlan, toggleRatePlanActive } from '@/app/actions/ratePlan'
 import { RatePlanModal } from './RatePlanModal'
 import type { RatePlanData } from './RoomDetailClient'
 
+const RP_FORMATTER = new Intl.NumberFormat('id-ID', {
+  style: 'currency',
+  currency: 'IDR',
+  maximumFractionDigits: 0,
+})
+
 function fmtRp(n: number) {
-  return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(n)
+  return RP_FORMATTER.format(n)
 }
 
 interface Props {
@@ -158,7 +164,8 @@ export function RatePlanList({ roomId, ratePlans, onRatePlansChange }: Props) {
                     </span>
                   </td>
                   <td className="px-4 py-3.5 text-center">
-                    <button
+                    <button type="button"
+                      aria-label={`${plan.isActive ? 'Nonaktifkan' : 'Aktifkan'} ${plan.name}`}
                       onClick={() => handleToggle(plan)}
                       disabled={isPending}
                       className={cn(
@@ -176,13 +183,15 @@ export function RatePlanList({ roomId, ratePlans, onRatePlansChange }: Props) {
                   </td>
                   <td className="px-4 py-3.5 text-right">
                     <div className="flex items-center justify-end gap-1">
-                      <button
+                      <button type="button"
+                        aria-label={`Edit ${plan.name}`}
                         onClick={() => openEdit(plan)}
                         className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
                       >
                         <Pencil className="h-3.5 w-3.5" />
                       </button>
-                      <button
+                      <button type="button"
+                        aria-label={`Hapus ${plan.name}`}
                         onClick={() => handleDelete(plan.id)}
                         disabled={deletingId === plan.id}
                         className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20 transition-colors disabled:opacity-50"
@@ -199,6 +208,7 @@ export function RatePlanList({ roomId, ratePlans, onRatePlansChange }: Props) {
       )}
 
       <RatePlanModal
+        key={modalOpen ? (editing?.id ?? 'new') : 'closed'}
         open={modalOpen}
         onClose={() => setModalOpen(false)}
         roomId={roomId}

@@ -10,8 +10,7 @@ interface Props {
 }
 
 export default async function RatePlanDetailPage({ params }: Props) {
-  const { roomId, ratePlanId } = await params
-  const user = await getSessionUser()
+  const [{ roomId, ratePlanId }, user] = await Promise.all([params, getSessionUser()])
   if (!user?.villaId) redirect('/login')
 
   const ratePlan = await getRatePlanById(ratePlanId)

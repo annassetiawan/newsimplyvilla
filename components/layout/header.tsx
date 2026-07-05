@@ -43,7 +43,7 @@ export function Header() {
     >
       <div className="flex items-center gap-3">
         {/* Hamburger — mobile only */}
-        <button
+        <button type="button"
           className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground lg:hidden"
           onClick={openMobile}
           aria-label="Open menu"

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
@@ -13,7 +13,7 @@ import { Label } from '@/components/ui/label'
 import { createClient } from '@/lib/supabase/client'
 
 const schema = z.object({
-  email: z.string().email('Invalid email address'),
+  email: z.email('Invalid email address'),
   password: z.string().min(1, 'Password is required'),
 })
 
@@ -22,6 +22,11 @@ type FormValues = z.infer<typeof schema>
 export default function LoginPage() {
   const router = useRouter()
   const [showPassword, setShowPassword] = useState(false)
+  const [currentYear, setCurrentYear] = useState<number | null>(null)
+
+  useEffect(() => {
+    setCurrentYear(new Date().getFullYear())
+  }, [])
 
   const {
     register,
@@ -129,7 +134,7 @@ export default function LoginPage() {
         </div>
 
         <p className="mt-5 text-center text-xs text-muted-foreground">
-          © {new Date().getFullYear()} SimplyVilla. All rights reserved.
+          © {currentYear ?? ''} SimplyVilla. All rights reserved.
         </p>
       </div>
     </div>

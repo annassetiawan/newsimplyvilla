@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition, useEffect } from 'react'
+import { useState, useTransition } from 'react'
 import { toast } from 'sonner'
 import {
   Dialog,
@@ -42,34 +42,31 @@ const EMPTY: Omit<Employee, 'id' | 'villaId' | 'createdAt' | 'updatedAt' | 'staf
   status: 'ACTIVE',
 }
 
-export function EmployeeModal({ open, onClose, employee, staffList, linkedStaffIds }: Props) {
-  const [form, setForm] = useState(EMPTY)
-  const [isPending, startTransition] = useTransition()
+function toFormState(employee: Employee | null): typeof EMPTY {
+  if (!employee) return { ...EMPTY, startDate: new Date().toISOString().split('T')[0] }
+  return {
+    name: employee.name,
+    photo: employee.photo,
+    idNumber: employee.idNumber,
+    birthPlace: employee.birthPlace,
+    birthDate: employee.birthDate ? employee.birthDate.split('T')[0] : null,
+    gender: employee.gender,
+    phone: employee.phone,
+    address: employee.address,
+    position: employee.position,
+    department: employee.department,
+    employmentType: employee.employmentType,
+    startDate: employee.startDate.split('T')[0],
+    endDate: employee.endDate ? employee.endDate.split('T')[0] : null,
+    baseSalary: employee.baseSalary,
+    staffId: employee.staffId,
+    status: employee.status,
+  }
+}
 
-  useEffect(() => {
-    if (employee) {
-      setForm({
-        name: employee.name,
-        photo: employee.photo,
-        idNumber: employee.idNumber,
-        birthPlace: employee.birthPlace,
-        birthDate: employee.birthDate ? employee.birthDate.split('T')[0] : null,
-        gender: employee.gender,
-        phone: employee.phone,
-        address: employee.address,
-        position: employee.position,
-        department: employee.department,
-        employmentType: employee.employmentType,
-        startDate: employee.startDate.split('T')[0],
-        endDate: employee.endDate ? employee.endDate.split('T')[0] : null,
-        baseSalary: employee.baseSalary,
-        staffId: employee.staffId,
-        status: employee.status,
-      })
-    } else {
-      setForm({ ...EMPTY, startDate: new Date().toISOString().split('T')[0] })
-    }
-  }, [employee, open])
+export function EmployeeModal({ open, onClose, employee, staffList, linkedStaffIds }: Props) {
+  const [form, setForm] = useState(() => toFormState(employee))
+  const [isPending, startTransition] = useTransition()
 
   function set<K extends keyof typeof form>(key: K, value: typeof form[K]) {
     setForm((prev) => ({ ...prev, [key]: value }))

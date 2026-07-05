@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useTransition } from 'react'
+import { useTransition } from 'react'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -44,24 +44,15 @@ export function BusinessModal({ open, onClose, editing }: Props) {
   const [pending, startTransition] = useTransition()
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { name: '', type: '', description: '', status: 'ACTIVE' },
+    defaultValues: editing
+      ? {
+          name: editing.name,
+          type: editing.type,
+          description: editing.description ?? '',
+          status: editing.status,
+        }
+      : { name: '', type: '', description: '', status: 'ACTIVE' },
   })
-
-  useEffect(() => {
-    if (open) {
-      form.reset(
-        editing
-          ? {
-              name: editing.name,
-              type: editing.type,
-              description: editing.description ?? '',
-              status: editing.status,
-            }
-          : { name: '', type: '', description: '', status: 'ACTIVE' }
-      )
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, editing])
 
   function onSubmit(data: FormValues) {
     startTransition(async () => {

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition, useEffect } from 'react'
+import { useState, useTransition } from 'react'
 import {
   Dialog,
   DialogContent,
@@ -27,23 +27,15 @@ interface Props {
 
 export function EditReservationModal({ reservation, onClose, onSuccess }: Props) {
   const [pending, startTransition] = useTransition()
-  const [checkIn, setCheckIn] = useState('')
-  const [checkOut, setCheckOut] = useState('')
-  const [status, setStatus] = useState<'CONFIRMED' | 'PENDING' | 'CHECKEDIN' | 'CHECKEDOUT'>('CONFIRMED')
-  const [paymentStatus, setPaymentStatus] = useState<'PAID' | 'UNPAID'>('UNPAID')
+  const [checkIn, setCheckIn] = useState(() => (reservation ? toDateInput(reservation.checkIn) : ''))
+  const [checkOut, setCheckOut] = useState(() => (reservation ? toDateInput(reservation.checkOut) : ''))
+  const [status, setStatus] = useState<'CONFIRMED' | 'PENDING' | 'CHECKEDIN' | 'CHECKEDOUT'>(
+    () => (reservation && reservation.status !== 'CANCELLED' ? reservation.status : 'CONFIRMED')
+  )
+  const [paymentStatus, setPaymentStatus] = useState<'PAID' | 'UNPAID'>(
+    () => reservation?.paymentStatus ?? 'UNPAID'
+  )
   const [error, setError] = useState('')
-
-  useEffect(() => {
-    if (reservation) {
-      setCheckIn(toDateInput(reservation.checkIn))
-      setCheckOut(toDateInput(reservation.checkOut))
-      setStatus(
-        reservation.status === 'CANCELLED' ? 'CONFIRMED' : reservation.status
-      )
-      setPaymentStatus(reservation.paymentStatus)
-      setError('')
-    }
-  }, [reservation])
 
   const nights =
     checkIn && checkOut

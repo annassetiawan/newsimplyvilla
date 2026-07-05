@@ -85,8 +85,9 @@ export function PettyCashTab({ pettyCash }: Props) {
 
       {/* Filter */}
       <div className="flex items-center gap-2">
-        <label className="text-sm text-muted-foreground">Filter bulan:</label>
+        <label htmlFor="petty-cash-month" className="text-sm text-muted-foreground">Filter bulan:</label>
         <select
+          id="petty-cash-month"
           value={filterMonth}
           onChange={(e) => setFilterMonth(e.target.value)}
           className="rounded-md border border-border bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
@@ -151,7 +152,7 @@ export function PettyCashTab({ pettyCash }: Props) {
                       {formatRp(p.running)}
                     </td>
                     <td className="px-4 py-3 text-center">
-                      <button
+                      <button type="button"
                         onClick={() => handleDelete(p.id)}
                         disabled={isPending}
                         className="rounded-md p-1.5 text-muted-foreground hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950 dark:hover:text-red-400 transition-colors disabled:opacity-50"

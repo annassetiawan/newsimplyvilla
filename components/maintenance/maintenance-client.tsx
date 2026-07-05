@@ -92,7 +92,7 @@ export function MaintenanceClient({ tasks, staffOptions, locationOptions }: Prop
         <div className="flex items-center justify-between gap-2 sm:justify-start sm:gap-3">
           <div className="inline-flex h-9 items-center justify-center rounded-lg bg-muted p-1 text-muted-foreground">
             {VIEWS.map(({ id, label, icon: Icon }) => (
-              <button
+              <button type="button"
                 key={id}
                 onClick={() => setView(id)}
                 className={cn(
@@ -167,6 +167,7 @@ export function MaintenanceClient({ tasks, staffOptions, locationOptions }: Prop
       )}
 
       <TaskModal
+        key={modalOpen ? (editTask?.id ?? 'new') : 'closed'}
         open={modalOpen}
         onClose={handleClose}
         initial={editTask}

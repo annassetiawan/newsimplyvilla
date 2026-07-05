@@ -1,7 +1,15 @@
+import { timingSafeEqual } from 'crypto'
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { ChannexClient } from '@/lib/channex/client'
 import { processRevisionById } from '@/lib/channex/bookings'
+
+function secretsMatch(a: string, b: string) {
+  const bufA = Buffer.from(a)
+  const bufB = Buffer.from(b)
+  if (bufA.length !== bufB.length) return false
+  return timingSafeEqual(bufA, bufB)
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -33,6 +41,15 @@ export async function POST(req: NextRequest) {
     if (!config) {
       // Unknown property — ack silently so Channex stops retrying
       return NextResponse.json({ ok: true, skipped: true })
+    }
+
+    // Reject forged requests: only accept calls carrying the secret we
+    // registered for this property (Channex has no built-in signing, so we
+    // supply our own shared secret via the webhook's custom `headers`).
+    const incomingSecret = req.headers.get('x-channex-webhook-secret')
+    if (!config.webhookSecret || !incomingSecret || !secretsMatch(incomingSecret, config.webhookSecret)) {
+      console.warn('[Channex webhook] rejected: missing or invalid secret header')
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const client = new ChannexClient(config.apiKey, config.environment as 'staging' | 'production')

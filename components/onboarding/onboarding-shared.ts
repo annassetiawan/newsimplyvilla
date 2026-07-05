@@ -25,7 +25,7 @@ export const roomsSchema = z.object({
 
 const staffMemberSchema = z.object({
   name: z.string().min(1, 'Nama wajib diisi'),
-  email: z.string().email('Email tidak valid'),
+  email: z.email('Email tidak valid'),
   position: z.string().min(1, 'Pilih posisi'),
   permissions: z.array(z.string()),
 })

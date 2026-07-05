@@ -161,7 +161,7 @@ export default function BusinessClient({ businesses, villaId: _villaId }: Props)
       {/* ── Mobile: fixed bottom cart bar ─────────────────────────────── */}
       {showMobileCartBar && (
         <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-background px-4 pb-safe pt-3 pb-4 lg:hidden">
-          <button
+          <button type="button"
             onClick={() => setMobileCartOpen(true)}
             className="flex w-full items-center gap-3 rounded-xl bg-neutral-800 px-4 py-3 text-white dark:bg-neutral-200 dark:text-neutral-900"
           >

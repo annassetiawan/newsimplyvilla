@@ -139,7 +139,7 @@ export default function PricingPage() {
         <div className="flex items-center justify-center gap-2 pt-1">
           <div className="inline-flex h-9 items-center rounded-full border border-border bg-muted p-1">
             {(['bulanan', 'tahunan'] as const).map((opt) => (
-              <button
+              <button type="button"
                 key={opt}
                 onClick={() => setBilling(opt)}
                 className={cn(
@@ -265,9 +265,10 @@ export default function PricingPage() {
             </thead>
             <tbody>
               {TABLE_ROWS.map((row, i) => {
+                const rowKey = `${row.category}-${row.label}`
                 if (row.category === 'header') {
                   return (
-                    <tr key={i} className="bg-muted/50">
+                    <tr key={rowKey} className="bg-muted/50">
                       <td
                         colSpan={3}
                         className="px-5 py-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground"
@@ -278,7 +279,7 @@ export default function PricingPage() {
                   )
                 }
                 return (
-                  <tr key={i} className="border-t border-border hover:bg-muted/20 transition-colors">
+                  <tr key={rowKey} className="border-t border-border hover:bg-muted/20 transition-colors">
                     <td className="px-5 py-3 text-sm">{row.label}</td>
                     <td className="px-5 py-3 text-center">
                       <CellValue value={row.free} isPro={false} />
@@ -316,7 +317,7 @@ export default function PricingPage() {
         <h2 className="text-lg font-semibold text-center">Pertanyaan umum</h2>
         <Accordion type="single" collapsible className="rounded-xl border border-border px-4">
           {FAQ.map((item, i) => (
-            <AccordionItem key={i} value={`faq-${i}`}>
+            <AccordionItem key={item.q} value={`faq-${i}`}>
               <AccordionTrigger className="text-sm font-medium text-left hover:no-underline">
                 {item.q}
               </AccordionTrigger>

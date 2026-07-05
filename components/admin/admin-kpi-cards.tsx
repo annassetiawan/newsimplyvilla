@@ -10,7 +10,7 @@ interface KpiCardProps {
   className?: string
 }
 
-export function KpiCard({ title, value, change, icon, className }: KpiCardProps) {
+function KpiCard({ title, value, change, icon, className }: KpiCardProps) {
   return (
     <Card className={cn('', className)}>
       <CardHeader className="flex flex-row items-center justify-between pb-2">

@@ -10,10 +10,21 @@ import { cn } from '@/lib/utils'
 import { upsertRestriction } from '@/app/actions/ratePlan'
 import type { RestrictionData } from './RatePlanDetailClient'
 
-function Toggle({ checked, onChange, disabled }: { checked: boolean; onChange: (v: boolean) => void; disabled?: boolean }) {
+function Toggle({
+  checked,
+  onChange,
+  disabled,
+  ariaLabel,
+}: {
+  checked: boolean
+  onChange: (v: boolean) => void
+  disabled?: boolean
+  ariaLabel: string
+}) {
   return (
     <button
       type="button"
+      aria-label={ariaLabel}
       onClick={() => onChange(!checked)}
       disabled={disabled}
       className={cn(
@@ -37,6 +48,7 @@ function Tooltip({ text }: { text: string }) {
     <span className="relative inline-flex">
       <button
         type="button"
+        aria-label={text}
         onMouseEnter={() => setShow(true)}
         onMouseLeave={() => setShow(false)}
         onClick={() => setShow(!show)}
@@ -119,7 +131,12 @@ export function RestrictionForm({ ratePlanId, initial }: Props) {
             <Tooltip text="Tamu tidak bisa memesan lebih dari jumlah malam ini. Opsional." />
           </div>
           <div className="flex items-center gap-3">
-            <Toggle checked={hasMaxStay} onChange={setHasMaxStay} disabled={isPending} />
+            <Toggle
+              checked={hasMaxStay}
+              onChange={setHasMaxStay}
+              disabled={isPending}
+              ariaLabel="Aktifkan batas maksimum menginap"
+            />
             <span className="text-sm text-muted-foreground">
               {hasMaxStay ? 'Ada batas maksimum' : 'Tidak ada batas maksimum'}
             </span>
@@ -149,7 +166,12 @@ export function RestrictionForm({ ratePlanId, initial }: Props) {
                 Tamu tidak bisa check-in di tanggal yang ditandai ini
               </p>
             </div>
-            <Toggle checked={closedToArrival} onChange={setClosedToArrival} disabled={isPending} />
+            <Toggle
+              checked={closedToArrival}
+              onChange={setClosedToArrival}
+              disabled={isPending}
+              ariaLabel="Ubah closed to arrival"
+            />
           </div>
 
           <div className="flex items-center justify-between rounded-lg border border-border p-4">
@@ -162,7 +184,12 @@ export function RestrictionForm({ ratePlanId, initial }: Props) {
                 Tamu tidak bisa check-out di tanggal yang ditandai ini
               </p>
             </div>
-            <Toggle checked={closedToDeparture} onChange={setClosedToDeparture} disabled={isPending} />
+            <Toggle
+              checked={closedToDeparture}
+              onChange={setClosedToDeparture}
+              disabled={isPending}
+              ariaLabel="Ubah closed to departure"
+            />
           </div>
         </div>
 

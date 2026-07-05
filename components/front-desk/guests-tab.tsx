@@ -13,7 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { fmtRp, fmtDate } from './reservation-detail-sheet'
+import { fmtRp, fmtDate } from './reservation-format'
 
 interface GuestReservation {
   id: string

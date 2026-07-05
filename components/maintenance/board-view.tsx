@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition, useEffect } from 'react'
+import { useState, useTransition } from 'react'
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd'
 import { Clock, MapPin, ChevronRight, Loader, CheckCircle, X, Pencil, Users, Tag } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -119,7 +119,7 @@ function TaskDetailSheet({
               </span>
             </div>
           </div>
-          <button
+          <button type="button"
             onClick={onClose}
             className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           >
@@ -226,12 +226,26 @@ function TaskCard({
   innerRef: (el: HTMLElement | null) => void
 }) {
   const isDone = task.status === 'DONE'
+  // dragHandleProps already carries its own role/tabIndex/onKeyDown for
+  // keyboard drag (space to lift, arrows to move) — compose rather than
+  // clobber so Enter also opens the detail sheet without breaking drag.
+  const dragProps = (dragHandleProps ?? {}) as Record<string, unknown> & {
+    onKeyDown?: (e: React.KeyboardEvent<HTMLDivElement>) => void
+  }
+
+  function handleKeyDown(e: React.KeyboardEvent<HTMLDivElement>) {
+    dragProps.onKeyDown?.(e)
+    if (!e.defaultPrevented && e.key === 'Enter') onOpenDetail()
+  }
 
   return (
     <div
       ref={innerRef}
+      role="button"
+      tabIndex={0}
       {...draggableProps}
-      {...(dragHandleProps ?? {})}
+      {...dragProps}
+      onKeyDown={handleKeyDown}
       onClick={onOpenDetail}
       className={cn(
         'bg-card rounded-lg border border-border shadow-sm p-3.5 space-y-2.5 cursor-pointer',
@@ -283,16 +297,25 @@ function TaskCard({
   )
 }
 
+type DragOverride = { taskId: string; status: 'PENDING' | 'IN_PROGRESS' | 'DONE' }
+
 export function BoardView({ tasks, onEdit }: Props) {
-  const [localTasks, setLocalTasks] = useState<TaskData[]>(tasks)
+  // Optimistic drag override: only holds a value until `tasks` reflects it,
+  // then self-evicts — no effect needed to keep it in sync with the prop.
+  const [dragOverride, setDragOverride] = useState<DragOverride | null>(null)
   const [detailTask, setDetailTask] = useState<TaskData | null>(null)
   const [, startTransition] = useTransition()
   const isMobile = useMediaQuery('(max-width: 1024px)')
   const [mobileCol, setMobileCol] = useState<'PENDING' | 'IN_PROGRESS' | 'DONE'>('PENDING')
 
-  useEffect(() => {
-    setLocalTasks(tasks)
-  }, [tasks])
+  const pendingOverride =
+    dragOverride && tasks.find((t) => t.id === dragOverride.taskId)?.status !== dragOverride.status
+      ? dragOverride
+      : null
+
+  const localTasks = pendingOverride
+    ? tasks.map((t) => (t.id === pendingOverride.taskId ? { ...t, status: pendingOverride.status } : t))
+    : tasks
 
   function onDragEnd(result: DropResult) {
     const { source, destination, draggableId } = result
@@ -300,16 +323,12 @@ export function BoardView({ tasks, onEdit }: Props) {
     if (source.droppableId === destination.droppableId) return
 
     const newStatus = destination.droppableId as 'PENDING' | 'IN_PROGRESS' | 'DONE'
-    const previousTasks = localTasks
-
-    setLocalTasks((prev) =>
-      prev.map((t) => (t.id === draggableId ? { ...t, status: newStatus } : t))
-    )
+    setDragOverride({ taskId: draggableId, status: newStatus })
 
     startTransition(async () => {
       const res = await moveTaskStatus(draggableId, newStatus)
       if (!res.success) {
-        setLocalTasks(previousTasks)
+        setDragOverride(null)
       }
     })
   }
@@ -322,7 +341,7 @@ export function BoardView({ tasks, onEdit }: Props) {
           {COLUMNS.map((col) => {
             const count = localTasks.filter((t) => t.status === col.status).length
             return (
-              <button
+              <button type="button"
                 key={col.status}
                 onClick={() => setMobileCol(col.status)}
                 className={cn(

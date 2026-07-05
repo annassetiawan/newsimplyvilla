@@ -141,6 +141,7 @@ export function ItemList({ businessId, items }: Props) {
       )}
 
       <ItemModal
+        key={modalOpen ? (editing?.id ?? 'new') : 'closed'}
         open={modalOpen}
         onClose={() => setModalOpen(false)}
         businessId={businessId}

@@ -8,7 +8,7 @@ import { getSessionUser } from '@/lib/getSession'
 
 const EmployeeSchema = z.object({
   name: z.string().min(1),
-  photo: z.string().url().optional().or(z.literal('')),
+  photo: z.url().optional().or(z.literal('')),
   idNumber: z.string().optional(),
   birthPlace: z.string().optional(),
   birthDate: z.string().optional(),
@@ -100,19 +100,6 @@ export async function updateEmployee(id: string, data: z.infer<typeof EmployeeSc
 }
 
 export async function deactivateEmployee(id: string) {
-  const user = await getSessionUser()
-  if (!user?.villaId) redirect('/login')
-
-  await db.employee.update({
-    where: { id, villaId: user.villaId! },
-    data: { status: 'INACTIVE' },
-  })
-
-  revalidatePath('/employee')
-  return { success: true }
-}
-
-export async function deleteEmployee(id: string) {
   const user = await getSessionUser()
   if (!user?.villaId) redirect('/login')
 

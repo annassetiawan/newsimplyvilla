@@ -148,12 +148,13 @@ export function CalendarGrid({
                     )
                   })}
 
-                  {roomRes.filter(isVisible).map((res) => {
+                  {roomRes.flatMap((res) => {
+                    if (!isVisible(res)) return []
                     const block = getBlock(res, viewStart)
-                    if (!block) return null
+                    if (!block) return []
                     const confirmed = isConfirmed(res)
                     const pending = isPending(res)
-                    return (
+                    return [
                       <button
                         key={res.id}
                         type="button"
@@ -173,8 +174,8 @@ export function CalendarGrid({
                         <span className="ml-1.5 shrink-0 text-[10px] font-medium opacity-70">
                           {block.nights}n
                         </span>
-                      </button>
-                    )
+                      </button>,
+                    ]
                   })}
                 </div>
               </div>

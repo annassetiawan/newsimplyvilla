@@ -555,6 +555,7 @@ model ChannexConfig {
   channexPropertyId String?
   isActive          Boolean   @default(false)
   webhookId         String?
+  webhookSecret     String?
   lastSyncAt        DateTime?
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt

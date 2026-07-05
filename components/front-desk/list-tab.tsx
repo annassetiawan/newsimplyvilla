@@ -24,7 +24,7 @@ import { cancelReservation, markAsPaid } from '@/app/actions/reservations'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { ReservationDetailSheet } from './reservation-detail-sheet'
 import { EditReservationModal } from './edit-reservation-modal'
-import { fmtDate, fmtRp, nightCount, STATUS_STYLE, STATUS_LABEL } from './reservation-detail-sheet'
+import { fmtDate, fmtRp, nightCount, STATUS_STYLE, STATUS_LABEL } from './reservation-format'
 
 export interface ListReservation {
   id: string
@@ -249,6 +249,7 @@ export function ListTab({ reservations, onNewReservation }: Props) {
       />
 
       <EditReservationModal
+        key={editTarget?.id ?? 'none'}
         reservation={editTarget}
         onClose={() => setEditTarget(null)}
         onSuccess={handleEditSuccess}

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Image from 'next/image'
 import { BedDouble, Users, Wallet, Images, Tag, CalendarDays } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { RatePlanList } from './RatePlanList'
@@ -20,8 +21,14 @@ const STATUS_LABEL = {
   MAINTENANCE: 'Maintenance',
 } as const
 
+const RP_FORMATTER = new Intl.NumberFormat('id-ID', {
+  style: 'currency',
+  currency: 'IDR',
+  maximumFractionDigits: 0,
+})
+
 function fmtRp(n: number) {
-  return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(n)
+  return RP_FORMATTER.format(n)
 }
 
 export interface RoomData {
@@ -88,7 +95,7 @@ export function RoomDetailClient({ room, ratePlans: initialRatePlans, calendarRo
           { key: 'rateplans', label: 'Rate Plans', icon: Tag },
           { key: 'calendar', label: 'Harga & Ketersediaan', icon: CalendarDays },
         ] as { key: Tab; label: string; icon: React.ElementType }[]).map(({ key, label, icon: Icon }) => (
-          <button
+          <button type="button"
             key={key}
             onClick={() => setTab(key)}
             className={cn(
@@ -109,8 +116,8 @@ export function RoomDetailClient({ room, ratePlans: initialRatePlans, calendarRo
         <div className="rounded-xl border border-border bg-background">
           {room.photos && room.photos.length > 0 ? (
             <div className="p-5 pb-0 flex gap-2 overflow-x-auto">
-              {room.photos.map((url, i) => (
-                <img key={i} src={url} alt="" className="h-48 w-64 shrink-0 rounded-xl object-cover" />
+              {room.photos.map((url) => (
+                <Image key={url} src={url} alt="" width={256} height={192} className="h-48 w-64 shrink-0 rounded-xl object-cover" />
               ))}
             </div>
           ) : (

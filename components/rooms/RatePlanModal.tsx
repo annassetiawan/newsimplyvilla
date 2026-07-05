@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useTransition } from 'react'
+import { useState, useTransition } from 'react'
 import { toast } from 'sonner'
 import {
   Dialog,
@@ -25,10 +25,21 @@ interface Props {
   onSaved: (plan: RatePlanData) => void
 }
 
-function Toggle({ checked, onChange, disabled }: { checked: boolean; onChange: (v: boolean) => void; disabled?: boolean }) {
+function Toggle({
+  checked,
+  onChange,
+  disabled,
+  ariaLabel,
+}: {
+  checked: boolean
+  onChange: (v: boolean) => void
+  disabled?: boolean
+  ariaLabel: string
+}) {
   return (
     <button
       type="button"
+      aria-label={ariaLabel}
       onClick={() => onChange(!checked)}
       disabled={disabled}
       className={cn(
@@ -50,25 +61,15 @@ export function RatePlanModal({ open, onClose, roomId, initial, onSaved }: Props
   const isEdit = !!initial
   const [isPending, startTransition] = useTransition()
 
-  const [name, setName] = useState('')
-  const [basePrice, setBasePrice] = useState('')
-  const [sellMode, setSellMode] = useState<'per_room' | 'per_person'>('per_room')
-  const [maxPersons, setMaxPersons] = useState('2')
-  const [isRefundable, setIsRefundable] = useState(true)
-  const [isActive, setIsActive] = useState(true)
+  const [name, setName] = useState(initial?.name ?? '')
+  const [basePrice, setBasePrice] = useState(initial ? String(initial.basePrice) : '')
+  const [sellMode, setSellMode] = useState<'per_room' | 'per_person'>(
+    (initial?.sellMode as 'per_room' | 'per_person') ?? 'per_room'
+  )
+  const [maxPersons, setMaxPersons] = useState(String(initial?.maxPersons ?? 2))
+  const [isRefundable, setIsRefundable] = useState(initial?.isRefundable ?? true)
+  const [isActive, setIsActive] = useState(initial?.isActive ?? true)
   const [error, setError] = useState('')
-
-  useEffect(() => {
-    if (open) {
-      setName(initial?.name ?? '')
-      setBasePrice(initial ? String(initial.basePrice) : '')
-      setSellMode((initial?.sellMode as 'per_room' | 'per_person') ?? 'per_room')
-      setMaxPersons(String(initial?.maxPersons ?? 2))
-      setIsRefundable(initial?.isRefundable ?? true)
-      setIsActive(initial?.isActive ?? true)
-      setError('')
-    }
-  }, [open, initial])
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -193,14 +194,24 @@ export function RatePlanModal({ open, onClose, roomId, initial, onSaved }: Props
                 <p className="text-sm font-medium">Refundable</p>
                 <p className="text-xs text-muted-foreground">Tamu bisa batalkan dan dapat refund</p>
               </div>
-              <Toggle checked={isRefundable} onChange={setIsRefundable} disabled={isPending} />
+              <Toggle
+                checked={isRefundable}
+                onChange={setIsRefundable}
+                disabled={isPending}
+                ariaLabel="Ubah refundable rate plan"
+              />
             </div>
             <div className="flex items-center justify-between rounded-lg border border-border p-3">
               <div>
                 <p className="text-sm font-medium">Status Aktif</p>
                 <p className="text-xs text-muted-foreground">Rate plan ditampilkan ke tamu</p>
               </div>
-              <Toggle checked={isActive} onChange={setIsActive} disabled={isPending} />
+              <Toggle
+                checked={isActive}
+                onChange={setIsActive}
+                disabled={isPending}
+                ariaLabel="Ubah status aktif rate plan"
+              />
             </div>
           </div>
 

@@ -88,32 +88,34 @@ export async function inviteStaff(
       { auth: { autoRefreshToken: false, persistSession: false } }
     )
 
-    for (const member of staffList) {
-      const staff = await db.staff.create({
-        data: {
-          name: member.name,
-          email: member.email,
-          position: member.position,
-          role: 'STAFF',
-          isActive: true,
-          villaId: user.villaId!,
-          permissions: member.permissions,
-        },
-      })
-      try {
-        const { data: inviteData } = await adminClient.auth.admin.inviteUserByEmail(member.email, {
-          data: { name: member.name },
+    await Promise.all(
+      staffList.map(async (member) => {
+        const staff = await db.staff.create({
+          data: {
+            name: member.name,
+            email: member.email,
+            position: member.position,
+            role: 'STAFF',
+            isActive: true,
+            villaId: user.villaId!,
+            permissions: member.permissions,
+          },
         })
-        if (inviteData?.user?.id) {
-          await db.staff.update({
-            where: { id: staff.id },
-            data: { supabaseUserId: inviteData.user.id },
+        try {
+          const { data: inviteData } = await adminClient.auth.admin.inviteUserByEmail(member.email, {
+            data: { name: member.name },
           })
+          if (inviteData?.user?.id) {
+            await db.staff.update({
+              where: { id: staff.id },
+              data: { supabaseUserId: inviteData.user.id },
+            })
+          }
+        } catch {
+          // Invite email failed — DB record still created
         }
-      } catch {
-        // Invite email failed — DB record still created
-      }
-    }
+      })
+    )
   } catch (error) {
     console.error('inviteStaff error:', error)
     throw new Error('Gagal mengundang staf. Coba lagi.')

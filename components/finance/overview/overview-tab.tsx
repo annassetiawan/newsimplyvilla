@@ -1,10 +1,15 @@
 'use client'
 
 import { useState } from 'react'
+import dynamic from 'next/dynamic'
 import { TrendingUp, TrendingDown, DollarSign } from 'lucide-react'
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts'
 import { cn } from '@/lib/utils'
 import { calcMonthlyPL, calcLast6MonthsPL, formatRp, MONTH_NAMES_FULL } from '@/lib/finance'
+
+const RevenueExpenseChart = dynamic(
+  () => import('./revenue-expense-chart').then((m) => ({ default: m.RevenueExpenseChart })),
+  { loading: () => <div className="h-[220px] animate-pulse rounded-lg bg-muted" />, ssr: false }
+)
 
 interface Transaction {
   date: string
@@ -79,8 +84,6 @@ function PLRow({ label, value, bold, indent }: { label: string; value: number; b
   )
 }
 
-const CHART_COLORS = { roomRevenue: '#6366f1', posRevenue: '#22c55e', otherIncome: '#f59e0b', expenses: '#ef4444' }
-
 export function OverviewTab({ transactions, reservations, posTransactions, currentMonth, currentYear }: Props) {
   const [selectedMonth, setSelectedMonth] = useState(currentMonth)
   const [selectedYear, setSelectedYear] = useState(currentYear)
@@ -103,8 +106,9 @@ export function OverviewTab({ transactions, reservations, posTransactions, curre
     <div className="space-y-5">
       {/* Month selector */}
       <div className="flex items-center gap-2">
-        <label className="text-sm text-muted-foreground">Periode:</label>
+        <label htmlFor="overview-period" className="text-sm text-muted-foreground">Periode:</label>
         <select
+          id="overview-period"
           value={`${selectedMonth}-${selectedYear}`}
           onChange={(e) => {
             const [m, y] = e.target.value.split('-').map(Number)
@@ -168,6 +172,7 @@ export function OverviewTab({ transactions, reservations, posTransactions, curre
           <div className="mb-3 flex items-center justify-between">
             <h3 className="font-semibold text-sm">Tren Revenue vs Expenses</h3>
             <select
+              aria-label="Rentang chart revenue"
               value={chartRange}
               onChange={(e) => setChartRange(e.target.value as '1' | '3' | '6')}
               className="rounded-md border border-border bg-background px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-ring"
@@ -177,24 +182,7 @@ export function OverviewTab({ transactions, reservations, posTransactions, curre
               <option value="6">6 bulan</option>
             </select>
           </div>
-          <ResponsiveContainer width="100%" height={220}>
-            <BarChart data={chartData} barCategoryGap="30%">
-              <XAxis dataKey="label" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
-              <YAxis
-                tick={{ fontSize: 10 }}
-                axisLine={false}
-                tickLine={false}
-                tickFormatter={(v) => `${(v / 1_000_000).toFixed(0)}jt`}
-              />
-              <Tooltip
-                formatter={(v: number) => formatRp(v)}
-                contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid var(--border)' }}
-              />
-              <Legend wrapperStyle={{ fontSize: 11 }} />
-              <Bar dataKey="grossRevenue" name="Revenue" fill={CHART_COLORS.roomRevenue} radius={[3, 3, 0, 0]} />
-              <Bar dataKey="expenses" name="Expenses" fill={CHART_COLORS.expenses} radius={[3, 3, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
+          <RevenueExpenseChart data={chartData} />
         </div>
       </div>
     </div>

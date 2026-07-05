@@ -26,7 +26,7 @@ export function ItemGrid({ items, onAdd }: Props) {
       {items.map((item) => {
         const outOfStock = item.stock === 0
         return (
-          <button
+          <button type="button"
             key={item.id}
             disabled={outOfStock}
             onClick={() => onAdd(item)}

@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
+import { after } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { db } from '@/lib/db'
 import { getSessionUser } from '@/lib/getSession'
@@ -61,7 +62,7 @@ export async function createStaff(data: {
     const { data: inviteData, error: inviteError } = await adminClient.auth.admin.inviteUserByEmail(data.email, {
       data: { name: data.name },
     })
-    console.log('[createStaff] invite result:', { userId: inviteData?.user?.id, error: inviteError })
+    after(() => console.log('[createStaff] invite result:', { userId: inviteData?.user?.id, error: inviteError }))
     if (inviteData?.user?.id) {
       await db.staff.update({
         where: { id: staff.id },
@@ -134,10 +135,10 @@ export async function resendInvite(id: string) {
 
     // Find and delete existing Supabase auth user by ID or by email lookup
     const userIdToDelete = staff.supabaseUserId ?? await findSupabaseUserIdByEmail(adminClient, staff.email)
-    console.log('[resendInvite] userIdToDelete:', userIdToDelete)
+    after(() => console.log('[resendInvite] userIdToDelete:', userIdToDelete))
     if (userIdToDelete) {
       const { error: deleteError } = await adminClient.auth.admin.deleteUser(userIdToDelete)
-      console.log('[resendInvite] deleteUser result:', deleteError)
+      after(() => console.log('[resendInvite] deleteUser result:', deleteError))
       if (!deleteError) {
         await db.staff.update({ where: { id }, data: { supabaseUserId: null } })
       }
@@ -146,7 +147,7 @@ export async function resendInvite(id: string) {
     const { data: inviteData, error } = await adminClient.auth.admin.inviteUserByEmail(staff.email, {
       data: { name: staff.name },
     })
-    console.log('[resendInvite] inviteUserByEmail result:', { userId: inviteData?.user?.id, error })
+    after(() => console.log('[resendInvite] inviteUserByEmail result:', { userId: inviteData?.user?.id, error }))
     if (error) throw error
 
     // Store new Supabase user ID

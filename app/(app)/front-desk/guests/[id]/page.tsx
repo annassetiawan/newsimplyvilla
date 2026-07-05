@@ -10,8 +10,7 @@ interface Props {
 }
 
 export default async function GuestDetailPage({ params }: Props) {
-  const { id } = await params
-  const user = await getSessionUser()
+  const [{ id }, user] = await Promise.all([params, getSessionUser()])
   if (!user?.villaId) redirect('/login')
 
   const guest = await db.guest.findFirst({

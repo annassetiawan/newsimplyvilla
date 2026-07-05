@@ -16,7 +16,7 @@ import { registerUser } from '@/app/actions/auth'
 const schema = z
   .object({
     name: z.string().min(2, 'Nama minimal 2 karakter'),
-    email: z.string().email('Email tidak valid'),
+    email: z.email('Email tidak valid'),
     password: z.string().min(8, 'Password minimal 8 karakter'),
     confirmPassword: z.string(),
   })

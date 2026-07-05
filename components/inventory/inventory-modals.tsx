@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useTransition } from 'react'
+import { useTransition } from 'react'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -72,13 +72,8 @@ export function StockInModal({
   const [pending, startTransition] = useTransition()
   const form = useForm<StockInValues>({
     resolver: zodResolver(stockInSchema),
-    defaultValues: { itemId: '', quantity: 1, date: today(), note: '' },
+    defaultValues: { itemId: defaultItemId ?? '', quantity: 1, date: today(), note: '' },
   })
-
-  useEffect(() => {
-    if (open) form.reset({ itemId: defaultItemId ?? '', quantity: 1, date: today(), note: '' })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open])
 
   function onSubmit(data: StockInValues) {
     startTransition(async () => {
@@ -182,13 +177,8 @@ export function StockOutModal({
   const [pending, startTransition] = useTransition()
   const form = useForm<StockOutValues>({
     resolver: zodResolver(stockOutSchema),
-    defaultValues: { itemId: '', quantity: 1, date: today(), note: '' },
+    defaultValues: { itemId: defaultItemId ?? '', quantity: 1, date: today(), note: '' },
   })
-
-  useEffect(() => {
-    if (open) form.reset({ itemId: defaultItemId ?? '', quantity: 1, date: today(), note: '' })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open])
 
   function onSubmit(data: StockOutValues) {
     startTransition(async () => {
@@ -301,11 +291,6 @@ export function NewItemModal({ open, onClose }: { open: boolean; onClose: () => 
     defaultValues: { sku: genSku(), name: '', category: 'LINEN', unit: 'pcs', onHand: 0, minLevel: 0 },
   })
 
-  useEffect(() => {
-    if (open) form.reset({ sku: genSku(), name: '', category: 'LINEN', unit: 'pcs', onHand: 0, minLevel: 0 })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open])
-
   function onSubmit(data: NewItemValues) {
     startTransition(async () => {
       await createInventoryItem(data)
@@ -397,7 +382,7 @@ export function StockHistorySheet({
   item: InventoryItem | null
 }) {
   if (!item) return null
-  const sorted = [...item.movements].sort(
+  const sorted = item.movements.toSorted(
     (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
   )
 

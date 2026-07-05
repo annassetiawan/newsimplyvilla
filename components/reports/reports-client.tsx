@@ -1,15 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  Legend,
-} from 'recharts'
+import dynamic from 'next/dynamic'
 import { TrendingUp, TrendingDown, Plus, Download, BarChart2, Receipt, Lock } from 'lucide-react'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { cn } from '@/lib/utils'
@@ -17,6 +9,11 @@ import { Button } from '@/components/ui/button'
 import { ExpenseModal } from './expense-modal'
 import { useSubscription } from '@/hooks/useSubscription'
 import { useRouter } from 'next/navigation'
+
+const RevenueExpenseChart = dynamic(
+  () => import('./revenue-expense-chart').then((m) => ({ default: m.RevenueExpenseChart })),
+  { loading: () => <div className="h-[180px] animate-pulse rounded-lg bg-muted lg:h-[220px]" />, ssr: false }
+)
 
 export interface TransactionData {
   id: string
@@ -100,27 +97,14 @@ function StatCard({
   )
 }
 
-const CustomTooltip = ({ active, payload, label }: { active?: boolean; payload?: { name: string; value: number }[]; label?: string }) => {
-  if (!active || !payload?.length) return null
-  return (
-    <div className="rounded-lg border border-border bg-background p-2 text-xs shadow-md space-y-1">
-      <p className="font-semibold">{label}</p>
-      {payload.map((p) => (
-        <p key={p.name}>
-          {p.name}: {formatRp(p.value)}
-        </p>
-      ))}
-    </div>
-  )
-}
-
 export function ReportsClient({ transactions, monthlyData, stats, expenseByCategory }: Props) {
   const [expenseOpen, setExpenseOpen] = useState(false)
+  const [showAllTransactions, setShowAllTransactions] = useState(false)
   const { isPro } = useSubscription()
   const router = useRouter()
 
   const maxExpense = Math.max(...expenseByCategory.map((e) => e.amount), 1)
-  const recent = transactions.slice(0, 5)
+  const recent = showAllTransactions ? transactions : transactions.slice(0, 5)
 
   const revenues = monthlyData.map((m) => m.revenue)
   const bestIdx = revenues.indexOf(Math.max(...revenues))
@@ -243,20 +227,7 @@ export function ReportsClient({ transactions, monthlyData, stats, expenseByCateg
             />
           ) : (
             <>
-              <ResponsiveContainer width="100%" height={180} className="lg:!h-[220px]">
-                <BarChart data={monthlyData} barGap={4}>
-                  <XAxis dataKey="month" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
-                  <YAxis hide />
-                  <Tooltip content={<CustomTooltip />} />
-                  <Legend
-                    iconType="square"
-                    iconSize={10}
-                    wrapperStyle={{ fontSize: 11, paddingTop: 8 }}
-                  />
-                  <Bar dataKey="revenue" name="Revenue" fill="#16a34a" radius={[3, 3, 0, 0]} />
-                  <Bar dataKey="expenses" name="Expenses" fill="#dc2626" radius={[3, 3, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
+              <RevenueExpenseChart data={monthlyData} />
               <div className="grid grid-cols-3 gap-3 border-t border-border pt-4">
                 <div>
                   <p className="text-[11px] text-muted-foreground uppercase tracking-wider">Best month</p>
@@ -309,7 +280,11 @@ export function ReportsClient({ transactions, monthlyData, stats, expenseByCateg
         <div className="flex items-center justify-between px-5 py-4 border-b border-border">
           <div>
             <p className="font-semibold">Recent transactions</p>
-            <p className="text-xs text-muted-foreground">Showing the latest 5 entries</p>
+            <p className="text-xs text-muted-foreground">
+              {showAllTransactions
+                ? `Showing all ${transactions.length} entries`
+                : 'Showing the latest 5 entries'}
+            </p>
           </div>
         </div>
         <table className="w-full">
@@ -383,14 +358,20 @@ export function ReportsClient({ transactions, monthlyData, stats, expenseByCateg
             ))}
           </tbody>
         </table>
-        <div className="flex justify-end px-5 py-3 border-t border-border">
-          <a href="#" className="text-xs text-primary font-medium hover:underline">
-            View all →
-          </a>
-        </div>
+        {transactions.length > 5 && (
+          <div className="flex justify-end px-5 py-3 border-t border-border">
+            <button
+              type="button"
+              onClick={() => setShowAllTransactions((v) => !v)}
+              className="text-xs text-primary font-medium hover:underline"
+            >
+              {showAllTransactions ? '← Show less' : 'View all →'}
+            </button>
+          </div>
+        )}
       </div>
 
-      <ExpenseModal open={expenseOpen} onClose={() => setExpenseOpen(false)} />
+      <ExpenseModal key={expenseOpen ? 'open' : 'closed'} open={expenseOpen} onClose={() => setExpenseOpen(false)} />
     </div>
   )
 }

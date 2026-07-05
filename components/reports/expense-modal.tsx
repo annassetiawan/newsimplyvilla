@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useTransition } from 'react'
+import { useTransition } from 'react'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -58,19 +58,6 @@ export function ExpenseModal({ open, onClose }: Props) {
       paymentStatus: 'UNPAID',
     },
   })
-
-  useEffect(() => {
-    if (open) {
-      form.reset({
-        date: new Date().toISOString().slice(0, 10),
-        description: '',
-        category: '',
-        amount: 0,
-        paymentStatus: 'UNPAID',
-      })
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open])
 
   function onSubmit(data: Values) {
     startTransition(async () => {

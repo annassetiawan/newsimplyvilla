@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
 import { Pencil } from 'lucide-react'
@@ -67,7 +68,7 @@ export function EmployeeDetailSheet({ employee, open, onClose, onEdit }: Props) 
           {/* Avatar + Name */}
           <div className="flex items-center gap-4">
             {employee.photo ? (
-              <img src={employee.photo} alt={employee.name} className="w-14 h-14 rounded-full object-cover" />
+              <Image src={employee.photo} alt={employee.name} width={56} height={56} className="w-14 h-14 rounded-full object-cover" />
             ) : (
               <div className="w-14 h-14 rounded-full bg-neutral-800 dark:bg-neutral-200 flex items-center justify-center">
                 <span className="text-lg font-bold text-white dark:text-neutral-900">

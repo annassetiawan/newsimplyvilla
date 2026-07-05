@@ -287,7 +287,7 @@ export function ScheduleClient({ staff, shifts: initialShifts }: Props) {
                         className={cn('px-2 py-2', isToday && 'bg-primary/5')}
                       >
                         {shift && cfg ? (
-                          <button
+                          <button type="button"
                             onClick={() => openEdit(shift)}
                             className={cn(
                               'w-full rounded-lg px-2 py-2.5 text-center transition-opacity',
@@ -300,7 +300,7 @@ export function ScheduleClient({ staff, shifts: initialShifts }: Props) {
                             </p>
                           </button>
                         ) : (
-                          <button
+                          <button type="button"
                             onClick={() => openNew(member.id, day)}
                             className="w-full rounded-lg border border-dashed border-border py-2.5 text-[11px] text-muted-foreground transition-colors hover:border-primary/40 hover:text-primary"
                           >
@@ -325,6 +325,7 @@ export function ScheduleClient({ staff, shifts: initialShifts }: Props) {
       )}
 
       <ShiftModal
+        key={modalOpen ? (editShift ? `${editShift.staffId}-${editShift.date}` : 'new') : 'closed'}
         open={modalOpen}
         onClose={handleClose}
         onSave={handleSave}

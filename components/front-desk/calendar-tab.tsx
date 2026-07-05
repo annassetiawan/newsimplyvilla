@@ -187,6 +187,7 @@ export function CalendarTab({ rooms, reservations, onNewReservation }: Props) {
       />
 
       <EditReservationModal
+        key={editTarget?.id ?? 'none'}
         reservation={editTarget}
         onClose={() => setEditTarget(null)}
         onSuccess={handleEditSuccess}

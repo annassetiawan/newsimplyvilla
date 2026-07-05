@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition, useEffect } from 'react'
+import { useState, useTransition } from 'react'
 import { toast } from 'sonner'
 import {
   CheckCircle2, ExternalLink, RefreshCw, UploadCloud, CalendarCheck,
@@ -187,7 +187,7 @@ export function ChannexDashboard({ status, stats, userRole, onDisconnected }: Pr
       {/* Advanced (owner only) */}
       {isOwner && (
         <div className="rounded-xl border border-border bg-background overflow-hidden">
-          <button
+          <button type="button"
             onClick={() => setShowAdvanced((v) => !v)}
             className="flex w-full items-center justify-between px-5 py-4 text-sm font-semibold hover:bg-muted/50 transition-colors"
           >
