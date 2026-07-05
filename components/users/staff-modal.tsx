@@ -28,6 +28,8 @@ const ALL_MODULES = [
   { key: 'dashboard',       label: 'Dashboard' },
   { key: 'front-desk',      label: 'Front Desk' },
   { key: 'rooms',           label: 'Rooms & Areas' },
+  { key: 'rate-plans',      label: 'Rate Plans' },
+  { key: 'availability',    label: 'Rates & Availability' },
   { key: 'inventory',       label: 'Inventory' },
   { key: 'maintenance',     label: 'Maintenance' },
   { key: 'schedule',        label: 'Schedule' },
@@ -37,7 +39,7 @@ const ALL_MODULES = [
   { key: 'settings',        label: 'Settings' },
 ]
 
-const DEFAULT_PERMISSIONS = ['dashboard', 'front-desk', 'rooms', 'maintenance', 'schedule', 'sop']
+const DEFAULT_PERMISSIONS = ['dashboard', 'front-desk', 'rooms', 'rate-plans', 'availability', 'maintenance', 'schedule', 'sop']
 
 const schema = z.object({
   name: z.string().min(1, 'Required'),

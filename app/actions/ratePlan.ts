@@ -48,6 +48,7 @@ export async function createRatePlan(data: unknown) {
   })
 
   revalidatePath('/rooms')
+  revalidatePath('/rate-plans')
 
   // Sync to Channex and push initial ARI (fire-and-forget)
   void (async () => {
@@ -70,6 +71,7 @@ export async function updateRatePlan(id: string, data: unknown) {
   })
 
   revalidatePath('/rooms')
+  revalidatePath('/rate-plans')
 
   // Push updated rates for next year (fire-and-forget)
   void pushRatesForDays(villaId, id, 365).catch(console.error)
@@ -88,6 +90,7 @@ export async function deleteRatePlan(id: string) {
   void deleteMapping(villaId, 'rate_plan', id).catch(console.error)
 
   revalidatePath('/rooms')
+  revalidatePath('/rate-plans')
   return { success: true }
 }
 
@@ -100,6 +103,7 @@ export async function toggleRatePlanActive(id: string, isActive: boolean) {
   })
 
   revalidatePath('/rooms')
+  revalidatePath('/rate-plans')
   return { success: true }
 }
 
@@ -142,6 +146,46 @@ export async function getRoomCalendar(roomId: string, startDate: string, endDate
   }))
 }
 
+// ── Villa-wide Calendar (all rooms, all rate plans) ────────────────────────
+
+export async function getVillaCalendar(startDate: string, endDate: string, roomId?: string) {
+  const villaId = await getSessionVillaId()
+
+  const start = new Date(startDate)
+  const end = new Date(endDate)
+
+  const ratePlans = await db.ratePlan.findMany({
+    where: { villaId, ...(roomId ? { roomId } : {}) },
+    orderBy: [{ room: { code: 'asc' } }, { createdAt: 'asc' }],
+    include: {
+      room: { select: { code: true, name: true } },
+      priceOverrides: {
+        where: { date: { gte: start, lte: end } },
+      },
+    },
+  })
+
+  return ratePlans.map((rp) => ({
+    id: rp.id,
+    name: rp.name,
+    basePrice: Number(rp.basePrice),
+    sellMode: rp.sellMode,
+    maxPersons: rp.maxPersons,
+    isRefundable: rp.isRefundable,
+    isActive: rp.isActive,
+    roomId: rp.roomId,
+    roomCode: rp.room.code,
+    roomName: rp.room.name,
+    overrides: rp.priceOverrides.map((o) => ({
+      id: o.id,
+      ratePlanId: o.ratePlanId,
+      date: o.date.toISOString().split('T')[0],
+      price: o.price !== null ? Number(o.price) : null,
+      isClosed: o.isClosed,
+    })),
+  }))
+}
+
 // ── Price Calendar (single rate plan, monthly) ──────────────────────────────
 
 export async function getPriceCalendar(ratePlanId: string, year: number, month: number) {
@@ -172,6 +216,7 @@ export async function setPriceOverride(data: unknown) {
   })
 
   revalidatePath('/rooms')
+  revalidatePath('/rate-plans')
 
   // Push updated rate for this specific date (fire-and-forget)
   void pushRatesAndRestrictions(villaId, validated.ratePlanId, [validated.date]).catch(console.error)
@@ -210,6 +255,7 @@ export async function setPriceOverrideRange(data: unknown) {
   )
 
   revalidatePath('/rooms')
+  revalidatePath('/rate-plans')
 
   // Push updated rates for the range (fire-and-forget)
   void pushRatesAndRestrictions(villaId, validated.ratePlanId, dateStrings).catch(console.error)
@@ -228,6 +274,7 @@ export async function deletePriceOverride(ratePlanId: string, date: string) {
   })
 
   revalidatePath('/rooms')
+  revalidatePath('/rate-plans')
 
   // Push reset (will send basePrice) for this date (fire-and-forget)
   void pushRatesAndRestrictions(villaId, ratePlanId, [date]).catch(console.error)
@@ -260,6 +307,7 @@ export async function upsertRestriction(data: unknown) {
   })
 
   revalidatePath('/rooms')
+  revalidatePath('/rate-plans')
 
   // Push restrictions for next year (fire-and-forget)
   void pushRatesForDays(villaId, validated.ratePlanId, 365).catch(console.error)

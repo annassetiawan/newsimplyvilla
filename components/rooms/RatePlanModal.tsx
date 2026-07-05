@@ -21,6 +21,7 @@ interface Props {
   open: boolean
   onClose: () => void
   roomId: string
+  rooms?: { id: string; code: string; name: string }[]
   initial: RatePlanData | null
   onSaved: (plan: RatePlanData) => void
 }
@@ -57,10 +58,12 @@ function Toggle({
   )
 }
 
-export function RatePlanModal({ open, onClose, roomId, initial, onSaved }: Props) {
+export function RatePlanModal({ open, onClose, roomId, rooms, initial, onSaved }: Props) {
   const isEdit = !!initial
+  const showRoomPicker = !isEdit && !!rooms && rooms.length > 0
   const [isPending, startTransition] = useTransition()
 
+  const [selectedRoomId, setSelectedRoomId] = useState(roomId || rooms?.[0]?.id || '')
   const [name, setName] = useState(initial?.name ?? '')
   const [basePrice, setBasePrice] = useState(initial ? String(initial.basePrice) : '')
   const [sellMode, setSellMode] = useState<'per_room' | 'per_person'>(
@@ -74,13 +77,15 @@ export function RatePlanModal({ open, onClose, roomId, initial, onSaved }: Props
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     const price = Number(basePrice)
+    const targetRoomId = showRoomPicker ? selectedRoomId : roomId
+    if (!targetRoomId) { setError('Pilih kamar terlebih dahulu'); return }
     if (!name.trim()) { setError('Nama rate plan wajib diisi'); return }
     if (isNaN(price) || price < 0) { setError('Harga tidak valid'); return }
     setError('')
 
     startTransition(async () => {
       const data = {
-        roomId,
+        roomId: targetRoomId,
         name: name.trim(),
         basePrice: price,
         sellMode,
@@ -103,7 +108,7 @@ export function RatePlanModal({ open, onClose, roomId, initial, onSaved }: Props
         if (res.success) {
           onSaved({
             id: res.id!,
-            roomId,
+            roomId: data.roomId,
             name: data.name,
             basePrice: data.basePrice,
             currency: 'IDR',
@@ -130,6 +135,25 @@ export function RatePlanModal({ open, onClose, roomId, initial, onSaved }: Props
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Room picker (only when creating from a cross-room context) */}
+          {showRoomPicker && (
+            <div className="space-y-1.5">
+              <Label>Kamar</Label>
+              <Select value={selectedRoomId} onValueChange={setSelectedRoomId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Pilih kamar" />
+                </SelectTrigger>
+                <SelectContent>
+                  {rooms!.map((room) => (
+                    <SelectItem key={room.id} value={room.id}>
+                      {room.code} · {room.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
           {/* Name */}
           <div className="space-y-1.5">
             <Label htmlFor="rp-name">Nama Rate Plan</Label>

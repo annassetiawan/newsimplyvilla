@@ -1,9 +1,9 @@
 'use client'
 
-import { useState, useRef, useCallback, useTransition } from 'react'
+import { useState, useRef, useCallback, useEffect, useTransition } from 'react'
 import { ChevronLeft, ChevronRight, Tag } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { getRoomCalendar } from '@/app/actions/ratePlan'
+import { getRoomCalendar, getVillaCalendar } from '@/app/actions/ratePlan'
 import { PriceOverrideModal } from './PriceOverrideModal'
 
 const DAY_LABELS = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab']
@@ -71,6 +71,8 @@ export interface RatePlanCalendarRow {
   isRefundable: boolean
   isActive: boolean
   roomId: string
+  roomCode?: string
+  roomName?: string
   overrides: {
     id: string
     ratePlanId: string
@@ -94,12 +96,14 @@ interface ModalState {
 }
 
 interface Props {
-  roomId: string
+  roomId?: string
+  villaWide?: boolean
+  roomFilter?: string
   initialRows: RatePlanCalendarRow[]
   initialStartDate: string
 }
 
-export function RatesCalendar({ roomId, initialRows, initialStartDate }: Props) {
+export function RatesCalendar({ roomId, villaWide, roomFilter, initialRows, initialStartDate }: Props) {
   const [startDate, setStartDate] = useState(initialStartDate)
   const [rows, setRows] = useState<RatePlanCalendarRow[]>(initialRows)
   const [isLoading, startNavTransition] = useTransition()
@@ -107,6 +111,7 @@ export function RatesCalendar({ roomId, initialRows, initialStartDate }: Props) 
   const [drag, setDrag] = useState<DragState | null>(null)
   const [modal, setModal] = useState<ModalState | null>(null)
   const isDragging = useRef(false)
+  const isFirstRender = useRef(true)
 
   const dates = buildDateWindow(startDate)
 
@@ -116,11 +121,27 @@ export function RatesCalendar({ roomId, initialRows, initialStartDate }: Props) 
     const newStart = toISO(addDays(fromISO(startDate), delta * WINDOW))
     startNavTransition(async () => {
       const end = toISO(addDays(fromISO(newStart), WINDOW - 1))
-      const fresh = await getRoomCalendar(roomId, newStart, end)
+      const fresh = villaWide
+        ? await getVillaCalendar(newStart, end, roomFilter)
+        : await getRoomCalendar(roomId!, newStart, end)
       setRows(fresh)
       setStartDate(newStart)
     })
   }
+
+  // ── Refetch current window when the room filter changes (villa-wide only) ──
+
+  useEffect(() => {
+    if (isFirstRender.current) { isFirstRender.current = false; return }
+    if (!villaWide) return
+    startNavTransition(async () => {
+      const end = toISO(addDays(fromISO(startDate), WINDOW - 1))
+      setRows(await getVillaCalendar(startDate, end, roomFilter))
+    })
+    // Only re-run on roomFilter changes — startDate changes are already handled by navigate(),
+    // and villaWide is a static prop for the lifetime of this component.
+    // eslint-disable-next-line react-hooks/exhaustive-deps, react-doctor/exhaustive-deps
+  }, [roomFilter])
 
   // ── Drag selection ──────────────────────────────────────────────────────────
 
@@ -277,6 +298,11 @@ export function RatesCalendar({ roomId, initialRows, initialStartDate }: Props) 
                     <td className="sticky left-0 z-10 bg-background group-hover:bg-muted/20 border-r border-border px-4 py-3 transition-colors">
                       <div className="flex items-start gap-2">
                         <div className="min-w-0">
+                          {row.roomCode && (
+                            <p className="text-[9px] font-semibold uppercase tracking-wide text-muted-foreground/70 truncate max-w-[140px]">
+                              {row.roomCode} · {row.roomName}
+                            </p>
+                          )}
                           <p className="text-xs font-semibold text-foreground truncate max-w-[140px]">{row.name}</p>
                           <p className="text-[10px] text-muted-foreground mt-0.5">
                             {fmtShort(row.basePrice)} dasar

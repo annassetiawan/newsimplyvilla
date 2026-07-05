@@ -12,6 +12,8 @@ import {
   BookOpen,
   Users,
   Settings,
+  Tag,
+  CalendarDays,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
@@ -26,6 +28,8 @@ const navGroups = [
     items: [
       { label: 'Front Desk', href: '/front-desk', key: 'front-desk', icon: ConciergeBell },
       { label: 'Rooms & Areas', href: '/rooms', key: 'rooms', icon: BedDouble },
+      { label: 'Rate Plans', href: '/rate-plans', key: 'rate-plans', icon: Tag },
+      { label: 'Rates & Availability', href: '/availability', key: 'availability', icon: CalendarDays },
       { label: 'Inventory', href: '/inventory', key: 'inventory', icon: Package },
       { label: 'Maintenance', href: '/maintenance', key: 'maintenance', icon: Wrench },
       { label: 'Schedule', href: '/schedule', key: 'schedule', icon: Calendar },
