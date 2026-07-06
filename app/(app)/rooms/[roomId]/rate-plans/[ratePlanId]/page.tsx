@@ -28,6 +28,10 @@ export default async function RatePlanDetailPage({ params }: Props) {
     date: o.date.toISOString().split('T')[0],
     price: o.price !== null ? Number(o.price) : null,
     isClosed: o.isClosed,
+    minStay: o.minStay ?? null,
+    maxStay: o.maxStay ?? null,
+    closedToArrival: o.closedToArrival ?? null,
+    closedToDeparture: o.closedToDeparture ?? null,
   }))
 
   return (

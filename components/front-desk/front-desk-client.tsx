@@ -26,15 +26,17 @@ interface Props {
   reservations: ListReservation[]
   guests: GuestData[]
   lostAndFound: LostFoundItem[]
+  initialBookingId?: string | null
 }
 
-export function FrontDeskClient({ rooms, reservations, guests, lostAndFound }: Props) {
+export function FrontDeskClient({ rooms, reservations, guests, lostAndFound, initialBookingId }: Props) {
   const [modalOpen, setModalOpen] = useState(false)
   const isMobile = useMediaQuery('(max-width: 1024px)')
+  const defaultTab = initialBookingId ? 'list' : (isMobile ? 'list' : 'calendar')
 
   return (
     <>
-      <Tabs defaultValue={isMobile ? 'list' : 'calendar'}>
+      <Tabs defaultValue={defaultTab}>
         <TabsList className="scrollbar-hide mb-4 h-9 w-full overflow-x-auto justify-start">
           <TabsTrigger value="calendar" className="shrink-0">Calendar</TabsTrigger>
           <TabsTrigger value="list" className="shrink-0">List</TabsTrigger>
@@ -56,6 +58,7 @@ export function FrontDeskClient({ rooms, reservations, guests, lostAndFound }: P
           <ListTab
             reservations={reservations}
             onNewReservation={() => setModalOpen(true)}
+            initialBookingId={initialBookingId ?? null}
           />
         </TabsContent>
 

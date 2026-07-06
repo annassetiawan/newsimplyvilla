@@ -151,7 +151,7 @@ export function PriceOverrideModal({ open, onClose, ratePlanId, ratePlanName, ba
     startTransition(async () => {
       const res = await deletePriceOverride(ratePlanId, dates[0])
       if (res.success) {
-        onSaved([{ id: existing.id, ratePlanId, date: dates[0], price: null, isClosed: false }])
+        onSaved([{ id: existing.id, ratePlanId, date: dates[0], price: null, isClosed: false, minStay: null, maxStay: null, closedToArrival: null, closedToDeparture: null }])
         toast.success('Reset ke harga dasar')
         onClose()
       } else {

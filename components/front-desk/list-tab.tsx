@@ -50,12 +50,15 @@ export interface ListReservation {
 interface Props {
   reservations: ListReservation[]
   onNewReservation: () => void
+  initialBookingId?: string | null
 }
 
-export function ListTab({ reservations, onNewReservation }: Props) {
+export function ListTab({ reservations, onNewReservation, initialBookingId }: Props) {
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('ALL')
-  const [selected, setSelected] = useState<ListReservation | null>(null)
+  const [selected, setSelected] = useState<ListReservation | null>(() =>
+    initialBookingId ? (reservations.find((r) => r.id === initialBookingId) ?? null) : null
+  )
   const [editTarget, setEditTarget] = useState<ListReservation | null>(null)
   const [pending, startTransition] = useTransition()
 

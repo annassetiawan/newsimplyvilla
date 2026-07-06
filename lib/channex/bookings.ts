@@ -166,7 +166,7 @@ async function applyRevision(
         type: 'booking_new',
         title: `Booking baru dari ${attrs.ota_name}`,
         body: `${guestName} · ${room.checkin_date} → ${room.checkout_date} · ${attrs.ota_reservation_code ?? bookingId}`,
-        link: '/front-desk',
+        link: `/front-desk?booking=${reservation.id}`,
       },
     }).catch(console.error)
 
@@ -184,6 +184,9 @@ async function applyRevision(
     const reservation = await db.reservation.findFirst({ where: { channexBookingId: bookingId } })
     if (!reservation) return { applied: false, reason: 'reservation not found for cancellation' }
 
+    // Dedupe: already cancelled — ack without creating another notification
+    if (reservation.status === 'CANCELLED') return { applied: true, reason: 'already cancelled' }
+
     await db.reservation.update({ where: { id: reservation.id }, data: { status: 'CANCELLED' } })
 
     void db.notification.create({
@@ -193,7 +196,7 @@ async function applyRevision(
         type: 'booking_cancelled',
         title: 'Booking dibatalkan',
         body: `Reservasi ${bookingId.slice(0, 8)}… telah dibatalkan oleh OTA`,
-        link: '/front-desk',
+        link: `/front-desk?booking=${reservation.id}`,
       },
     }).catch(console.error)
 
@@ -234,7 +237,7 @@ async function applyRevision(
         type: 'booking_modified',
         title: 'Booking dimodifikasi',
         body: `Reservasi ${bookingId.slice(0, 8)}… diubah: ${room.checkin_date} → ${room.checkout_date}`,
-        link: '/front-desk',
+        link: `/front-desk?booking=${reservation.id}`,
       },
     }).catch(console.error)
 
