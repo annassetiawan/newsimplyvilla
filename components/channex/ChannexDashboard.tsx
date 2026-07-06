@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState, useTransition, useCallback } from 'react'
 import { toast } from 'sonner'
 import {
   CheckCircle2, ExternalLink, RefreshCw, UploadCloud, CalendarCheck,
@@ -9,7 +9,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import {
-  pushAllRatesNow, pushAllAvailabilityNow, runInitialSync, deactivateChannex,
+  pushAllRatesNow, pushAllAvailabilityNow, runInitialSync, deactivateChannex, getSyncDetails,
 } from '@/app/actions/channex'
 
 interface ChannexStatus {
@@ -49,12 +49,26 @@ function fmtDate(iso: string | null | undefined) {
   return new Date(iso).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' })
 }
 
+type SyncDetails = Awaited<ReturnType<typeof getSyncDetails>>
+
 export function ChannexDashboard({ status, stats, userRole, onDisconnected }: Props) {
   const [showAdvanced, setShowAdvanced] = useState(false)
   const [isPending, startTransition] = useTransition()
   const [statsOverride, setStatsOverride] = useState<Partial<OtaStats> | null>(null)
+  const [syncDetails, setSyncDetails] = useState<SyncDetails | null>(null)
+  const [syncLoading, setSyncLoading] = useState(false)
   const currentStats = statsOverride ? { ...stats, ...statsOverride } : stats
   const isOwner = userRole === 'OWNER' || userRole === 'SUPER_ADMIN'
+
+  const fetchSyncDetails = useCallback(async () => {
+    setSyncLoading(true)
+    try {
+      const data = await getSyncDetails()
+      setSyncDetails(data)
+    } finally {
+      setSyncLoading(false)
+    }
+  }, [])
 
   const channexUrl = status.environment === 'staging'
     ? 'https://staging.channex.io'
@@ -82,6 +96,7 @@ export function ChannexDashboard({ status, stats, userRole, onDisconnected }: Pr
       if (res.success && res.data) {
         toast.success(`Sinkronisasi selesai`)
         setStatsOverride({ syncedRooms: res.data!.roomTypes, activeRatePlans: res.data!.ratePlans })
+        await fetchSyncDetails()
       } else {
         toast.error(res.message ?? 'Sinkronisasi gagal')
       }
@@ -189,7 +204,11 @@ export function ChannexDashboard({ status, stats, userRole, onDisconnected }: Pr
       {isOwner && (
         <div className="rounded-xl border border-border bg-background overflow-hidden">
           <button type="button"
-            onClick={() => setShowAdvanced((v) => !v)}
+            onClick={() => {
+              const next = !showAdvanced
+              setShowAdvanced(next)
+              if (next && !syncDetails) fetchSyncDetails()
+            }}
             className="flex w-full items-center justify-between px-5 py-4 text-sm font-semibold hover:bg-muted/50 transition-colors"
           >
             <div className="flex items-center gap-2">
@@ -204,6 +223,79 @@ export function ChannexDashboard({ status, stats, userRole, onDisconnected }: Pr
 
           {showAdvanced && (
             <div className="border-t border-border px-5 py-4 space-y-4">
+              {/* Sync status tables */}
+              {syncLoading && (
+                <p className="text-xs text-muted-foreground animate-pulse">Memuat status sinkronisasi…</p>
+              )}
+              {syncDetails && !syncLoading && (
+                <div className="space-y-4">
+                  {/* Rooms table */}
+                  <div>
+                    <p className="text-xs font-medium text-muted-foreground mb-2">Kamar</p>
+                    <div className="rounded-lg border border-border overflow-hidden">
+                      <table className="w-full text-xs">
+                        <thead className="bg-muted/50">
+                          <tr>
+                            <th className="px-3 py-2 text-left font-medium text-muted-foreground">Kode · Nama</th>
+                            <th className="px-3 py-2 text-left font-medium text-muted-foreground">Status</th>
+                            <th className="px-3 py-2 text-left font-medium text-muted-foreground">Channex ID</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-border">
+                          {syncDetails.rooms.map((r) => (
+                            <tr key={r.id}>
+                              <td className="px-3 py-2 font-medium">
+                                <span className="font-mono text-muted-foreground mr-1">{r.code}</span>
+                                {r.name}
+                              </td>
+                              <td className="px-3 py-2">
+                                {r.channexId
+                                  ? <span className="text-green-600 dark:text-green-400 font-medium">✓ Tersinkron</span>
+                                  : <span className="text-muted-foreground">✗ Belum</span>
+                                }
+                              </td>
+                              <td className="px-3 py-2 font-mono text-muted-foreground">
+                                {r.channexId ? r.channexId.slice(0, 8) : '—'}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  {/* Rate plans table */}
+                  <div>
+                    <p className="text-xs font-medium text-muted-foreground mb-2">Rate Plan</p>
+                    <div className="rounded-lg border border-border overflow-hidden">
+                      <table className="w-full text-xs">
+                        <thead className="bg-muted/50">
+                          <tr>
+                            <th className="px-3 py-2 text-left font-medium text-muted-foreground">Nama</th>
+                            <th className="px-3 py-2 text-left font-medium text-muted-foreground">Kamar</th>
+                            <th className="px-3 py-2 text-left font-medium text-muted-foreground">Status</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-border">
+                          {syncDetails.ratePlans.map((rp) => (
+                            <tr key={rp.id} className={cn(!rp.isActive && 'opacity-50')}>
+                              <td className="px-3 py-2 font-medium">{rp.name}</td>
+                              <td className="px-3 py-2 text-muted-foreground">{rp.roomName}</td>
+                              <td className="px-3 py-2">
+                                {rp.channexId
+                                  ? <span className="text-green-600 dark:text-green-400 font-medium">✓ Tersinkron</span>
+                                  : <span className="text-muted-foreground">✗ Belum</span>
+                                }
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <p className="text-xs text-muted-foreground">
                 Gunakan tombol di bawah jika data di Channex tidak sesuai dengan SimplyVilla.
                 Biasanya tidak perlu dijalankan manual.

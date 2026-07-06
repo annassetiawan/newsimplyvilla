@@ -6,6 +6,8 @@ import { db } from '@/lib/db'
 import { getSessionUser } from '@/lib/getSession'
 import { logActivity } from '@/lib/activity-log'
 import { getVillaPlan } from '@/lib/subscription'
+import { getChannexClient } from '@/lib/channex/getClient'
+import { syncRoomType } from '@/lib/channex/sync'
 
 async function getSessionVillaId() {
   const user = await getSessionUser()
@@ -66,8 +68,13 @@ export async function upsertRoom(data: {
         })
       }
       await logActivity({ villaId: user.villaId!, staffName: user.name, action: `Updated room: ${data.name}`, module: 'Rooms' })
+      void (async () => {
+        const client = await getChannexClient(user.villaId!)
+        if (!client) return
+        await syncRoomType(user.villaId!, data.id!, client)
+      })().catch(console.error)
     } else {
-      await db.room.create({
+      const newRoom = await db.room.create({
         data: {
           code: data.code,
           name: data.name,
@@ -80,6 +87,11 @@ export async function upsertRoom(data: {
         },
       })
       await logActivity({ villaId: user.villaId!, staffName: user.name, action: `Added room: ${data.name}`, module: 'Rooms' })
+      void (async () => {
+        const client = await getChannexClient(user.villaId!)
+        if (!client) return
+        await syncRoomType(user.villaId!, newRoom.id, client)
+      })().catch(console.error)
     }
     revalidatePath('/rooms')
     revalidatePath('/dashboard')

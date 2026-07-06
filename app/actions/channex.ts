@@ -256,3 +256,37 @@ export async function deactivateChannex() {
   revalidatePath('/channel-manager')
   return { success: true }
 }
+
+export async function getSyncDetails() {
+  const villaId = await getSessionVillaId()
+
+  const [rooms, ratePlans, mappings] = await Promise.all([
+    db.room.findMany({ where: { villaId }, orderBy: { code: 'asc' } }),
+    db.ratePlan.findMany({
+      where: { villaId },
+      include: { room: { select: { name: true } } },
+      orderBy: [{ room: { code: 'asc' } }, { createdAt: 'asc' }],
+    }),
+    db.channexMapping.findMany({
+      where: { villaId, kind: { in: ['room_type', 'rate_plan'] } },
+    }),
+  ])
+
+  const byKey = new Map(mappings.map((m) => [`${m.kind}:${m.localId}`, m.channexId]))
+
+  return {
+    rooms: rooms.map((r) => ({
+      id: r.id,
+      name: r.name,
+      code: r.code,
+      channexId: byKey.get(`room_type:${r.id}`) ?? null,
+    })),
+    ratePlans: ratePlans.map((rp) => ({
+      id: rp.id,
+      name: rp.name,
+      roomName: rp.room.name,
+      isActive: rp.isActive,
+      channexId: byKey.get(`rate_plan:${rp.id}`) ?? null,
+    })),
+  }
+}

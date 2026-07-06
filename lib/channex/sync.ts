@@ -43,7 +43,7 @@ async function syncProperty(villaId: string, client: ChannexClient): Promise<str
 
 // ── Room type sync ───────────────────────────────────────────────────────────
 
-async function syncRoomType(villaId: string, roomId: string, client: ChannexClient): Promise<string> {
+export async function syncRoomType(villaId: string, roomId: string, client: ChannexClient): Promise<string> {
   const [room, channexPropertyId, existing] = await Promise.all([
     db.room.findUniqueOrThrow({ where: { id: roomId } }),
     getMapping(villaId, 'property', villaId),
