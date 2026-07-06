@@ -230,10 +230,10 @@ export async function pushRatesAndRestrictions(
       date,
       rate,
       stop_sell: isClosed,
-      min_stay_arrival: restriction?.minStay ?? 1,
-      max_stay: restriction?.maxStay ?? null,
-      closed_to_arrival: isClosed || (restriction?.closedToArrival ?? false),
-      closed_to_departure: isClosed || (restriction?.closedToDeparture ?? false),
+      min_stay_arrival: override?.minStay ?? restriction?.minStay ?? 1,
+      max_stay: override?.maxStay ?? restriction?.maxStay ?? null,
+      closed_to_arrival: override?.closedToArrival ?? isClosed || (restriction?.closedToArrival ?? false),
+      closed_to_departure: override?.closedToDeparture ?? isClosed || (restriction?.closedToDeparture ?? false),
     }
   })
 
@@ -327,10 +327,10 @@ export async function pushBatchRatesForPlans(
           : toMinorUnits(basePrice)
         return {
           date, rate, stop_sell: isClosed,
-          min_stay_arrival: restriction?.minStay ?? 1,
-          max_stay: restriction?.maxStay ?? null,
-          closed_to_arrival: isClosed || (restriction?.closedToArrival ?? false),
-          closed_to_departure: isClosed || (restriction?.closedToDeparture ?? false),
+          min_stay_arrival: override?.minStay ?? restriction?.minStay ?? 1,
+          max_stay: override?.maxStay ?? restriction?.maxStay ?? null,
+          closed_to_arrival: override?.closedToArrival ?? isClosed || (restriction?.closedToArrival ?? false),
+          closed_to_departure: override?.closedToDeparture ?? isClosed || (restriction?.closedToDeparture ?? false),
         }
       })
 

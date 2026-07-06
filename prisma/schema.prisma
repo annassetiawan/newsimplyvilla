@@ -615,12 +615,16 @@ model RatePlan {
 }
 
 model PriceOverride {
-  id         String   @id @default(cuid())
-  ratePlanId String
-  villaId    String
-  date       DateTime @db.Date
-  price      Decimal? @db.Decimal(12, 2)
-  isClosed   Boolean  @default(false)
+  id                String   @id @default(cuid())
+  ratePlanId        String
+  villaId           String
+  date              DateTime @db.Date
+  price             Decimal? @db.Decimal(12, 2)
+  isClosed          Boolean  @default(false)
+  minStay           Int?
+  maxStay           Int?
+  closedToArrival   Boolean?
+  closedToDeparture Boolean?
 
   ratePlan RatePlan @relation(fields: [ratePlanId], references: [id], onDelete: Cascade)
   villa    Villa    @relation(fields: [villaId], references: [id], onDelete: Cascade)

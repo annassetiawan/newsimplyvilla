@@ -11,6 +11,7 @@ import { cn } from '@/lib/utils'
 import {
   pushAllRatesNow, pushAllAvailabilityNow, runInitialSync, deactivateChannex,
 } from '@/app/actions/channex'
+import { ChannexAriOverride } from './ChannexAriOverride'
 
 interface ChannexStatus {
   connected: boolean
@@ -29,10 +30,18 @@ interface OtaStats {
   activeRatePlans: number
 }
 
+interface RatePlanOption {
+  id: string
+  name: string
+  roomName: string
+  basePrice: number
+}
+
 interface Props {
   status: ChannexStatus
   stats: OtaStats
   userRole: 'OWNER' | 'STAFF' | 'SUPER_ADMIN'
+  ratePlans: RatePlanOption[]
   onDisconnected: () => void
 }
 
@@ -49,7 +58,7 @@ function fmtDate(iso: string | null | undefined) {
   return new Date(iso).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' })
 }
 
-export function ChannexDashboard({ status, stats, userRole, onDisconnected }: Props) {
+export function ChannexDashboard({ status, stats, userRole, ratePlans, onDisconnected }: Props) {
   const [showAdvanced, setShowAdvanced] = useState(false)
   const [isPending, startTransition] = useTransition()
   const [statsOverride, setStatsOverride] = useState<Partial<OtaStats> | null>(null)
@@ -222,6 +231,10 @@ export function ChannexDashboard({ status, stats, userRole, onDisconnected }: Pr
                   <CalendarCheck className="h-3.5 w-3.5" />
                   Perbarui Ketersediaan
                 </Button>
+              </div>
+
+              <div className="pt-2 border-t border-border">
+                <ChannexAriOverride ratePlans={ratePlans} />
               </div>
 
               <div className="pt-2 border-t border-border">

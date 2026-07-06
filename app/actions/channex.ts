@@ -168,6 +168,88 @@ export async function getOtaStats() {
   return { bookingsThisMonth, syncedRooms, activeRatePlans }
 }
 
+export async function getRatePlansForVilla() {
+  const villaId = await getSessionVillaId()
+  const rooms = await db.room.findMany({
+    where: { villaId },
+    include: { ratePlans: { where: { isActive: true } } },
+  })
+  return rooms.flatMap((room) =>
+    room.ratePlans.map((rp) => ({
+      id: rp.id,
+      name: rp.name,
+      roomName: room.name,
+      basePrice: Number(rp.basePrice),
+    }))
+  )
+}
+
+export async function pushAriDeltaForDateRange(input: {
+  ratePlanId: string
+  dateFrom: string
+  dateTo: string
+  price?: number | null
+  minStay?: number | null
+  maxStay?: number | null
+  stopSell?: boolean
+  closedToArrival?: boolean
+  closedToDeparture?: boolean
+}) {
+  const villaId = await getSessionVillaId()
+
+  const config = await db.channexConfig.findUnique({ where: { villaId } })
+  if (!config?.isActive) return { success: false, message: 'Channex belum terhubung' }
+
+  // Generate all dates in range
+  const dates: string[] = []
+  const cur = new Date(input.dateFrom)
+  const end = new Date(input.dateTo)
+  while (cur <= end) {
+    dates.push(cur.toISOString().split('T')[0])
+    cur.setDate(cur.getDate() + 1)
+  }
+  if (dates.length === 0) return { success: false, message: 'Rentang tanggal tidak valid' }
+  if (dates.length > 365) return { success: false, message: 'Rentang maksimal 365 hari' }
+
+  // Upsert PriceOverride for each date
+  await Promise.all(
+    dates.map((dateStr) =>
+      db.priceOverride.upsert({
+        where: { ratePlanId_date: { ratePlanId: input.ratePlanId, date: new Date(dateStr) } },
+        create: {
+          ratePlanId: input.ratePlanId,
+          villaId,
+          date: new Date(dateStr),
+          price: input.price ?? null,
+          isClosed: input.stopSell ?? false,
+          minStay: input.minStay ?? null,
+          maxStay: input.maxStay ?? null,
+          closedToArrival: input.closedToArrival ?? null,
+          closedToDeparture: input.closedToDeparture ?? null,
+        },
+        update: {
+          ...(input.price !== undefined && { price: input.price }),
+          ...(input.stopSell !== undefined && { isClosed: input.stopSell }),
+          ...(input.minStay !== undefined && { minStay: input.minStay }),
+          ...(input.maxStay !== undefined && { maxStay: input.maxStay }),
+          ...(input.closedToArrival !== undefined && { closedToArrival: input.closedToArrival }),
+          ...(input.closedToDeparture !== undefined && { closedToDeparture: input.closedToDeparture }),
+        },
+      })
+    )
+  )
+
+  // Push delta to Channex for just these dates
+  const { pushRatesAndRestrictions } = await import('@/lib/channex/ari')
+  try {
+    await pushRatesAndRestrictions(villaId, input.ratePlanId, dates)
+    return { success: true, message: `${dates.length} hari berhasil di-push ke Channex` }
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : String(e)
+    return { success: false, message: msg }
+  }
+}
+
 export async function deactivateChannex() {
   const villaId = await getSessionVillaId()
   await db.channexConfig.update({ where: { villaId }, data: { isActive: false } })

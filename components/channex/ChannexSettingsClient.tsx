@@ -22,13 +22,21 @@ interface OtaStats {
   activeRatePlans: number
 }
 
+interface RatePlanOption {
+  id: string
+  name: string
+  roomName: string
+  basePrice: number
+}
+
 interface Props {
   initialStatus: ChannexStatus
   initialStats: OtaStats
   userRole: 'OWNER' | 'STAFF' | 'SUPER_ADMIN'
+  ratePlans: RatePlanOption[]
 }
 
-export function ChannexSettingsClient({ initialStatus, initialStats, userRole }: Props) {
+export function ChannexSettingsClient({ initialStatus, initialStats, userRole, ratePlans }: Props) {
   const [status, setStatus] = useState(initialStatus)
   const [stats, setStats] = useState(initialStats)
 
@@ -55,6 +63,7 @@ export function ChannexSettingsClient({ initialStatus, initialStats, userRole }:
       status={status}
       stats={stats}
       userRole={userRole}
+      ratePlans={ratePlans}
       onDisconnected={handleDisconnected}
     />
   )
