@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
 
       // Fetch unacked booking revisions for this property
       const revisions = await client.get<RevisionListItem[]>('/booking_revisions', {
-        property_id: config.channexPropertyId,
+        property_id: config.channexPropertyId ?? '',
         'filter[status]': 'new,modified,cancelled',
         'filter[is_acked]': 'false',
         per_page: '50',
