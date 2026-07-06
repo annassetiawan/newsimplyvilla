@@ -86,6 +86,10 @@ async function applyRevision(
     const room = attrs.rooms?.[0]
     if (!room) return { applied: false, reason: 'no room in booking' }
 
+    console.log('[Channex booking] room data:', JSON.stringify(room))
+
+    if (!room.room_type_id) return { applied: false, reason: `room_type_id is null — room: ${JSON.stringify(room)}` }
+
     const mapping = await db.channexMapping.findFirst({
       where: { villaId, kind: 'room_type', channexId: room.room_type_id },
     })
