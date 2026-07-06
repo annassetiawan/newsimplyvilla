@@ -10,13 +10,51 @@ function isAuthorized(req: NextRequest): boolean {
   return req.headers.get('x-cron-secret') === secret
 }
 
-interface RevisionListItem {
+interface FeedItem {
   id: string
   type: string
   attributes: {
     id: string
     status: string
+    property_id: string
   }
+}
+
+interface FeedResponse {
+  data: FeedItem | null
+}
+
+// Drain the Feed API for one config: process revisions one by one until feed is empty.
+// Channex Feed API guarantees FIFO order and only returns unacked revisions.
+async function drainFeed(
+  client: ChannexClient,
+  villaId: string,
+  propertyId: string
+): Promise<number> {
+  let processed = 0
+  let attempts = 0
+  const MAX = 200 // safety cap per poll run
+
+  while (attempts < MAX) {
+    attempts++
+    const feed = await client.get<FeedResponse>('/booking_revisions/feed', {
+      property_id: propertyId ?? '',
+    })
+
+    const revision = feed?.data ?? (feed as unknown as FeedItem | null)
+    if (!revision || !revision.id) break
+
+    try {
+      await processRevisionById(revision.id, villaId, client)
+      processed++
+    } catch (e) {
+      console.error(`[Channex poll] failed to process revision ${revision.id}:`, e)
+      // Break on error to avoid infinite loop if ack failed
+      break
+    }
+  }
+
+  return processed
 }
 
 export async function POST(req: NextRequest) {
@@ -34,26 +72,9 @@ export async function POST(req: NextRequest) {
   for (const config of configs) {
     try {
       const client = new ChannexClient(config.apiKey, config.environment as 'staging' | 'production')
-
-      // Fetch unacked booking revisions for this property
-      const revisions = await client.get<RevisionListItem[]>('/booking_revisions', {
-        property_id: config.channexPropertyId ?? '',
-        'filter[status]': 'new,modified,cancelled',
-        'filter[is_acked]': 'false',
-        per_page: '50',
-      })
-
-      const list = Array.isArray(revisions) ? revisions : []
-      console.log(`[Channex poll] ${config.channexPropertyId}: ${list.length} unacked revisions`)
-
-      for (const rev of list) {
-        try {
-          await processRevisionById(rev.id, config.villaId, client)
-          totalProcessed++
-        } catch (e) {
-          console.error(`[Channex poll] failed to process revision ${rev.id}:`, e)
-        }
-      }
+      const count = await drainFeed(client, config.villaId, config.channexPropertyId ?? '')
+      console.log(`[Channex poll] ${config.channexPropertyId}: processed ${count} revisions`)
+      totalProcessed += count
     } catch (e) {
       console.error(`[Channex poll] error for property ${config.channexPropertyId}:`, e)
     }
