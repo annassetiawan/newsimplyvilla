@@ -79,6 +79,10 @@ export interface RatePlanCalendarRow {
     date: string
     price: number | null
     isClosed: boolean
+    minStay: number | null
+    maxStay: number | null
+    closedToArrival: boolean | null
+    closedToDeparture: boolean | null
   }[]
 }
 
@@ -238,7 +242,7 @@ export function RatesCalendar({ roomId, villaWide, roomFilter, initialRows, init
       </div>
 
       {/* Legend */}
-      <div className="flex items-center gap-4 text-xs text-muted-foreground">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-muted-foreground">
         <span className="flex items-center gap-1.5">
           <span className="inline-block h-3 w-3 rounded bg-background border border-border" />
           Harga dasar
@@ -250,6 +254,18 @@ export function RatesCalendar({ roomId, villaWide, roomFilter, initialRows, init
         <span className="flex items-center gap-1.5">
           <span className="inline-block h-3 w-3 rounded bg-red-100 dark:bg-red-900/30" />
           Tutup
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="text-[8px] font-semibold bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 rounded px-0.5">3n</span>
+          Min malam
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="text-[8px] font-semibold bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 rounded px-0.5">CTA</span>
+          Tutup check-in
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="text-[8px] font-semibold bg-pink-100 dark:bg-pink-900/30 text-pink-600 dark:text-pink-400 rounded px-0.5">CTD</span>
+          Tutup check-out
         </span>
         <span className="text-muted-foreground/60">· Drag untuk pilih beberapa tanggal</span>
       </div>
@@ -330,6 +346,10 @@ export function RatesCalendar({ roomId, villaWide, roomFilter, initialRows, init
                       const isClosed = override?.isClosed ?? false
                       const hasCustomPrice = override && !isClosed && override.price !== null
                       const displayPrice = hasCustomPrice ? override!.price! : row.basePrice
+                      const hasCta = override?.closedToArrival === true
+                      const hasCtd = override?.closedToDeparture === true
+                      const hasMinStay = override?.minStay != null && override.minStay > 1
+                      const hasRestriction = hasCta || hasCtd || hasMinStay
 
                       const isInDrag =
                         drag?.ratePlanId === row.id &&
@@ -346,7 +366,7 @@ export function RatesCalendar({ roomId, villaWide, roomFilter, initialRows, init
                           onMouseEnter={() => handleMouseEnter(row.id, date)}
                           onMouseUp={() => handleMouseUp(row.id)}
                           className={cn(
-                            'border-r border-border last:border-r-0 px-1 py-2 text-center cursor-pointer transition-colors',
+                            'border-r border-border last:border-r-0 px-1 py-1.5 text-center cursor-pointer transition-colors',
                             isWeekend(date) && !isClosed && !hasCustomPrice && !isInDrag
                               ? 'bg-blue-50/30 dark:bg-blue-900/5'
                               : '',
@@ -371,6 +391,25 @@ export function RatesCalendar({ roomId, villaWide, roomFilter, initialRows, init
                             )}>
                               {fmtShort(displayPrice)}
                             </span>
+                          )}
+                          {!isClosed && hasRestriction && (
+                            <div className="flex justify-center gap-0.5 mt-0.5 flex-wrap">
+                              {hasMinStay && (
+                                <span className="text-[8px] font-semibold leading-none bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 rounded px-0.5">
+                                  {override!.minStay}n
+                                </span>
+                              )}
+                              {hasCta && (
+                                <span className="text-[8px] font-semibold leading-none bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 rounded px-0.5">
+                                  CTA
+                                </span>
+                              )}
+                              {hasCtd && (
+                                <span className="text-[8px] font-semibold leading-none bg-pink-100 dark:bg-pink-900/30 text-pink-600 dark:text-pink-400 rounded px-0.5">
+                                  CTD
+                                </span>
+                              )}
+                            </div>
                           )}
                         </td>
                       )

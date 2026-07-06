@@ -142,6 +142,10 @@ export async function getRoomCalendar(roomId: string, startDate: string, endDate
       date: o.date.toISOString().split('T')[0],
       price: o.price !== null ? Number(o.price) : null,
       isClosed: o.isClosed,
+      minStay: o.minStay ?? null,
+      maxStay: o.maxStay ?? null,
+      closedToArrival: o.closedToArrival ?? null,
+      closedToDeparture: o.closedToDeparture ?? null,
     })),
   }))
 }
@@ -182,6 +186,10 @@ export async function getVillaCalendar(startDate: string, endDate: string, roomI
       date: o.date.toISOString().split('T')[0],
       price: o.price !== null ? Number(o.price) : null,
       isClosed: o.isClosed,
+      minStay: o.minStay ?? null,
+      maxStay: o.maxStay ?? null,
+      closedToArrival: o.closedToArrival ?? null,
+      closedToDeparture: o.closedToDeparture ?? null,
     })),
   }))
 }
