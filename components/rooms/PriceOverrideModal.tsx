@@ -106,6 +106,10 @@ export function PriceOverrideModal({ open, onClose, ratePlanId, ratePlanName, ba
               date,
               price: isClosed ? null : priceVal,
               isClosed,
+              minStay: restrictions.minStay ?? null,
+              maxStay: restrictions.maxStay ?? null,
+              closedToArrival: restrictions.closedToArrival ?? null,
+              closedToDeparture: restrictions.closedToDeparture ?? null,
             }))
           )
           toast.success(`${dates.length} tanggal diperbarui`)
@@ -128,6 +132,10 @@ export function PriceOverrideModal({ open, onClose, ratePlanId, ratePlanName, ba
             date: dates[0],
             price: isClosed ? null : priceVal,
             isClosed,
+            minStay: restrictions.minStay ?? null,
+            maxStay: restrictions.maxStay ?? null,
+            closedToArrival: restrictions.closedToArrival ?? null,
+            closedToDeparture: restrictions.closedToDeparture ?? null,
           }])
           toast.success('Harga disimpan')
           onClose()

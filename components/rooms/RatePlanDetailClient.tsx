@@ -13,6 +13,10 @@ export interface PriceOverrideData {
   date: string
   price: number | null
   isClosed: boolean
+  minStay: number | null
+  maxStay: number | null
+  closedToArrival: boolean | null
+  closedToDeparture: boolean | null
 }
 
 export interface RestrictionData {

@@ -17,7 +17,10 @@ function addDays(date: Date, days: number) {
 }
 
 function toISO(date: Date) {
-  return date.toISOString().split('T')[0]
+  const y = date.getFullYear()
+  const m = String(date.getMonth() + 1).padStart(2, '0')
+  const d = String(date.getDate()).padStart(2, '0')
+  return `${y}-${m}-${d}`
 }
 
 function fromISO(iso: string) {
@@ -183,14 +186,15 @@ export function RatesCalendar({ roomId, villaWide, roomFilter, initialRows, init
 
   // ── After save ──────────────────────────────────────────────────────────────
 
-  function handleSaved(updates: { id: string; ratePlanId: string; date: string; price: number | null; isClosed: boolean }[]) {
+  function handleSaved(updates: RatePlanCalendarRow['overrides']) {
     setRows((prev) =>
       prev.map((row) => {
         const relevant = updates.filter((u) => u.ratePlanId === row.id)
         if (!relevant.length) return row
         const overrideMap = new Map(row.overrides.map((o) => [o.date, o]))
         for (const u of relevant) {
-          if (u.price === null && !u.isClosed) {
+          const hasAnyOverride = u.price !== null || u.isClosed || u.minStay != null || u.maxStay != null || u.closedToArrival || u.closedToDeparture
+          if (!hasAnyOverride) {
             overrideMap.delete(u.date)
           } else {
             overrideMap.set(u.date, u)
