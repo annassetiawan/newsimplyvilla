@@ -552,6 +552,7 @@ model ChannexConfig {
   villa             Villa     @relation(fields: [villaId], references: [id], onDelete: Cascade)
   apiKey            String
   environment       String    @default("staging")
+  currency          String    @default("IDR")
   channexPropertyId String?
   isActive          Boolean   @default(false)
   webhookId         String?

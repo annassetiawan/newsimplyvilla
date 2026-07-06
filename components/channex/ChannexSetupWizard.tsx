@@ -34,6 +34,7 @@ export function ChannexSetupWizard({ onConnected }: Props) {
   const [apiKey, setApiKey] = useState('')
   const [showKey, setShowKey] = useState(false)
   const [environment, setEnvironment] = useState<'staging' | 'production'>('staging')
+  const [currency, setCurrency] = useState('IDR')
   const [isLoading, setIsLoading] = useState(false)
   const [progress, setProgress] = useState<SyncProgress>({ property: false, rooms: false, ratePlans: false, webhook: false })
 
@@ -46,7 +47,7 @@ export function ChannexSetupWizard({ onConnected }: Props) {
 
     try {
       // Step 1: save config + test connection
-      const saveRes = await saveChannexConfig({ apiKey: apiKey.trim(), environment })
+      const saveRes = await saveChannexConfig({ apiKey: apiKey.trim(), environment, currency })
       if (!saveRes.success) {
         toast.error(saveRes.message ?? 'Koneksi gagal — periksa kode API')
         setStep('connect')
@@ -155,6 +156,26 @@ export function ChannexSetupWizard({ onConnected }: Props) {
                   Mode Testing: untuk uji coba. Gunakan Mode Produksi saat siap go-live.
                 </p>
               )}
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="channex-currency">Mata Uang Properti</Label>
+              <select
+                id="channex-currency"
+                value={currency}
+                onChange={(e) => setCurrency(e.target.value)}
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+              >
+                <option value="IDR">IDR — Indonesian Rupiah</option>
+                <option value="USD">USD — US Dollar</option>
+                <option value="SGD">SGD — Singapore Dollar</option>
+                <option value="EUR">EUR — Euro</option>
+                <option value="AUD">AUD — Australian Dollar</option>
+                <option value="GBP">GBP — British Pound</option>
+              </select>
+              <p className="text-xs text-muted-foreground">
+                Channex tidak mengizinkan ubah mata uang setelah properti dibuat. Pilih dengan cermat.
+              </p>
             </div>
 
             <div className="space-y-1.5">

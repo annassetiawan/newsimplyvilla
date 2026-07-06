@@ -8,7 +8,7 @@ export { deleteMapping }
 
 // ── Property sync ────────────────────────────────────────────────────────────
 
-async function syncProperty(villaId: string, client: ChannexClient): Promise<string> {
+async function syncProperty(villaId: string, client: ChannexClient, currency: string): Promise<string> {
   const [villa, existing] = await Promise.all([
     db.villa.findUniqueOrThrow({ where: { id: villaId } }),
     getMapping(villaId, 'property', villaId),
@@ -18,7 +18,7 @@ async function syncProperty(villaId: string, client: ChannexClient): Promise<str
 
   if (existing) {
     await client.put<PropertyRes>(`/properties/${existing}`, {
-      property: { title: villa.name, currency: 'IDR', email: villa.email ?? undefined },
+      property: { title: villa.name, currency, email: villa.email ?? undefined },
     })
     return existing
   }
@@ -26,7 +26,7 @@ async function syncProperty(villaId: string, client: ChannexClient): Promise<str
   const data = await client.post<PropertyRes>('/properties', {
     property: {
       title: villa.name,
-      currency: 'IDR',
+      currency,
       email: villa.email ?? undefined,
       country: 'ID',
       timezone: 'Asia/Makassar',
@@ -77,7 +77,7 @@ export async function syncRoomType(villaId: string, roomId: string, client: Chan
 
 // ── Rate plan sync ───────────────────────────────────────────────────────────
 
-export async function syncRatePlan(villaId: string, ratePlanId: string, client: ChannexClient): Promise<string> {
+export async function syncRatePlan(villaId: string, ratePlanId: string, client: ChannexClient, currency?: string): Promise<string> {
   const rp = await db.ratePlan.findUniqueOrThrow({ where: { id: ratePlanId } })
   const [channexPropertyId, channexRoomTypeId] = await Promise.all([
     getMapping(villaId, 'property', villaId),
@@ -89,11 +89,13 @@ export async function syncRatePlan(villaId: string, ratePlanId: string, client: 
 
   type RatePlanRes = { id: string }
 
+  const resolvedCurrency = currency ?? (await db.channexConfig.findUnique({ where: { villaId } }))?.currency ?? 'IDR'
+
   const attrs = {
     property_id: channexPropertyId,
     room_type_id: channexRoomTypeId,
     title: rp.name,
-    currency: 'IDR',
+    currency: resolvedCurrency,
     sell_mode: rp.sellMode,
     rate_mode: 'manual',
     options: [{ occupancy: rp.maxPersons, is_primary: true, rate: 0 }],
@@ -117,10 +119,14 @@ export async function initialSync(villaId: string): Promise<{
   roomTypes: number
   ratePlans: number
 }> {
-  const client = await getChannexClientRequired(villaId)
+  const [client, config] = await Promise.all([
+    getChannexClientRequired(villaId),
+    db.channexConfig.findUniqueOrThrow({ where: { villaId } }),
+  ])
+  const currency = config.currency ?? 'IDR'
 
   const [channexPropertyId, rooms] = await Promise.all([
-    syncProperty(villaId, client),
+    syncProperty(villaId, client, currency),
     db.room.findMany({ where: { villaId } }),
   ])
 
@@ -132,7 +138,7 @@ export async function initialSync(villaId: string): Promise<{
 
   const ratePlans = await db.ratePlan.findMany({ where: { villaId } })
   for (const rp of ratePlans) {
-    await syncRatePlan(villaId, rp.id, client)
+    await syncRatePlan(villaId, rp.id, client, currency)
   }
 
   // Push availability + rates in 2 API calls total (certification requirement)

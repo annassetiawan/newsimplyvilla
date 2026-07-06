@@ -18,6 +18,7 @@ async function getSessionVillaId() {
 export async function saveChannexConfig(input: {
   apiKey: string
   environment: 'staging' | 'production'
+  currency?: string
 }) {
   const villaId = await getSessionVillaId()
 
@@ -30,17 +31,21 @@ export async function saveChannexConfig(input: {
     return { success: false, message: `Koneksi gagal: ${msg}` }
   }
 
+  const currency = input.currency ?? 'IDR'
+
   await db.channexConfig.upsert({
     where: { villaId },
     create: {
       villaId,
       apiKey: input.apiKey,
       environment: input.environment,
+      currency,
       isActive: true,
     },
     update: {
       apiKey: input.apiKey,
       environment: input.environment,
+      currency,
       isActive: true,
     },
   })
@@ -77,6 +82,7 @@ export async function getChannexStatus() {
     connected: true,
     isActive: config.isActive,
     environment: config.environment as 'staging' | 'production',
+    currency: config.currency ?? 'IDR',
     channexPropertyId: config.channexPropertyId,
     webhookId: config.webhookId,
     lastSyncAt: config.lastSyncAt?.toISOString() ?? null,
@@ -255,6 +261,31 @@ export async function deactivateChannex() {
   await db.channexConfig.update({ where: { villaId }, data: { isActive: false } })
   revalidatePath('/channel-manager')
   return { success: true }
+}
+
+export async function changeCurrency(newCurrency: string) {
+  const villaId = await getSessionVillaId()
+
+  const config = await db.channexConfig.findUnique({ where: { villaId } })
+  if (!config?.isActive) return { success: false, message: 'Channex belum terhubung' }
+
+  // Clear all mappings so re-sync creates a new property with the new currency
+  await Promise.all([
+    db.channexMapping.deleteMany({ where: { villaId } }),
+    db.channexConfig.update({
+      where: { villaId },
+      data: { currency: newCurrency, channexPropertyId: null },
+    }),
+  ])
+
+  try {
+    const result = await initialSync(villaId)
+    revalidatePath('/channel-manager')
+    return { success: true, data: result }
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : String(e)
+    return { success: false, message: msg }
+  }
 }
 
 export async function getSyncDetails() {

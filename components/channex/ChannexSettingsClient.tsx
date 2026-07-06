@@ -9,6 +9,7 @@ type ChannexStatus = {
   connected: boolean
   isActive?: boolean
   environment?: 'staging' | 'production'
+  currency?: string
   channexPropertyId?: string | null
   webhookId?: string | null
   lastSyncAt?: string | null

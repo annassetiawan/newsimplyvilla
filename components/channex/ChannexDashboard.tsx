@@ -9,13 +9,23 @@ import {
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import {
-  pushAllRatesNow, pushAllAvailabilityNow, runInitialSync, deactivateChannex, getSyncDetails,
+  pushAllRatesNow, pushAllAvailabilityNow, runInitialSync, deactivateChannex, getSyncDetails, changeCurrency,
 } from '@/app/actions/channex'
+
+const CURRENCY_OPTIONS = [
+  { value: 'IDR', label: 'IDR — Indonesian Rupiah' },
+  { value: 'USD', label: 'USD — US Dollar' },
+  { value: 'SGD', label: 'SGD — Singapore Dollar' },
+  { value: 'EUR', label: 'EUR — Euro' },
+  { value: 'AUD', label: 'AUD — Australian Dollar' },
+  { value: 'GBP', label: 'GBP — British Pound' },
+]
 
 interface ChannexStatus {
   connected: boolean
   isActive?: boolean
   environment?: 'staging' | 'production'
+  currency?: string
   channexPropertyId?: string | null
   webhookId?: string | null
   lastSyncAt?: string | null
@@ -57,6 +67,8 @@ export function ChannexDashboard({ status, stats, userRole, onDisconnected }: Pr
   const [statsOverride, setStatsOverride] = useState<Partial<OtaStats> | null>(null)
   const [syncDetails, setSyncDetails] = useState<SyncDetails | null>(null)
   const [syncLoading, setSyncLoading] = useState(false)
+  const [showChangeCurrency, setShowChangeCurrency] = useState(false)
+  const [newCurrency, setNewCurrency] = useState(status.currency ?? 'IDR')
   const currentStats = statsOverride ? { ...stats, ...statsOverride } : stats
   const isOwner = userRole === 'OWNER' || userRole === 'SUPER_ADMIN'
 
@@ -99,6 +111,22 @@ export function ChannexDashboard({ status, stats, userRole, onDisconnected }: Pr
         await fetchSyncDetails()
       } else {
         toast.error(res.message ?? 'Sinkronisasi gagal')
+      }
+    })
+  }
+
+  function handleChangeCurrencyConfirm() {
+    startTransition(async () => {
+      const res = await changeCurrency(newCurrency)
+      if (res.success) {
+        toast.success(`Mata uang diubah ke ${newCurrency}. Properti Channex baru telah dibuat.`)
+        setShowChangeCurrency(false)
+        if (res.data) {
+          setStatsOverride({ syncedRooms: res.data.roomTypes, activeRatePlans: res.data.ratePlans })
+        }
+        await fetchSyncDetails()
+      } else {
+        toast.error(res.message ?? 'Gagal mengganti mata uang')
       }
     })
   }
@@ -223,6 +251,64 @@ export function ChannexDashboard({ status, stats, userRole, onDisconnected }: Pr
 
           {showAdvanced && (
             <div className="border-t border-border px-5 py-4 space-y-4">
+              {/* Currency section */}
+              <div className="rounded-lg border border-border px-4 py-3 flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground mb-0.5">Mata Uang Properti</p>
+                  <p className="text-sm font-semibold">{status.currency ?? 'IDR'}</p>
+                </div>
+                {!showChangeCurrency && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="shrink-0"
+                    onClick={() => { setNewCurrency(status.currency ?? 'IDR'); setShowChangeCurrency(true) }}
+                  >
+                    Ganti Currency
+                  </Button>
+                )}
+              </div>
+
+              {showChangeCurrency && (
+                <div className="rounded-lg border border-border p-4 space-y-3">
+                  <p className="text-xs font-medium">Ganti Mata Uang</p>
+                  <p className="text-xs text-destructive">
+                    Mengganti mata uang akan menghapus property Channex saat ini dan membuat yang baru.
+                    Semua sinkronisasi akan diulang dari awal.
+                  </p>
+                  <select
+                    value={newCurrency}
+                    onChange={(e) => setNewCurrency(e.target.value)}
+                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                  >
+                    {CURRENCY_OPTIONS.map((opt) => (
+                      <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    ))}
+                  </select>
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      size="sm"
+                      disabled={isPending || newCurrency === (status.currency ?? 'IDR')}
+                      onClick={handleChangeCurrencyConfirm}
+                      className="bg-neutral-900 text-white hover:bg-neutral-700 dark:bg-neutral-100 dark:text-neutral-900"
+                    >
+                      {isPending ? 'Memproses...' : 'Konfirmasi Ganti'}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      disabled={isPending}
+                      onClick={() => setShowChangeCurrency(false)}
+                    >
+                      Batal
+                    </Button>
+                  </div>
+                </div>
+              )}
+
               {/* Sync status tables */}
               {syncLoading && (
                 <p className="text-xs text-muted-foreground animate-pulse">Memuat status sinkronisasi…</p>
