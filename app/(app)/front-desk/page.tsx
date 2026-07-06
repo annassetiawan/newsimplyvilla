@@ -113,6 +113,7 @@ export default async function FrontDeskPage({
         </p>
       </div>
       <FrontDeskClient
+        key={initialBookingId ?? 'default'}
         rooms={serializedRooms}
         reservations={serializedReservations}
         guests={serializedGuests}
