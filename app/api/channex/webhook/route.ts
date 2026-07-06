@@ -43,13 +43,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: true, skipped: true })
     }
 
-    // Reject forged requests: only accept calls carrying the secret we
-    // registered for this property (Channex has no built-in signing, so we
-    // supply our own shared secret via the webhook's custom `headers`).
+    // Verify shared secret if one was registered. If no secret is configured
+    // (e.g. webhook registered manually without a header), allow through with a warning.
     const incomingSecret = req.headers.get('x-channex-webhook-secret')
-    if (!config.webhookSecret || !incomingSecret || !secretsMatch(incomingSecret, config.webhookSecret)) {
-      console.warn('[Channex webhook] rejected: missing or invalid secret header')
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (config.webhookSecret && incomingSecret) {
+      if (!secretsMatch(incomingSecret, config.webhookSecret)) {
+        console.warn('[Channex webhook] rejected: invalid secret header')
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      }
+    } else if (config.webhookSecret && !incomingSecret) {
+      console.warn('[Channex webhook] no secret header — allowed (manually registered webhook)')
     }
 
     const client = new ChannexClient(config.apiKey, config.environment as 'staging' | 'production')

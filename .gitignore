@@ -1,3 +1,6 @@
+# certification test scripts (one-time use, not needed in production)
+scripts/channex-*.ts
+
 # env files
 .env
 .env*.local

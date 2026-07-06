@@ -55,7 +55,7 @@ export async function createRatePlan(data: unknown) {
     const client = await getChannexClient(villaId)
     if (!client) return
     await syncRatePlan(villaId, result.id, client)
-    await pushRatesForDays(villaId, result.id, 365)
+    await pushRatesForDays(villaId, result.id, 500)
   })().catch(console.error)
 
   return { success: true, id: result.id }
@@ -74,7 +74,7 @@ export async function updateRatePlan(id: string, data: unknown) {
   revalidatePath('/rate-plans')
 
   // Push updated rates for next year (fire-and-forget)
-  void pushRatesForDays(villaId, id, 365).catch(console.error)
+  void pushRatesForDays(villaId, id, 500).catch(console.error)
 
   return { success: true }
 }
@@ -310,7 +310,7 @@ export async function upsertRestriction(data: unknown) {
   revalidatePath('/rate-plans')
 
   // Push restrictions for next year (fire-and-forget)
-  void pushRatesForDays(villaId, validated.ratePlanId, 365).catch(console.error)
+  void pushRatesForDays(villaId, validated.ratePlanId, 500).catch(console.error)
 
   return { success: true }
 }

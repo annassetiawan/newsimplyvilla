@@ -2,7 +2,7 @@ import { db } from '@/lib/db'
 import { ChannexClient } from './client'
 import { getChannexClientRequired } from './getClient'
 import { getMapping, saveMapping, deleteMapping } from './mapping'
-import { pushRatesForDays } from './ari'
+import { pushAllAvailabilityBatch, pushBatchRatesForPlans } from './ari'
 
 export { deleteMapping }
 
@@ -135,10 +135,9 @@ export async function initialSync(villaId: string): Promise<{
     await syncRatePlan(villaId, rp.id, client)
   }
 
-  // Push rates after syncing rate plan structure
-  for (const rp of ratePlans) {
-    await pushRatesForDays(villaId, rp.id, 365)
-  }
+  // Push availability + rates in 2 API calls total (certification requirement)
+  await pushAllAvailabilityBatch(villaId, 500)
+  await pushBatchRatesForPlans(villaId, ratePlans.map((rp) => rp.id), 500)
 
   await db.channexConfig.update({
     where: { villaId },

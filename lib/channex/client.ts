@@ -45,10 +45,17 @@ export class ChannexClient {
 
     let res = await attempt()
 
-    // Retry once on 5xx transient errors
-    if (res.status >= 500) {
-      await new Promise((r) => setTimeout(r, 1000))
-      res = await attempt()
+    // Retry with exponential backoff on 429 (rate limit) and 5xx (transient errors)
+    const retryDelays = [1000, 2000, 4000]
+    for (const delay of retryDelays) {
+      if (res.status === 429 || res.status >= 500) {
+        const retryAfter = res.headers.get('Retry-After')
+        const waitMs = retryAfter ? parseInt(retryAfter, 10) * 1000 : delay
+        await new Promise((r) => setTimeout(r, waitMs))
+        res = await attempt()
+      } else {
+        break
+      }
     }
 
     if (!res.ok) {

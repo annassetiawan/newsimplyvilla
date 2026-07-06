@@ -201,8 +201,47 @@ async function applyRevision(
   }
 
   if (status === 'modified') {
-    console.warn(`[Channex] Booking modification for ${bookingId} — manual review needed`)
-    return { applied: true, reason: 'modification logged' }
+    const reservation = await db.reservation.findFirst({ where: { channexBookingId: bookingId } })
+    if (!reservation) return { applied: false, reason: 'reservation not found for modification' }
+
+    const room = attrs.rooms?.[0]
+    if (!room) return { applied: false, reason: 'no room in modification' }
+
+    const checkIn = new Date(room.checkin_date)
+    const checkOut = new Date(room.checkout_date)
+    const nights = Math.ceil((checkOut.getTime() - checkIn.getTime()) / 86400000)
+    const dayPrices = Object.values(room.days ?? {}).map(Number)
+    const pricePerNight = dayPrices.length > 0
+      ? dayPrices.reduce((a, b) => a + b, 0) / dayPrices.length
+      : Number(room.amount) / Math.max(nights, 1)
+
+    const oldCheckIn = toISO(reservation.checkIn)
+    const oldCheckOut = toISO(new Date(reservation.checkOut.getTime() - 86400000))
+
+    await db.reservation.update({
+      where: { id: reservation.id },
+      data: { checkIn, checkOut, pricePerNight, totalAmount: pricePerNight * nights },
+    })
+
+    void db.notification.create({
+      data: {
+        id: `notif_${Date.now()}`,
+        villaId,
+        type: 'booking_modified',
+        title: 'Booking dimodifikasi',
+        body: `Reservasi ${bookingId.slice(0, 8)}… diubah: ${room.checkin_date} → ${room.checkout_date}`,
+        link: '/front-desk',
+      },
+    }).catch(console.error)
+
+    // Refresh availability for old dates and new dates
+    void pushAvailability(villaId, reservation.roomId, oldCheckIn, oldCheckOut).catch(console.error)
+    void pushAvailability(
+      villaId, reservation.roomId, room.checkin_date,
+      toISO(new Date(checkOut.getTime() - 86400000))
+    ).catch(console.error)
+
+    return { applied: true }
   }
 
   return { applied: false, reason: `unknown status: ${status}` }
