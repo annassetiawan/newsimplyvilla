@@ -73,10 +73,10 @@ export function PriceOverrideModal({ open, onClose, ratePlanId, ratePlanName, ba
     existing?.price !== null && existing?.price !== undefined ? String(existing.price) : ''
   )
   const [isClosed, setIsClosed] = useState(existing?.isClosed ?? false)
-  const [minStay, setMinStay] = useState('')
-  const [maxStay, setMaxStay] = useState('')
-  const [cta, setCta] = useState(false)
-  const [ctd, setCtd] = useState(false)
+  const [minStay, setMinStay] = useState(existing?.minStay != null ? String(existing.minStay) : '')
+  const [maxStay, setMaxStay] = useState(existing?.maxStay != null ? String(existing.maxStay) : '')
+  const [cta, setCta] = useState(existing?.closedToArrival ?? false)
+  const [ctd, setCtd] = useState(existing?.closedToDeparture ?? false)
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
