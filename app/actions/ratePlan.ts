@@ -209,10 +209,17 @@ export async function setPriceOverride(data: unknown) {
 
   const date = new Date(validated.date)
 
+  const restrictionFields = {
+    minStay: validated.minStay ?? null,
+    maxStay: validated.maxStay ?? null,
+    closedToArrival: validated.closedToArrival ?? null,
+    closedToDeparture: validated.closedToDeparture ?? null,
+  }
+
   await db.priceOverride.upsert({
     where: { ratePlanId_date: { ratePlanId: validated.ratePlanId, date } },
-    create: { ...validated, date, villaId },
-    update: { price: validated.price, isClosed: validated.isClosed },
+    create: { ratePlanId: validated.ratePlanId, date, villaId, price: validated.price, isClosed: validated.isClosed, ...restrictionFields },
+    update: { price: validated.price, isClosed: validated.isClosed, ...restrictionFields },
   })
 
   revalidatePath('/rooms')
@@ -238,18 +245,19 @@ export async function setPriceOverrideRange(data: unknown) {
     dateStrings.push(d.toISOString().split('T')[0])
   }
 
+  const restrictionFields = {
+    minStay: validated.minStay ?? null,
+    maxStay: validated.maxStay ?? null,
+    closedToArrival: validated.closedToArrival ?? null,
+    closedToDeparture: validated.closedToDeparture ?? null,
+  }
+
   await db.$transaction(
     dateDates.map((date) =>
       db.priceOverride.upsert({
         where: { ratePlanId_date: { ratePlanId: validated.ratePlanId, date } },
-        create: {
-          ratePlanId: validated.ratePlanId,
-          villaId,
-          date,
-          price: validated.price,
-          isClosed: validated.isClosed,
-        },
-        update: { price: validated.price, isClosed: validated.isClosed },
+        create: { ratePlanId: validated.ratePlanId, villaId, date, price: validated.price, isClosed: validated.isClosed, ...restrictionFields },
+        update: { price: validated.price, isClosed: validated.isClosed, ...restrictionFields },
       })
     )
   )

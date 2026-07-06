@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { cn } from '@/lib/utils'
+import { Checkbox } from '@/components/ui/checkbox'
 import { setPriceOverride, setPriceOverrideRange, deletePriceOverride } from '@/app/actions/ratePlan'
 import type { PriceOverrideData } from './RatePlanDetailClient'
 
@@ -72,10 +73,20 @@ export function PriceOverrideModal({ open, onClose, ratePlanId, ratePlanName, ba
     existing?.price !== null && existing?.price !== undefined ? String(existing.price) : ''
   )
   const [isClosed, setIsClosed] = useState(existing?.isClosed ?? false)
+  const [minStay, setMinStay] = useState('')
+  const [maxStay, setMaxStay] = useState('')
+  const [cta, setCta] = useState(false)
+  const [ctd, setCtd] = useState(false)
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     const priceVal = price === '' ? null : Number(price)
+    const restrictions = {
+      minStay: minStay ? Number(minStay) : null,
+      maxStay: maxStay ? Number(maxStay) : null,
+      closedToArrival: cta || null,
+      closedToDeparture: ctd || null,
+    }
 
     startTransition(async () => {
       if (isRange) {
@@ -85,6 +96,7 @@ export function PriceOverrideModal({ open, onClose, ratePlanId, ratePlanName, ba
           endDate: dates[dates.length - 1],
           price: isClosed ? null : priceVal,
           isClosed,
+          ...restrictions,
         })
         if (res.success) {
           onSaved(
@@ -107,6 +119,7 @@ export function PriceOverrideModal({ open, onClose, ratePlanId, ratePlanName, ba
           date: dates[0],
           price: isClosed ? null : priceVal,
           isClosed,
+          ...restrictions,
         })
         if (res.success) {
           onSaved([{
@@ -187,6 +200,49 @@ export function PriceOverrideModal({ open, onClose, ratePlanId, ratePlanName, ba
                   onChange={(e) => setPrice(e.target.value)}
                   placeholder={String(basePrice)}
                 />
+              </div>
+            </div>
+          )}
+
+          {/* Restrictions */}
+          {!isClosed && (
+            <div className="space-y-2">
+              <p className="text-xs font-medium text-muted-foreground">Pembatasan (opsional)</p>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label htmlFor="po-min-stay" className="text-xs">Min malam</Label>
+                  <Input
+                    id="po-min-stay"
+                    type="number"
+                    min={1}
+                    placeholder="1"
+                    value={minStay}
+                    onChange={(e) => setMinStay(e.target.value)}
+                    className="h-8 text-xs"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="po-max-stay" className="text-xs">Maks malam</Label>
+                  <Input
+                    id="po-max-stay"
+                    type="number"
+                    min={1}
+                    placeholder="—"
+                    value={maxStay}
+                    onChange={(e) => setMaxStay(e.target.value)}
+                    className="h-8 text-xs"
+                  />
+                </div>
+              </div>
+              <div className="flex gap-4">
+                <div className="flex items-center gap-2">
+                  <Checkbox id="po-cta" checked={cta} onCheckedChange={(v) => setCta(!!v)} />
+                  <Label htmlFor="po-cta" className="text-xs cursor-pointer">Tutup Check-in (CTA)</Label>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Checkbox id="po-ctd" checked={ctd} onCheckedChange={(v) => setCtd(!!v)} />
+                  <Label htmlFor="po-ctd" className="text-xs cursor-pointer">Tutup Check-out (CTD)</Label>
+                </div>
               </div>
             </div>
           )}
