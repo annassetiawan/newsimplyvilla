@@ -88,12 +88,16 @@ async function applyRevision(
 
     console.log('[Channex booking] room data:', JSON.stringify(room))
 
-    if (!room.room_type_id) return { applied: false, reason: `room_type_id is null — room: ${JSON.stringify(room)}` }
+    let mapping = room.room_type_id
+      ? await db.channexMapping.findFirst({ where: { villaId, kind: 'room_type', channexId: room.room_type_id } })
+      : null
 
-    const mapping = await db.channexMapping.findFirst({
-      where: { villaId, kind: 'room_type', channexId: room.room_type_id },
-    })
-    if (!mapping) return { applied: false, reason: `no room mapping for ${room.room_type_id}` }
+    // External OTA bookings (e.g. Booking.com) may have room_type_id: null — fall back to the only room type for this villa
+    if (!mapping) {
+      const fallback = await db.channexMapping.findFirst({ where: { villaId, kind: 'room_type' } })
+      if (!fallback) return { applied: false, reason: `no room mapping for villa ${villaId}` }
+      mapping = fallback
+    }
 
     // Guest name from customer field (more reliable than room guests)
     const customer = attrs.customer
