@@ -7,7 +7,7 @@ import { db } from '@/lib/db'
 import { getSessionUser } from '@/lib/getSession'
 import { ChannexClient } from '@/lib/channex/client'
 import { initialSync } from '@/lib/channex/sync'
-import { pushBatchRatesForPlans, pushAllAvailabilityBatch, pushAvailability } from '@/lib/channex/ari'
+import { pushBatchRatesForPlans, pushAllAvailabilityBatch, pushAvailability, pushBatchAriDeltaForChanges } from '@/lib/channex/ari'
 
 async function getSessionVillaId() {
   const user = await getSessionUser()
@@ -261,6 +261,83 @@ export async function deactivateChannex() {
   await db.channexConfig.update({ where: { villaId }, data: { isActive: false } })
   revalidatePath('/channel-manager')
   return { success: true }
+}
+
+export async function batchPushAriDelta(
+  changes: Array<{
+    ratePlanId: string
+    dateFrom: string
+    dateTo: string
+    price?: number | null
+    minStay?: number | null
+    maxStay?: number | null
+    stopSell?: boolean
+    closedToArrival?: boolean
+    closedToDeparture?: boolean
+  }>
+) {
+  const villaId = await getSessionVillaId()
+
+  const config = await db.channexConfig.findUnique({ where: { villaId } })
+  if (!config?.isActive) return { success: false, message: 'Channex belum terhubung' }
+  if (changes.length === 0) return { success: false, message: 'Tidak ada perubahan' }
+
+  // Generate all dates for each change
+  const withDates = changes.map((c) => {
+    const dates: string[] = []
+    const cur = new Date(c.dateFrom)
+    const end = new Date(c.dateTo)
+    while (cur <= end) {
+      dates.push(cur.toISOString().split('T')[0])
+      cur.setDate(cur.getDate() + 1)
+    }
+    return { ...c, dates }
+  })
+
+  const totalDates = withDates.reduce((sum, c) => sum + c.dates.length, 0)
+  if (totalDates === 0) return { success: false, message: 'Rentang tanggal tidak valid' }
+
+  // Persist all overrides to DB
+  await Promise.all(
+    withDates.flatMap(({ ratePlanId, dates, price, minStay, maxStay, stopSell, closedToArrival, closedToDeparture }) =>
+      dates.map((dateStr) =>
+        db.priceOverride.upsert({
+          where: { ratePlanId_date: { ratePlanId, date: new Date(dateStr) } },
+          create: {
+            ratePlanId,
+            villaId,
+            date: new Date(dateStr),
+            price: price ?? null,
+            isClosed: stopSell ?? false,
+            minStay: minStay ?? null,
+            maxStay: maxStay ?? null,
+            closedToArrival: closedToArrival ?? null,
+            closedToDeparture: closedToDeparture ?? null,
+          },
+          update: {
+            ...(price !== undefined && { price }),
+            ...(stopSell !== undefined && { isClosed: stopSell }),
+            ...(minStay !== undefined && { minStay }),
+            ...(maxStay !== undefined && { maxStay }),
+            ...(closedToArrival !== undefined && { closedToArrival }),
+            ...(closedToDeparture !== undefined && { closedToDeparture }),
+          },
+        })
+      )
+    )
+  )
+
+  // Single Channex API call for all rate plan + date combinations
+  try {
+    await pushBatchAriDeltaForChanges(
+      villaId,
+      withDates.map(({ ratePlanId, dates }) => ({ ratePlanId, dates }))
+    )
+    return { success: true, message: `${changes.length} perubahan berhasil di-push dalam 1 API call` }
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : String(e)
+    return { success: false, message: msg }
+  }
 }
 
 export async function changeCurrency(newCurrency: string) {

@@ -363,3 +363,84 @@ export async function pushBatchRatesForPlans(
   // Single API call for all rate plans combined
   await client.post('/restrictions', { values })
 }
+
+// Push delta for multiple rate plan + date combinations in a single API call (cert Tests 3-7)
+export async function pushBatchAriDeltaForChanges(
+  villaId: string,
+  changes: Array<{ ratePlanId: string; dates: string[] }>
+): Promise<void> {
+  const client = await getChannexClient(villaId)
+  if (!client) return
+
+  const channexPropertyId = await getMapping(villaId, 'property', villaId)
+  if (!channexPropertyId) return
+
+  const today = toISO(new Date())
+
+  const planDataList = await Promise.all(
+    changes.map(async ({ ratePlanId, dates }) => {
+      const channexRatePlanId = await getMapping(villaId, 'rate_plan', ratePlanId)
+      if (!channexRatePlanId) return null
+
+      const futureDates = dates.filter((d) => d >= today)
+      if (futureDates.length === 0) return null
+
+      const [rp, restriction, overrides] = await Promise.all([
+        db.ratePlan.findUniqueOrThrow({ where: { id: ratePlanId } }),
+        db.ratePlanRestriction.findUnique({ where: { ratePlanId } }),
+        db.priceOverride.findMany({
+          where: { ratePlanId, date: { in: futureDates.map((d) => new Date(d)) } },
+        }),
+      ])
+
+      const overrideMap = new Map(overrides.map((o) => [toISO(new Date(o.date)), o]))
+      const basePrice = Number(rp.basePrice)
+
+      type Entry = {
+        date: string; rate: number; stop_sell: boolean
+        min_stay_arrival: number; max_stay: number | null
+        closed_to_arrival: boolean; closed_to_departure: boolean
+      }
+
+      const entries: Entry[] = futureDates.map((date) => {
+        const override = overrideMap.get(date)
+        const isClosed = override?.isClosed ?? false
+        const rate = isClosed
+          ? toMinorUnits(basePrice)
+          : override?.price !== null && override?.price !== undefined
+          ? toMinorUnits(Number(override.price))
+          : toMinorUnits(basePrice)
+        return {
+          date, rate, stop_sell: isClosed,
+          min_stay_arrival: override?.minStay ?? restriction?.minStay ?? 1,
+          max_stay: override?.maxStay ?? restriction?.maxStay ?? null,
+          closed_to_arrival: (override?.closedToArrival ?? null) !== null ? override!.closedToArrival! : (isClosed || (restriction?.closedToArrival ?? false)),
+          closed_to_departure: (override?.closedToDeparture ?? null) !== null ? override!.closedToDeparture! : (isClosed || (restriction?.closedToDeparture ?? false)),
+        }
+      })
+
+      const compressed = compressRanges(entries)
+      return compressed.map((e) => {
+        const entry: Record<string, unknown> = {
+          property_id: channexPropertyId,
+          rate_plan_id: channexRatePlanId,
+          date_from: e.date_from,
+          date_to: e.date_to,
+          rate: e.rate,
+          stop_sell: e.stop_sell,
+          min_stay_arrival: e.min_stay_arrival,
+          closed_to_arrival: e.closed_to_arrival,
+          closed_to_departure: e.closed_to_departure,
+        }
+        if (e.max_stay !== null) entry.max_stay = e.max_stay
+        return entry
+      })
+    })
+  )
+
+  const values = planDataList.flat().filter(Boolean) as Record<string, unknown>[]
+  if (values.length === 0) return
+
+  // Single API call for all rate plan/date combinations
+  await client.post('/restrictions', { values })
+}
