@@ -139,6 +139,7 @@ export function RoomsClient({ rooms, areas, plan, roomCount }: Props) {
       name: room.name,
       type: room.type,
       capacity: room.capacity,
+      countOfRooms: room.countOfRooms,
       pricePerNight: room.pricePerNight,
       status: room.status,
       photos: room.photos,

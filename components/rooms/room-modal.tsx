@@ -23,6 +23,7 @@ export interface RoomFormData {
   name: string
   type: string
   capacity: number
+  countOfRooms?: number
   pricePerNight: number
   status: 'AVAILABLE' | 'OCCUPIED' | 'CLEANING' | 'MAINTENANCE'
   photos?: string[]
@@ -42,6 +43,7 @@ export function RoomModal({ open, onClose, initial }: Props) {
   const [name, setName] = useState(initial?.name ?? '')
   const [type, setType] = useState(initial?.type ?? '')
   const [capacity, setCapacity] = useState(String(initial?.capacity ?? 2))
+  const [countOfRooms, setCountOfRooms] = useState(String(initial?.countOfRooms ?? 1))
   const [price, setPrice] = useState(initial ? String(initial.pricePerNight) : '')
   const [status, setStatus] = useState<RoomFormData['status']>(initial?.status ?? 'AVAILABLE')
   const [photos, setPhotos] = useState<PhotoItem[]>(
@@ -94,8 +96,10 @@ export function RoomModal({ open, onClose, initial }: Props) {
     if (!code.trim() || !name.trim() || !type.trim())
       return setError('Code, name, and type are required')
     const cap = parseInt(capacity)
+    const units = parseInt(countOfRooms)
     const priceNum = parseFloat(price)
     if (isNaN(cap) || cap < 1) return setError('Invalid capacity')
+    if (isNaN(units) || units < 1) return setError('Invalid units')
     if (isNaN(priceNum) || priceNum < 0) return setError('Invalid price')
 
     startTransition(async () => {
@@ -107,6 +111,7 @@ export function RoomModal({ open, onClose, initial }: Props) {
           name: name.trim(),
           type: type.trim(),
           capacity: cap,
+          countOfRooms: units,
           pricePerNight: priceNum,
           status,
           photos: photoUrls,
@@ -175,7 +180,7 @@ export function RoomModal({ open, onClose, initial }: Props) {
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-3 gap-3">
             <div className="space-y-1.5">
               <Label>Capacity (pax)</Label>
               <Input
@@ -183,6 +188,15 @@ export function RoomModal({ open, onClose, initial }: Props) {
                 min={1}
                 value={capacity}
                 onChange={(e) => setCapacity(e.target.value)}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Units</Label>
+              <Input
+                type="number"
+                min={1}
+                value={countOfRooms}
+                onChange={(e) => setCountOfRooms(e.target.value)}
               />
             </div>
             <div className="space-y-1.5">

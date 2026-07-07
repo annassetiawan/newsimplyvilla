@@ -56,7 +56,7 @@ export async function syncRoomType(villaId: string, roomId: string, client: Chan
   const attrs = {
     property_id: channexPropertyId,
     title: room.name,
-    count_of_rooms: 1,
+    count_of_rooms: room.countOfRooms ?? 1,
     occ_adults: room.capacity,
     occ_children: 0,
     occ_infants: 0,

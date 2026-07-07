@@ -64,12 +64,14 @@ export async function pushAvailability(
   const client = await getChannexClient(villaId)
   if (!client) return
 
-  const [channexPropertyId, channexRoomTypeId] = await Promise.all([
+  const [channexPropertyId, channexRoomTypeId, room] = await Promise.all([
     getMapping(villaId, 'property', villaId),
     getMapping(villaId, 'room_type', roomId),
+    db.room.findUnique({ where: { id: roomId }, select: { countOfRooms: true } }),
   ])
   if (!channexPropertyId || !channexRoomTypeId) return
 
+  const countOfRooms = room?.countOfRooms ?? 1
   const today = toISO(new Date())
   const from = dateFrom < today ? today : dateFrom
 
@@ -83,7 +85,7 @@ export async function pushAvailability(
   }
   if (dates.length === 0) return
 
-  // For each date: count_of_rooms(1) minus active reservations that overlap
+  // For each date: countOfRooms minus active reservations that overlap
   const occupiedCounts = await Promise.all(
     dates.map((date) =>
       db.reservation.count({
@@ -98,7 +100,7 @@ export async function pushAvailability(
   )
   const entries: Array<{ date: string; availability: number }> = dates.map((date, i) => ({
     date,
-    availability: Math.max(0, 1 - occupiedCounts[i]),
+    availability: Math.max(0, countOfRooms - occupiedCounts[i]),
   }))
 
   const compressed = compressRanges(entries)
@@ -141,6 +143,8 @@ export async function pushAllAvailabilityBatch(
       const channexRoomTypeId = await getMapping(villaId, 'room_type', room.id)
       if (!channexRoomTypeId) return null
 
+      const countOfRooms = room.countOfRooms ?? 1
+
       const occupiedCounts = await Promise.all(
         dates.map((date) =>
           db.reservation.count({
@@ -156,7 +160,7 @@ export async function pushAllAvailabilityBatch(
 
       const entries: Array<{ date: string; availability: number }> = dates.map((date, i) => ({
         date,
-        availability: Math.max(0, 1 - occupiedCounts[i]),
+        availability: Math.max(0, countOfRooms - occupiedCounts[i]),
       }))
 
       return compressRanges(entries).map((e) => ({

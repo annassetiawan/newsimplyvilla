@@ -55,6 +55,7 @@ model Room {
   name          String
   type          String
   capacity      Int
+  countOfRooms  Int           @default(1)
   pricePerNight Float
   status        RoomStatus    @default(AVAILABLE)
   photos        String[]

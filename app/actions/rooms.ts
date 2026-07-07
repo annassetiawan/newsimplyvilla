@@ -21,6 +21,7 @@ export async function upsertRoom(data: {
   name: string
   type: string
   capacity: number
+  countOfRooms?: number
   pricePerNight: number
   status: 'AVAILABLE' | 'OCCUPIED' | 'CLEANING' | 'MAINTENANCE'
   photos?: string[]
@@ -49,6 +50,7 @@ export async function upsertRoom(data: {
           name: data.name,
           type: data.type,
           capacity: data.capacity,
+          countOfRooms: data.countOfRooms ?? 1,
           pricePerNight: data.pricePerNight,
           status: data.status,
           ...(data.photos !== undefined && { photos: data.photos }),
@@ -80,6 +82,7 @@ export async function upsertRoom(data: {
           name: data.name,
           type: data.type,
           capacity: data.capacity,
+          countOfRooms: data.countOfRooms ?? 1,
           pricePerNight: data.pricePerNight,
           status: data.status,
           photos: data.photos ?? [],
