@@ -5,15 +5,12 @@ import { db } from '@/lib/db'
 import { FrontDeskClient } from '@/components/front-desk/front-desk-client'
 import { getSessionUser } from '@/lib/getSession'
 
-export default async function FrontDeskPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ booking?: string }>
-}) {
-  const [user, params] = await Promise.all([getSessionUser(), searchParams])
+import { Suspense } from 'react'
+
+export default async function FrontDeskPage() {
+  const user = await getSessionUser()
   if (!user?.villaId) redirect('/login')
   const villaId = user.villaId!
-  const initialBookingId = params.booking ?? null
 
   const [rooms, reservations, guestsRaw, lostAndFound] = await Promise.all([
     db.room.findMany({ where: { villaId }, orderBy: { code: 'asc' } }),
@@ -112,14 +109,14 @@ export default async function FrontDeskPage({
           Manage reservations, check-ins, guests, and lost &amp; found.
         </p>
       </div>
-      <FrontDeskClient
-        key={initialBookingId ?? 'default'}
-        rooms={serializedRooms}
-        reservations={serializedReservations}
-        guests={serializedGuests}
-        lostAndFound={serializedLostFound}
-        initialBookingId={initialBookingId}
-      />
+      <Suspense>
+        <FrontDeskClient
+          rooms={serializedRooms}
+          reservations={serializedReservations}
+          guests={serializedGuests}
+          lostAndFound={serializedLostFound}
+        />
+      </Suspense>
     </div>
   )
 }
