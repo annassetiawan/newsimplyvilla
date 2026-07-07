@@ -9,7 +9,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import {
-  pushAllRatesNow, pushAllAvailabilityNow, runInitialSync, deactivateChannex, getSyncDetails, changeCurrency,
+  pushAllRatesNow, pushAllAvailabilityNow, runInitialSync, deactivateChannex, getSyncDetails, changeCurrency, registerWebhook,
 } from '@/app/actions/channex'
 
 const CURRENCY_OPTIONS = [
@@ -69,6 +69,7 @@ export function ChannexDashboard({ status, stats, userRole, onDisconnected }: Pr
   const [syncLoading, setSyncLoading] = useState(false)
   const [showChangeCurrency, setShowChangeCurrency] = useState(false)
   const [newCurrency, setNewCurrency] = useState(status.currency ?? 'IDR')
+  const [webhookId, setWebhookId] = useState(status.webhookId ?? null)
   const currentStats = statsOverride ? { ...stats, ...statsOverride } : stats
   const isOwner = userRole === 'OWNER' || userRole === 'SUPER_ADMIN'
 
@@ -115,12 +116,25 @@ export function ChannexDashboard({ status, stats, userRole, onDisconnected }: Pr
     })
   }
 
+  function handleRegisterWebhook() {
+    startTransition(async () => {
+      const res = await registerWebhook(window.location.origin)
+      if (res.success) {
+        toast.success('Webhook berhasil didaftarkan')
+        setWebhookId(res.webhookId ?? null)
+      } else {
+        toast.error(res.message ?? 'Gagal mendaftarkan webhook')
+      }
+    })
+  }
+
   function handleChangeCurrencyConfirm() {
     startTransition(async () => {
       const res = await changeCurrency(newCurrency)
       if (res.success) {
         toast.success(`Mata uang diubah ke ${newCurrency}. Properti Channex baru telah dibuat.`)
         setShowChangeCurrency(false)
+        setWebhookId(null)
         if (res.data) {
           setStatsOverride({ syncedRooms: res.data.roomTypes, activeRatePlans: res.data.ratePlans })
         }
@@ -400,6 +414,20 @@ export function ChannexDashboard({ status, stats, userRole, onDisconnected }: Pr
                   <CalendarCheck className="h-3.5 w-3.5" />
                   Perbarui Ketersediaan
                 </Button>
+              </div>
+
+              <div className="pt-2 border-t border-border">
+                <p className="text-xs font-medium mb-1.5">Webhook</p>
+                <div className="flex items-center gap-3 flex-wrap">
+                  <p className="text-xs text-muted-foreground flex-1">
+                    {webhookId
+                      ? <>✓ Terdaftar — <span className="font-mono">{webhookId.slice(0, 8)}</span></>
+                      : 'Belum terdaftar. Diperlukan untuk menerima booking dari OTA.'}
+                  </p>
+                  <Button onClick={handleRegisterWebhook} disabled={isPending} variant="outline" size="sm">
+                    {webhookId ? 'Daftarkan Ulang' : 'Daftarkan Webhook'}
+                  </Button>
+                </div>
               </div>
 
               <div className="pt-2 border-t border-border">

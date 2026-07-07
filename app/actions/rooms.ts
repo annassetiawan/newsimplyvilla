@@ -8,6 +8,7 @@ import { logActivity } from '@/lib/activity-log'
 import { getVillaPlan } from '@/lib/subscription'
 import { getChannexClient } from '@/lib/channex/getClient'
 import { syncRoomType } from '@/lib/channex/sync'
+import { pushAvailability } from '@/lib/channex/ari'
 
 async function getSessionVillaId() {
   const user = await getSessionUser()
@@ -70,10 +71,16 @@ export async function upsertRoom(data: {
         })
       }
       await logActivity({ villaId: user.villaId!, staffName: user.name, action: `Updated room: ${data.name}`, module: 'Rooms' })
+      const countChanged = existing?.countOfRooms !== (data.countOfRooms ?? 1)
       void (async () => {
         const client = await getChannexClient(user.villaId!)
         if (!client) return
         await syncRoomType(user.villaId!, data.id!, client)
+        if (countChanged) {
+          const today = new Date().toISOString().split('T')[0]
+          const end = new Date(); end.setDate(end.getDate() + 500)
+          await pushAvailability(user.villaId!, data.id!, today, end.toISOString().split('T')[0])
+        }
       })().catch(console.error)
     } else {
       const newRoom = await db.room.create({
@@ -94,6 +101,9 @@ export async function upsertRoom(data: {
         const client = await getChannexClient(user.villaId!)
         if (!client) return
         await syncRoomType(user.villaId!, newRoom.id, client)
+        const today = new Date().toISOString().split('T')[0]
+        const end = new Date(); end.setDate(end.getDate() + 500)
+        await pushAvailability(user.villaId!, newRoom.id, today, end.toISOString().split('T')[0])
       })().catch(console.error)
     }
     revalidatePath('/rooms')

@@ -351,7 +351,7 @@ export async function changeCurrency(newCurrency: string) {
     db.channexMapping.deleteMany({ where: { villaId } }),
     db.channexConfig.update({
       where: { villaId },
-      data: { currency: newCurrency, channexPropertyId: null },
+      data: { currency: newCurrency, channexPropertyId: null, webhookId: null, webhookSecret: null },
     }),
   ])
 
