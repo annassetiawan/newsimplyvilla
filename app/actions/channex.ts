@@ -103,16 +103,15 @@ export async function registerWebhook(appUrl: string) {
 
   try {
     type WebhookRes = { id: string }
-    const data = await client.post<WebhookRes>('/webhooks', {
-      webhook: {
-        callback_url: callbackUrl,
-        event_mask: 'booking_new;booking_modification;booking_cancellation',
-        property_id: config.channexPropertyId ?? null,
-        is_active: true,
-        send_data: true,
-        headers: { 'X-Channex-Webhook-Secret': webhookSecret },
-      },
-    })
+    const webhookPayload: Record<string, unknown> = {
+      callback_url: callbackUrl,
+      event_mask: 'booking_new;booking_modification;booking_cancellation',
+      is_active: true,
+      send_data: true,
+    }
+    if (config.channexPropertyId) webhookPayload.property_id = config.channexPropertyId
+
+    const data = await client.post<WebhookRes>('/webhooks', { webhook: webhookPayload })
     const webhookId = (data as unknown as { id: string }).id
     await db.channexConfig.update({ where: { villaId }, data: { webhookId, webhookSecret } })
     revalidatePath('/channel-manager')
