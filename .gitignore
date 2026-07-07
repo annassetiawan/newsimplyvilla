@@ -25,6 +25,7 @@ tsconfig.tsbuildinfo
 .kiro/
 .factory/
 .agent/
+graphify-out/
 
 # skills lock (generated, not source)
 skills-lock.json
