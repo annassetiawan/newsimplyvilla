@@ -66,6 +66,7 @@ export default async function RoomsPage() {
       name: room.name,
       type: room.type,
       capacity: room.capacity,
+      countOfRooms: room.countOfRooms,
       pricePerNight: room.pricePerNight,
       status: room.status as 'AVAILABLE' | 'OCCUPIED' | 'CLEANING' | 'MAINTENANCE',
       photos: room.photos,
